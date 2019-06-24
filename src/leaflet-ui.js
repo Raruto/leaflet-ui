@@ -1,4 +1,4 @@
-import 'google-maps'; // async
+import * as gapi from 'google-maps'; // async
 
 import 'leaflet.gridlayer.googlemutant';
 import 'leaflet.locatecontrol';
@@ -8,6 +8,8 @@ import '@raruto/leaflet-gesture-handling';
 import 'leaflet-control-layers-inline';
 
 // import './leaflet-ui.css';
+
+var G = Object.keys(gapi).length ? gapi : GoogleMapsLoader;
 
 (function() {
 
@@ -30,7 +32,7 @@ import 'leaflet-control-layers-inline';
     } else {
       this.zoomControl.remove();
       this.attributionControl.remove();
-      if (!window.google && isGMap.call(this)) (GoogleMapsLoader).load(initMap.bind(this));
+      if (!window.google && isGMap.call(this)) G.load(initMap.bind(this));
       else initMap.call(this);
     }
   });

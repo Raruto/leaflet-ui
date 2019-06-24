@@ -224,6 +224,10 @@
 
 	});
 
+	var gapi = /*#__PURE__*/Object.freeze({
+
+	});
+
 	// Based on https://github.com/shramov/leaflet-plugins
 	// GridLayer like https://avinmathew.com/leaflet-and-google-maps/ , but using MutationObserver instead of jQuery
 
@@ -2446,6 +2450,8 @@
 
 	// import './leaflet-ui.css';
 
+	var G = Object.keys(gapi).length ? gapi : GoogleMapsLoader;
+
 	(function() {
 
 	  L.Map.mergeOptions({
@@ -2467,7 +2473,7 @@
 	    } else {
 	      this.zoomControl.remove();
 	      this.attributionControl.remove();
-	      if (!window.google && isGMap.call(this)) (GoogleMapsLoader).load(initMap.bind(this));
+	      if (!window.google && isGMap.call(this)) G.load(initMap.bind(this));
 	      else initMap.call(this);
 	    }
 	  });
