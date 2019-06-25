@@ -1,7 +1,7 @@
 {
   "name": "leaflet-ui",
   "version": "0.0.2",
-  "description": "Leaflet maps bundle for common user interface customizations",
+  "description": "Leaflet bundle for common user interface customizations",
   "main": "dist/leaflet-ui.js",
   "module": "src/leaflet-ui.js",
   "scripts": {
