@@ -1,5 +1,5 @@
 # leaflet-ui
-Leaflet maps bundle for common user interface customizations
+Leaflet bundle for common user interface customizations
 
 _For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html)_
 
