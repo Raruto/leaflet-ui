@@ -4,6 +4,8 @@
 @import url("../node_modules/@raruto/leaflet-gesture-handling/dist/leaflet-gesture-handling.css");
 @import url("../node_modules/leaflet-control-layers-inline/leaflet-control-layers-inline.css");
 @import url("../node_modules/leaflet-minimap/dist/Control.MiniMap.min.css");
+@import url("../node_modules/leaflet-loading/src/Control.Loading.css");
+@import url("../node_modules/leaflet-search/dist/leaflet-search.min.css");
 
 .leaflet-pegman {
   box-sizing: content-box;
@@ -56,4 +58,16 @@
 
 .leaflet-control-layers-inline .leaflet-control-layers-base span {
   line-height: 1;
+}
+
+.leaflet-edit-osm.leaflet-control a {
+  padding-right: 5px;
+}
+
+.leaflet-edit-osm~.leaflet-control-attribution.leaflet-control {
+  clear: none;
+}
+
+.leaflet-edit-osm.leaflet-control-attribution.leaflet-control {
+  clear: both;
 }

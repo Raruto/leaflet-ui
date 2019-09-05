@@ -41,9 +41,11 @@
   "dependencies": {
     "@raruto/leaflet-gesture-handling": "^1.2.2",
     "leaflet-control-layers-inline": "0.0.3",
+    "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
     "leaflet-pegman": "^0.0.8",
     "leaflet-pointable": "^0.0.3",
+    "leaflet-search": "^2.9.8",
     "leaflet.fullscreen": "^1.5.1",
     "leaflet.gridlayer.googlemutant": "^0.7.1",
     "leaflet.locatecontrol": "^0.67.0"

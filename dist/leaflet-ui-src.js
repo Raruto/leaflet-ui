@@ -1757,11 +1757,1388 @@
 
     (function(factory,window){if(typeof define==="function"&&define.amd){define(["leaflet"],factory);}else if(typeof exports==="object"){module.exports=factory(require("leaflet"));}if(typeof window!=="undefined"&&window.L){window.L.Control.MiniMap=factory(L);window.L.control.minimap=function(layer,options){return new window.L.Control.MiniMap(layer,options)};}})(function(L){var MiniMap=L.Control.extend({includes:L.Evented?L.Evented.prototype:L.Mixin.Events,options:{position:"bottomright",toggleDisplay:false,zoomLevelOffset:-5,zoomLevelFixed:false,centerFixed:false,zoomAnimation:false,autoToggleDisplay:false,minimized:false,width:150,height:150,collapsedWidth:19,collapsedHeight:19,aimingRectOptions:{color:"#ff7800",weight:1,clickable:false},shadowRectOptions:{color:"#000000",weight:1,clickable:false,opacity:0,fillOpacity:0},strings:{hideText:"Hide MiniMap",showText:"Show MiniMap"},mapOptions:{}},initialize:function(layer,options){L.Util.setOptions(this,options);this.options.aimingRectOptions.clickable=false;this.options.shadowRectOptions.clickable=false;this._layer=layer;},onAdd:function(map){this._mainMap=map;this._container=L.DomUtil.create("div","leaflet-control-minimap");this._container.style.width=this.options.width+"px";this._container.style.height=this.options.height+"px";L.DomEvent.disableClickPropagation(this._container);L.DomEvent.on(this._container,"mousewheel",L.DomEvent.stopPropagation);var mapOptions={attributionControl:false,dragging:!this.options.centerFixed,zoomControl:false,zoomAnimation:this.options.zoomAnimation,autoToggleDisplay:this.options.autoToggleDisplay,touchZoom:this.options.centerFixed?"center":!this._isZoomLevelFixed(),scrollWheelZoom:this.options.centerFixed?"center":!this._isZoomLevelFixed(),doubleClickZoom:this.options.centerFixed?"center":!this._isZoomLevelFixed(),boxZoom:!this._isZoomLevelFixed(),crs:map.options.crs};mapOptions=L.Util.extend(this.options.mapOptions,mapOptions);this._miniMap=new L.Map(this._container,mapOptions);this._miniMap.addLayer(this._layer);this._mainMapMoving=false;this._miniMapMoving=false;this._userToggledDisplay=false;this._minimized=false;if(this.options.toggleDisplay){this._addToggleButton();}this._miniMap.whenReady(L.Util.bind(function(){this._aimingRect=L.rectangle(this._mainMap.getBounds(),this.options.aimingRectOptions).addTo(this._miniMap);this._shadowRect=L.rectangle(this._mainMap.getBounds(),this.options.shadowRectOptions).addTo(this._miniMap);this._mainMap.on("moveend",this._onMainMapMoved,this);this._mainMap.on("move",this._onMainMapMoving,this);this._miniMap.on("movestart",this._onMiniMapMoveStarted,this);this._miniMap.on("move",this._onMiniMapMoving,this);this._miniMap.on("moveend",this._onMiniMapMoved,this);},this));return this._container},addTo:function(map){L.Control.prototype.addTo.call(this,map);var center=this.options.centerFixed||this._mainMap.getCenter();this._miniMap.setView(center,this._decideZoom(true));this._setDisplay(this.options.minimized);return this},onRemove:function(map){this._mainMap.off("moveend",this._onMainMapMoved,this);this._mainMap.off("move",this._onMainMapMoving,this);this._miniMap.off("moveend",this._onMiniMapMoved,this);this._miniMap.removeLayer(this._layer);},changeLayer:function(layer){this._miniMap.removeLayer(this._layer);this._layer=layer;this._miniMap.addLayer(this._layer);},_addToggleButton:function(){this._toggleDisplayButton=this.options.toggleDisplay?this._createButton("",this._toggleButtonInitialTitleText(),"leaflet-control-minimap-toggle-display leaflet-control-minimap-toggle-display-"+this.options.position,this._container,this._toggleDisplayButtonClicked,this):undefined;this._toggleDisplayButton.style.width=this.options.collapsedWidth+"px";this._toggleDisplayButton.style.height=this.options.collapsedHeight+"px";},_toggleButtonInitialTitleText:function(){if(this.options.minimized){return this.options.strings.showText}else{return this.options.strings.hideText}},_createButton:function(html,title,className,container,fn,context){var link=L.DomUtil.create("a",className,container);link.innerHTML=html;link.href="#";link.title=title;var stop=L.DomEvent.stopPropagation;L.DomEvent.on(link,"click",stop).on(link,"mousedown",stop).on(link,"dblclick",stop).on(link,"click",L.DomEvent.preventDefault).on(link,"click",fn,context);return link},_toggleDisplayButtonClicked:function(){this._userToggledDisplay=true;if(!this._minimized){this._minimize();}else{this._restore();}},_setDisplay:function(minimize){if(minimize!==this._minimized){if(!this._minimized){this._minimize();}else{this._restore();}}},_minimize:function(){if(this.options.toggleDisplay){this._container.style.width=this.options.collapsedWidth+"px";this._container.style.height=this.options.collapsedHeight+"px";this._toggleDisplayButton.className+=" minimized-"+this.options.position;this._toggleDisplayButton.title=this.options.strings.showText;}else{this._container.style.display="none";}this._minimized=true;this._onToggle();},_restore:function(){if(this.options.toggleDisplay){this._container.style.width=this.options.width+"px";this._container.style.height=this.options.height+"px";this._toggleDisplayButton.className=this._toggleDisplayButton.className.replace("minimized-"+this.options.position,"");this._toggleDisplayButton.title=this.options.strings.hideText;}else{this._container.style.display="block";}this._minimized=false;this._onToggle();},_onMainMapMoved:function(e){if(!this._miniMapMoving){var center=this.options.centerFixed||this._mainMap.getCenter();this._mainMapMoving=true;this._miniMap.setView(center,this._decideZoom(true));this._setDisplay(this._decideMinimized());}else{this._miniMapMoving=false;}this._aimingRect.setBounds(this._mainMap.getBounds());},_onMainMapMoving:function(e){this._aimingRect.setBounds(this._mainMap.getBounds());},_onMiniMapMoveStarted:function(e){if(!this.options.centerFixed){var lastAimingRect=this._aimingRect.getBounds();var sw=this._miniMap.latLngToContainerPoint(lastAimingRect.getSouthWest());var ne=this._miniMap.latLngToContainerPoint(lastAimingRect.getNorthEast());this._lastAimingRectPosition={sw:sw,ne:ne};}},_onMiniMapMoving:function(e){if(!this.options.centerFixed){if(!this._mainMapMoving&&this._lastAimingRectPosition){this._shadowRect.setBounds(new L.LatLngBounds(this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.sw),this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.ne)));this._shadowRect.setStyle({opacity:1,fillOpacity:.3});}}},_onMiniMapMoved:function(e){if(!this._mainMapMoving){this._miniMapMoving=true;this._mainMap.setView(this._miniMap.getCenter(),this._decideZoom(false));this._shadowRect.setStyle({opacity:0,fillOpacity:0});}else{this._mainMapMoving=false;}},_isZoomLevelFixed:function(){var zoomLevelFixed=this.options.zoomLevelFixed;return this._isDefined(zoomLevelFixed)&&this._isInteger(zoomLevelFixed)},_decideZoom:function(fromMaintoMini){if(!this._isZoomLevelFixed()){if(fromMaintoMini){return this._mainMap.getZoom()+this.options.zoomLevelOffset}else{var currentDiff=this._miniMap.getZoom()-this._mainMap.getZoom();var proposedZoom=this._miniMap.getZoom()-this.options.zoomLevelOffset;var toRet;if(currentDiff>this.options.zoomLevelOffset&&this._mainMap.getZoom()<this._miniMap.getMinZoom()-this.options.zoomLevelOffset){if(this._miniMap.getZoom()>this._lastMiniMapZoom){toRet=this._mainMap.getZoom()+1;this._miniMap.setZoom(this._miniMap.getZoom()-1);}else{toRet=this._mainMap.getZoom();}}else{toRet=proposedZoom;}this._lastMiniMapZoom=this._miniMap.getZoom();return toRet}}else{if(fromMaintoMini){return this.options.zoomLevelFixed}else{return this._mainMap.getZoom()}}},_decideMinimized:function(){if(this._userToggledDisplay){return this._minimized}if(this.options.autoToggleDisplay){if(this._mainMap.getBounds().contains(this._miniMap.getBounds())){return true}return false}return this._minimized},_isInteger:function(value){return typeof value==="number"},_isDefined:function(value){return typeof value!=="undefined"},_onToggle:function(){L.Util.requestAnimFrame(function(){L.DomEvent.on(this._container,"transitionend",this._fireToggleEvents,this);if(!L.Browser.any3d){L.Util.requestAnimFrame(this._fireToggleEvents,this);}},this);},_fireToggleEvents:function(){L.DomEvent.off(this._container,"transitionend",this._fireToggleEvents,this);var data={minimized:this._minimized};this.fire(this._minimized?"minimize":"restore",data);this.fire("toggle",data);}});L.Map.mergeOptions({miniMapControl:false});L.Map.addInitHook(function(){if(this.options.miniMapControl){this.miniMapControl=(new MiniMap).addTo(this);}});return MiniMap},window);
 
-    // import * as gapi from 'google-maps'; // async
+    /*
+     * L.Control.Loading is a control that shows a loading indicator when tiles are
+     * loading or when map-related AJAX requests are taking place.
+     */
 
-    // import './leaflet-ui.css';
+    (function () {
 
-    // var G = Object.keys(gapi).length ? gapi : GoogleMapsLoader;
+        var console = window.console || {
+            error: function () {},
+            warn: function () {}
+        };
+
+        function defineLeafletLoading(L) {
+            L.Control.Loading = L.Control.extend({
+                options: {
+                    delayIndicator: null,
+                    position: 'topleft',
+                    separate: false,
+                    zoomControl: null,
+                    spinjs: false,
+                    spin: { 
+                        lines: 7, 
+                        length: 3, 
+                        width: 3, 
+                        radius: 5, 
+                        rotate: 13, 
+                        top: "83%"
+                    }
+                },
+
+                initialize: function(options) {
+                    L.setOptions(this, options);
+                    this._dataLoaders = {};
+
+                    // Try to set the zoom control this control is attached to from the 
+                    // options
+                    if (this.options.zoomControl !== null) {
+                        this.zoomControl = this.options.zoomControl;
+                    }
+                },
+
+                onAdd: function(map) {
+                    if (this.options.spinjs && (typeof Spinner !== 'function')) {
+                        return console.error("Leaflet.loading cannot load because you didn't load spin.js (http://fgnass.github.io/spin.js/), even though you set it in options.");
+                    }
+                    this._addLayerListeners(map);
+                    this._addMapListeners(map);
+
+                    // Try to set the zoom control this control is attached to from the map
+                    // the control is being added to
+                    if (!this.options.separate && !this.zoomControl) {
+                        if (map.zoomControl) {
+                            this.zoomControl = map.zoomControl;
+                        } else if (map.zoomsliderControl) {
+                            this.zoomControl = map.zoomsliderControl;
+                        }
+                    }
+
+                    // Create the loading indicator
+                    var classes = 'leaflet-control-loading';
+                    var container;
+                    if (this.zoomControl && !this.options.separate) {
+                        // If there is a zoom control, hook into the bottom of it
+                        container = this.zoomControl._container;
+                        // These classes are no longer used as of Leaflet 0.6
+                        classes += ' leaflet-bar-part-bottom leaflet-bar-part last';
+
+                        // Loading control will be added to the zoom control. So the visible last element is not the
+                        // last dom element anymore. So add the part-bottom class.
+                        L.DomUtil.addClass(this._getLastControlButton(), 'leaflet-bar-part-bottom');
+                    }
+                    else {
+                        // Otherwise, create a container for the indicator
+                        container = L.DomUtil.create('div', 'leaflet-control-zoom leaflet-control-layer-container leaflet-bar');
+                    }
+                    this._indicatorContainer = container;
+                    this._indicator = L.DomUtil.create('a', classes, container);
+                    if (this.options.spinjs) {
+                        this._spinner = new Spinner(this.options.spin).spin();
+                        this._indicator.appendChild(this._spinner.el);
+                    }
+                    return container;
+                },
+
+                onRemove: function(map) {
+                    this._removeLayerListeners(map);
+                    this._removeMapListeners(map);
+                },
+
+                removeFrom: function (map) {
+                    if (this.zoomControl && !this.options.separate) {
+                        // Override Control.removeFrom() to avoid clobbering the entire
+                        // _container, which is the same as zoomControl's
+                        this._container.removeChild(this._indicator);
+                        this._map = null;
+                        this.onRemove(map);
+                        return this;
+                    }
+                    else {
+                        // If this control is separate from the zoomControl, call the
+                        // parent method so we don't leave behind an empty container
+                        return L.Control.prototype.removeFrom.call(this, map);
+                    }
+                },
+
+                addLoader: function(id) {
+                    this._dataLoaders[id] = true;
+                    if (this.options.delayIndicator && !this.delayIndicatorTimeout) {
+                        // If we are delaying showing the indicator and we're not
+                        // already waiting for that delay, set up a timeout.
+                        var that = this;
+                        this.delayIndicatorTimeout = setTimeout(function () {
+                            that.updateIndicator();
+                            that.delayIndicatorTimeout = null;
+                        }, this.options.delayIndicator);
+                    }
+                    else {
+                        // Otherwise show the indicator immediately
+                        this.updateIndicator();
+                    }
+                },
+
+                removeLoader: function(id) {
+                    delete this._dataLoaders[id];
+                    this.updateIndicator();
+
+                    // If removing this loader means we're in no danger of loading,
+                    // clear the timeout. This prevents old delays from instantly 
+                    // triggering the indicator.
+                    if (this.options.delayIndicator && this.delayIndicatorTimeout && !this.isLoading()) {
+                        clearTimeout(this.delayIndicatorTimeout);
+                        this.delayIndicatorTimeout = null;
+                    }
+                },
+
+                updateIndicator: function() {
+                    if (this.isLoading()) {
+                        this._showIndicator();
+                    }
+                    else {
+                        this._hideIndicator();
+                    }
+                },
+
+                isLoading: function() {
+                    return this._countLoaders() > 0;
+                },
+
+                _countLoaders: function() {
+                    var size = 0, key;
+                    for (key in this._dataLoaders) {
+                        if (this._dataLoaders.hasOwnProperty(key)) size++;
+                    }
+                    return size;
+                },
+
+                _showIndicator: function() {
+                    // Show loading indicator
+                    L.DomUtil.addClass(this._indicator, 'is-loading');
+                    L.DomUtil.addClass(this._indicatorContainer, 'is-loading');
+
+                    // If zoomControl exists, make the zoom-out button not last
+                    if (!this.options.separate) {
+                        if (this.zoomControl instanceof L.Control.Zoom) {
+                            L.DomUtil.removeClass(this._getLastControlButton(), 'leaflet-bar-part-bottom');
+                        }
+                        else if (typeof L.Control.Zoomslider === 'function' && this.zoomControl instanceof L.Control.Zoomslider) {
+                            L.DomUtil.removeClass(this.zoomControl._ui.zoomOut, 'leaflet-bar-part-bottom');
+                        }
+                    }
+                },
+
+                _hideIndicator: function() {
+                    // Hide loading indicator
+                    L.DomUtil.removeClass(this._indicator, 'is-loading');
+                    L.DomUtil.removeClass(this._indicatorContainer, 'is-loading');
+
+                    // If zoomControl exists, make the zoom-out button last
+                    if (!this.options.separate) {
+                        if (this.zoomControl instanceof L.Control.Zoom) {
+                            L.DomUtil.addClass(this._getLastControlButton(), 'leaflet-bar-part-bottom');
+                        }
+                        else if (typeof L.Control.Zoomslider === 'function' && this.zoomControl instanceof L.Control.Zoomslider) {
+                            L.DomUtil.addClass(this.zoomControl._ui.zoomOut, 'leaflet-bar-part-bottom');
+                        }
+                    }
+                },
+
+                _getLastControlButton: function() {
+                    var container = this.zoomControl._container,
+                        index = container.children.length - 1;
+
+                    // Find the last visible control button that is not our loading
+                    // indicator
+                    while (index > 0) {
+                        var button = container.children[index];
+                        if (!(this._indicator === button || button.offsetWidth === 0 || button.offsetHeight === 0)) {
+                            break;
+                        }
+                        index--;
+                    }
+
+                    return container.children[index];
+                },
+
+                _handleLoading: function(e) {
+                    this.addLoader(this.getEventId(e));
+                },
+
+                _handleBaseLayerChange: function (e) {
+                    var that = this;
+
+                    // Check for a target 'layer' that contains multiple layers, such as
+                    // L.LayerGroup. This will happen if you have an L.LayerGroup in an
+                    // L.Control.Layers.
+                    if (e.layer && e.layer.eachLayer && typeof e.layer.eachLayer === 'function') {
+                        e.layer.eachLayer(function (layer) {
+                            that._handleBaseLayerChange({ layer: layer });
+                        });
+                    }
+                    else {
+                        // If we're changing to a canvas layer, don't handle loading
+                        // as canvas layers will not fire load events.
+                        if (!(L.TileLayer.Canvas && e.layer instanceof L.TileLayer.Canvas)) {
+                            that._handleLoading(e);
+                        }
+                    }
+                },
+
+                _handleLoad: function(e) {
+                    this.removeLoader(this.getEventId(e));
+                },
+
+                getEventId: function(e) {
+                    if (e.id) {
+                        return e.id;
+                    }
+                    else if (e.layer) {
+                        return e.layer._leaflet_id;
+                    }
+                    return e.target._leaflet_id;
+                },
+
+                _layerAdd: function(e) {
+                    if (!e.layer || !e.layer.on) return
+                    try {
+                        e.layer.on({
+                            loading: this._handleLoading,
+                            load: this._handleLoad
+                        }, this);
+                    }
+                    catch (exception) {
+                        console.warn('L.Control.Loading: Tried and failed to add ' +
+                                     ' event handlers to layer', e.layer);
+                        console.warn('L.Control.Loading: Full details', exception);
+                    }
+                },
+
+                _layerRemove: function(e) {
+                    if (!e.layer || !e.layer.off) return;
+                    try {
+                        e.layer.off({
+                            loading: this._handleLoading,
+                            load: this._handleLoad
+                        }, this);
+                    }
+                    catch (exception) {
+                        console.warn('L.Control.Loading: Tried and failed to remove ' +
+                                     'event handlers from layer', e.layer);
+                        console.warn('L.Control.Loading: Full details', exception);
+                    }
+                },
+
+                _addLayerListeners: function(map) {
+                    // Add listeners for begin and end of load to any layers already on the 
+                    // map
+                    map.eachLayer(function(layer) {
+                        if (!layer.on) return;
+                        layer.on({
+                            loading: this._handleLoading,
+                            load: this._handleLoad
+                        }, this);
+                    }, this);
+
+                    // When a layer is added to the map, add listeners for begin and end
+                    // of load
+                    map.on('layeradd', this._layerAdd, this);
+                    map.on('layerremove', this._layerRemove, this);
+                },
+
+                _removeLayerListeners: function(map) {
+                    // Remove listeners for begin and end of load from all layers
+                    map.eachLayer(function(layer) {
+                        if (!layer.off) return;
+                        layer.off({
+                            loading: this._handleLoading,
+                            load: this._handleLoad
+                        }, this);
+                    }, this);
+
+                    // Remove layeradd/layerremove listener from map
+                    map.off('layeradd', this._layerAdd, this);
+                    map.off('layerremove', this._layerRemove, this);
+                },
+
+                _addMapListeners: function(map) {
+                    // Add listeners to the map for (custom) dataloading and dataload
+                    // events, eg, for AJAX calls that affect the map but will not be
+                    // reflected in the above layer events.
+                    map.on({
+                        baselayerchange: this._handleBaseLayerChange,
+                        dataloading: this._handleLoading,
+                        dataload: this._handleLoad,
+                        layerremove: this._handleLoad
+                    }, this);
+                },
+
+                _removeMapListeners: function(map) {
+                    map.off({
+                        baselayerchange: this._handleBaseLayerChange,
+                        dataloading: this._handleLoading,
+                        dataload: this._handleLoad,
+                        layerremove: this._handleLoad
+                    }, this);
+                }
+            });
+
+            L.Map.addInitHook(function () {
+                if (this.options.loadingControl) {
+                    this.loadingControl = new L.Control.Loading();
+                    this.addControl(this.loadingControl);
+                }
+            });
+
+            L.Control.loading = function(options) {
+                return new L.Control.Loading(options);
+            };
+        }
+
+        if (typeof define === 'function' && define.amd) {
+            // Try to add leaflet.loading to Leaflet using AMD
+            define(['leaflet'], function (L) {
+                defineLeafletLoading(L);
+            });
+        }
+        else {
+            // Else use the global L
+            defineLeafletLoading(L);
+        }
+
+    })();
+
+    /* 
+     * Leaflet Control Search v2.9.7 - 2019-01-14 
+     * 
+     * Copyright 2019 Stefano Cudini 
+     * stefano.cudini@gmail.com 
+     * http://labs.easyblog.it/ 
+     * 
+     * Licensed under the MIT license. 
+     * 
+     * Demo: 
+     * http://labs.easyblog.it/maps/leaflet-search/ 
+     * 
+     * Source: 
+     * git@github.com:stefanocudini/leaflet-search.git 
+     * 
+     */
+    /*
+    	Name					Data passed			   Description
+
+    	Managed Events:
+    	 search:locationfound	{latlng, title, layer} fired after moved and show markerLocation
+    	 search:expanded		{}					   fired after control was expanded
+    	 search:collapsed		{}					   fired after control was collapsed
+     	 search:cancel			{}					   fired after cancel button clicked
+
+    	Public methods:
+    	 setLayer()				L.LayerGroup()         set layer search at runtime
+    	 showAlert()            'Text message'         show alert message
+    	 searchText()			'Text searched'        search text by external code
+    */
+
+    //TODO implement can do research on multiple sources layers and remote		
+    //TODO history: false,		//show latest searches in tooltip		
+    //FIXME option condition problem {autoCollapse: true, markerLocation: true} not show location
+    //FIXME option condition problem {autoCollapse: false }
+    //
+    //TODO here insert function  search inputText FIRST in _recordsCache keys and if not find results.. 
+    //  run one of callbacks search(sourceData,jsonpUrl or options.layer) and run this.showTooltip
+    //
+    //TODO change structure of _recordsCache
+    //	like this: _recordsCache = {"text-key1": {loc:[lat,lng], ..other attributes.. }, {"text-key2": {loc:[lat,lng]}...}, ...}
+    //	in this mode every record can have a free structure of attributes, only 'loc' is required
+    //TODO important optimization!!! always append data in this._recordsCache
+    //  now _recordsCache content is emptied and replaced with new data founded
+    //  always appending data on _recordsCache give the possibility of caching ajax, jsonp and layersearch!
+    //
+    //TODO here insert function  search inputText FIRST in _recordsCache keys and if not find results.. 
+    //  run one of callbacks search(sourceData,jsonpUrl or options.layer) and run this.showTooltip
+    //
+    //TODO change structure of _recordsCache
+    //	like this: _recordsCache = {"text-key1": {loc:[lat,lng], ..other attributes.. }, {"text-key2": {loc:[lat,lng]}...}, ...}
+    //	in this way every record can have a free structure of attributes, only 'loc' is required
+
+    (function (factory) {
+        if(typeof define === 'function' && define.amd) {
+        //AMD
+            define(['leaflet'], factory);
+        } else if(typeof module !== 'undefined') {
+        // Node/CommonJS
+            module.exports = factory(require('leaflet'));
+        } else {
+        // Browser globals
+            if(typeof window.L === 'undefined')
+                throw 'Leaflet must be loaded first';
+            factory(window.L);
+        }
+    })(function (L) {
+
+
+    L.Control.Search = L.Control.extend({
+    	
+    	includes: L.version[0]==='1' ? L.Evented.prototype : L.Mixin.Events,
+
+    	options: {
+    		url: '',						//url for search by ajax request, ex: "search.php?q={s}". Can be function to returns string for dynamic parameter setting
+    		layer: null,					//layer where search markers(is a L.LayerGroup)				
+    		sourceData: null,				//function to fill _recordsCache, passed searching text by first param and callback in second				
+    		//TODO implements uniq option 'sourceData' to recognizes source type: url,array,callback or layer				
+    		jsonpParam: null,				//jsonp param name for search by jsonp service, ex: "callback"
+    		propertyLoc: 'loc',				//field for remapping location, using array: ['latname','lonname'] for select double fields(ex. ['lat','lon'] ) support dotted format: 'prop.subprop.title'
+    		propertyName: 'title',			//property in marker.options(or feature.properties for vector layer) trough filter elements in layer,
+    		formatData: null,				//callback for reformat all data from source to indexed data object
+    		filterData: null,				//callback for filtering data from text searched, params: textSearch, allRecords
+    		moveToLocation: null,			//callback run on location found, params: latlng, title, map
+    		buildTip: null,					//function to return row tip html node(or html string), receive text tooltip in first param
+    		container: '',					//container id to insert Search Control		
+    		zoom: null,						//default zoom level for move to location
+    		minLength: 1,					//minimal text length for autocomplete
+    		initial: true,					//search elements only by initial text
+    		casesensitive: false,			//search elements in case sensitive text
+    		autoType: true,					//complete input with first suggested result and select this filled-in text.
+    		delayType: 400,					//delay while typing for show tooltip
+    		tooltipLimit: -1,				//limit max results to show in tooltip. -1 for no limit, 0 for no results
+    		tipAutoSubmit: true,			//auto map panTo when click on tooltip
+    		firstTipSubmit: false,			//auto select first result con enter click
+    		autoResize: true,				//autoresize on input change
+    		collapsed: true,				//collapse search control at startup
+    		autoCollapse: false,			//collapse search control after submit(on button or on tips if enabled tipAutoSubmit)
+    		autoCollapseTime: 1200,			//delay for autoclosing alert and collapse after blur
+    		textErr: 'Location not found',	//error message
+    		textCancel: 'Cancel',		    //title in cancel button		
+    		textPlaceholder: 'Search...',   //placeholder value			
+    		hideMarkerOnCollapse: false,    //remove circle and marker on search control collapsed		
+    		position: 'topleft',		
+    		marker: {						//custom L.Marker or false for hide
+    			icon: false,				//custom L.Icon for maker location or false for hide
+    			animate: true,				//animate a circle over location found
+    			circle: {					//draw a circle in location found
+    				radius: 10,
+    				weight: 3,
+    				color: '#e03',
+    				stroke: true,
+    				fill: false
+    			}
+    		}
+    	},
+
+    	_getPath: function(obj, prop) {
+    		var parts = prop.split('.'),
+    			last = parts.pop(),
+    			len = parts.length,
+    			cur = parts[0],
+    			i = 1;
+
+    		if(len > 0)
+    			while((obj = obj[cur]) && i < len)
+    				cur = parts[i++];
+
+    		if(obj)
+    			return obj[last];
+    	},
+
+    	_isObject: function(obj) {
+    		return Object.prototype.toString.call(obj) === "[object Object]";
+    	},
+
+    	initialize: function(options) {
+    		L.Util.setOptions(this, options || {});
+    		this._inputMinSize = this.options.textPlaceholder ? this.options.textPlaceholder.length : 10;
+    		this._layer = this.options.layer || new L.LayerGroup();
+    		this._filterData = this.options.filterData || this._defaultFilterData;
+    		this._formatData = this.options.formatData || this._defaultFormatData;
+    		this._moveToLocation = this.options.moveToLocation || this._defaultMoveToLocation;
+    		this._autoTypeTmp = this.options.autoType;	//useful for disable autoType temporarily in delete/backspace keydown
+    		this._countertips = 0;		//number of tips items
+    		this._recordsCache = {};	//key,value table! to store locations! format: key,latlng
+    		this._curReq = null;
+    	},
+
+    	onAdd: function (map) {
+    		this._map = map;
+    		this._container = L.DomUtil.create('div', 'leaflet-control-search');
+    		this._input = this._createInput(this.options.textPlaceholder, 'search-input');
+    		this._tooltip = this._createTooltip('search-tooltip');
+    		this._cancel = this._createCancel(this.options.textCancel, 'search-cancel');
+    		this._button = this._createButton(this.options.textPlaceholder, 'search-button');
+    		this._alert = this._createAlert('search-alert');
+
+    		if(this.options.collapsed===false)
+    			this.expand(this.options.collapsed);
+
+    		if(this.options.marker) {
+    			
+    			if(this.options.marker instanceof L.Marker || this.options.marker instanceof L.CircleMarker)
+    				this._markerSearch = this.options.marker;
+
+    			else if(this._isObject(this.options.marker))
+    				this._markerSearch = new L.Control.Search.Marker([0,0], this.options.marker);
+
+    			this._markerSearch._isMarkerSearch = true;
+    		}
+
+    		this.setLayer( this._layer );
+
+    		map.on({
+    			// 		'layeradd': this._onLayerAddRemove,
+    			// 		'layerremove': this._onLayerAddRemove
+    			'resize': this._handleAutoresize
+    			}, this);
+    		return this._container;
+    	},
+    	addTo: function (map) {
+
+    		if(this.options.container) {
+    			this._container = this.onAdd(map);
+    			this._wrapper = L.DomUtil.get(this.options.container);
+    			this._wrapper.style.position = 'relative';
+    			this._wrapper.appendChild(this._container);
+    		}
+    		else
+    			L.Control.prototype.addTo.call(this, map);
+
+    		return this;
+    	},
+
+    	onRemove: function(map) {
+    		this._recordsCache = {};
+    		// map.off({
+    		// 		'layeradd': this._onLayerAddRemove,
+    		// 		'layerremove': this._onLayerAddRemove
+    		// 	}, this);
+    		map.off({
+    			// 		'layeradd': this._onLayerAddRemove,
+    			// 		'layerremove': this._onLayerAddRemove
+    			'resize': this._handleAutoresize
+    			}, this);
+    	},
+
+    	// _onLayerAddRemove: function(e) {
+    	// 	//without this, run setLayer also for each Markers!! to optimize!
+    	// 	if(e.layer instanceof L.LayerGroup)
+    	// 		if( L.stamp(e.layer) != L.stamp(this._layer) )
+    	// 			this.setLayer(e.layer);
+    	// },
+
+    	setLayer: function(layer) {	//set search layer at runtime
+    		//this.options.layer = layer; //setting this, run only this._recordsFromLayer()
+    		this._layer = layer;
+    		this._layer.addTo(this._map);
+    		return this;
+    	},
+    	
+    	showAlert: function(text) {
+    		var self = this;
+    		text = text || this.options.textErr;
+    		this._alert.style.display = 'block';
+    		this._alert.innerHTML = text;
+    		clearTimeout(this.timerAlert);
+    		
+    		this.timerAlert = setTimeout(function() {
+    			self.hideAlert();
+    		},this.options.autoCollapseTime);
+    		return this;
+    	},
+    	
+    	hideAlert: function() {
+    		this._alert.style.display = 'none';
+    		return this;
+    	},
+    		
+    	cancel: function() {
+    		this._input.value = '';
+    		this._handleKeypress({ keyCode: 8 });//simulate backspace keypress
+    		this._input.size = this._inputMinSize;
+    		this._input.focus();
+    		this._cancel.style.display = 'none';
+    		this._hideTooltip();
+    		this.fire('search:cancel');
+    		return this;
+    	},
+    	
+    	expand: function(toggle) {
+    		toggle = typeof toggle === 'boolean' ? toggle : true;
+    		this._input.style.display = 'block';
+    		L.DomUtil.addClass(this._container, 'search-exp');
+    		if ( toggle !== false ) {
+    			this._input.focus();
+    			this._map.on('dragstart click', this.collapse, this);
+    		}
+    		this.fire('search:expanded');
+    		return this;	
+    	},
+
+    	collapse: function() {
+    		this._hideTooltip();
+    		this.cancel();
+    		this._alert.style.display = 'none';
+    		this._input.blur();
+    		if(this.options.collapsed)
+    		{
+    			this._input.style.display = 'none';
+    			this._cancel.style.display = 'none';			
+    			L.DomUtil.removeClass(this._container, 'search-exp');		
+    			if (this.options.hideMarkerOnCollapse) {
+    				this._map.removeLayer(this._markerSearch);
+    			}
+    			this._map.off('dragstart click', this.collapse, this);
+    		}
+    		this.fire('search:collapsed');
+    		return this;
+    	},
+    	
+    	collapseDelayed: function() {	//collapse after delay, used on_input blur
+    		var self = this;
+    		if (!this.options.autoCollapse) return this;
+    		clearTimeout(this.timerCollapse);
+    		this.timerCollapse = setTimeout(function() {
+    			self.collapse();
+    		}, this.options.autoCollapseTime);
+    		return this;		
+    	},
+
+    	collapseDelayedStop: function() {
+    		clearTimeout(this.timerCollapse);
+    		return this;		
+    	},
+
+    	////start DOM creations
+    	_createAlert: function(className) {
+    		var alert = L.DomUtil.create('div', className, this._container);
+    		alert.style.display = 'none';
+
+    		L.DomEvent
+    			.on(alert, 'click', L.DomEvent.stop, this)
+    			.on(alert, 'click', this.hideAlert, this);
+
+    		return alert;
+    	},
+
+    	_createInput: function (text, className) {
+    		var self = this;
+    		var label = L.DomUtil.create('label', className, this._container);
+    		var input = L.DomUtil.create('input', className, this._container);
+    		input.type = 'text';
+    		input.size = this._inputMinSize;
+    		input.value = '';
+    		input.autocomplete = 'off';
+    		input.autocorrect = 'off';
+    		input.autocapitalize = 'off';
+    		input.placeholder = text;
+    		input.style.display = 'none';
+    		input.role = 'search';
+    		input.id = input.role + input.type + input.size;
+    		
+    		label.htmlFor = input.id;
+    		label.style.display = 'none';
+    		label.value = text;
+
+    		L.DomEvent
+    			.disableClickPropagation(input)
+    			.on(input, 'keyup', this._handleKeypress, this)
+    			.on(input, 'paste', function(e) {
+    				setTimeout(function(e) {
+    					self._handleKeypress(e);
+    				},10,e);
+    			}, this)
+    			.on(input, 'blur', this.collapseDelayed, this)
+    			.on(input, 'focus', this.collapseDelayedStop, this);
+    		
+    		return input;
+    	},
+
+    	_createCancel: function (title, className) {
+    		var cancel = L.DomUtil.create('a', className, this._container);
+    		cancel.href = '#';
+    		cancel.title = title;
+    		cancel.style.display = 'none';
+    		cancel.innerHTML = "<span>&otimes;</span>";//imageless(see css)
+
+    		L.DomEvent
+    			.on(cancel, 'click', L.DomEvent.stop, this)
+    			.on(cancel, 'click', this.cancel, this);
+
+    		return cancel;
+    	},
+    	
+    	_createButton: function (title, className) {
+    		var button = L.DomUtil.create('a', className, this._container);
+    		button.href = '#';
+    		button.title = title;
+
+    		L.DomEvent
+    			.on(button, 'click', L.DomEvent.stop, this)
+    			.on(button, 'click', this._handleSubmit, this)			
+    			.on(button, 'focus', this.collapseDelayedStop, this)
+    			.on(button, 'blur', this.collapseDelayed, this);
+
+    		return button;
+    	},
+
+    	_createTooltip: function(className) {
+    		var self = this;		
+    		var tool = L.DomUtil.create('ul', className, this._container);
+    		tool.style.display = 'none';
+    		L.DomEvent
+    			.disableClickPropagation(tool)
+    			.on(tool, 'blur', this.collapseDelayed, this)
+    			.on(tool, 'mousewheel', function(e) {
+    				self.collapseDelayedStop();
+    				L.DomEvent.stopPropagation(e);//disable zoom map
+    			}, this)
+    			.on(tool, 'mouseover', function(e) {
+    				self.collapseDelayedStop();
+    			}, this);
+    		return tool;
+    	},
+
+    	_createTip: function(text, val) {//val is object in recordCache, usually is Latlng
+    		var tip;
+    		
+    		if(this.options.buildTip)
+    		{
+    			tip = this.options.buildTip.call(this, text, val); //custom tip node or html string
+    			if(typeof tip === 'string')
+    			{
+    				var tmpNode = L.DomUtil.create('div');
+    				tmpNode.innerHTML = tip;
+    				tip = tmpNode.firstChild;
+    			}
+    		}
+    		else
+    		{
+    			tip = L.DomUtil.create('li', '');
+    			tip.innerHTML = text;
+    		}
+    		
+    		L.DomUtil.addClass(tip, 'search-tip');
+    		tip._text = text; //value replaced in this._input and used by _autoType
+
+    		if(this.options.tipAutoSubmit)
+    			L.DomEvent
+    				.disableClickPropagation(tip)		
+    				.on(tip, 'click', L.DomEvent.stop, this)
+    				.on(tip, 'click', function(e) {
+    					this._input.value = text;
+    					this._handleAutoresize();
+    					this._input.focus();
+    					this._hideTooltip();	
+    					this._handleSubmit();
+    				}, this);
+
+    		return tip;
+    	},
+
+    	//////end DOM creations
+
+    	_getUrl: function(text) {
+    		return (typeof this.options.url === 'function') ? this.options.url(text) : this.options.url;
+    	},
+
+    	_defaultFilterData: function(text, records) {
+    	
+    		var I, icase, regSearch, frecords = {};
+
+    		text = text.replace(/[.*+?^${}()|[\]\\]/g, '');  //sanitize remove all special characters
+    		if(text==='')
+    			return [];
+
+    		I = this.options.initial ? '^' : '';  //search only initial text
+    		icase = !this.options.casesensitive ? 'i' : undefined;
+
+    		regSearch = new RegExp(I + text, icase);
+
+    		//TODO use .filter or .map
+    		for(var key in records) {
+    			if( regSearch.test(key) )
+    				frecords[key]= records[key];
+    		}
+    		
+    		return frecords;
+    	},
+
+    	showTooltip: function(records) {
+    		
+
+    		this._countertips = 0;
+    		this._tooltip.innerHTML = '';
+    		this._tooltip.currentSelection = -1;  //inizialized for _handleArrowSelect()
+
+    		if(this.options.tooltipLimit)
+    		{
+    			for(var key in records)//fill tooltip
+    			{
+    				if(this._countertips === this.options.tooltipLimit)
+    					break;
+    				
+    				this._countertips++;
+
+    				this._tooltip.appendChild( this._createTip(key, records[key]) );
+    			}
+    		}
+    		
+    		if(this._countertips > 0)
+    		{
+    			this._tooltip.style.display = 'block';
+    			
+    			if(this._autoTypeTmp)
+    				this._autoType();
+
+    			this._autoTypeTmp = this.options.autoType;//reset default value
+    		}
+    		else
+    			this._hideTooltip();
+
+    		this._tooltip.scrollTop = 0;
+
+    		return this._countertips;
+    	},
+
+    	_hideTooltip: function() {
+    		this._tooltip.style.display = 'none';
+    		this._tooltip.innerHTML = '';
+    		return 0;
+    	},
+
+    	_defaultFormatData: function(json) {	//default callback for format data to indexed data
+    		var self = this,
+    			propName = this.options.propertyName,
+    			propLoc = this.options.propertyLoc,
+    			i, jsonret = {};
+
+    		if( L.Util.isArray(propLoc) )
+    			for(i in json)
+    				jsonret[ self._getPath(json[i],propName) ]= L.latLng( json[i][ propLoc[0] ], json[i][ propLoc[1] ] );
+    		else
+    			for(i in json)
+    				jsonret[ self._getPath(json[i],propName) ]= L.latLng( self._getPath(json[i],propLoc) );
+    		//TODO throw new Error("propertyName '"+propName+"' not found in JSON data");
+    		return jsonret;
+    	},
+
+    	_recordsFromJsonp: function(text, callAfter) {  //extract searched records from remote jsonp service
+    		L.Control.Search.callJsonp = callAfter;
+    		var script = L.DomUtil.create('script','leaflet-search-jsonp', document.getElementsByTagName('body')[0] ),			
+    			url = L.Util.template(this._getUrl(text)+'&'+this.options.jsonpParam+'=L.Control.Search.callJsonp', {s: text}); //parsing url
+    			//rnd = '&_='+Math.floor(Math.random()*10000);
+    			//TODO add rnd param or randomize callback name! in recordsFromJsonp
+    		script.type = 'text/javascript';
+    		script.src = url;
+    		return { abort: function() { script.parentNode.removeChild(script); } };
+    	},
+
+    	_recordsFromAjax: function(text, callAfter) {	//Ajax request
+    		if (window.XMLHttpRequest === undefined) {
+    			window.XMLHttpRequest = function() {
+    				try { return new ActiveXObject("Microsoft.XMLHTTP.6.0"); }
+    				catch  (e1) {
+    					try { return new ActiveXObject("Microsoft.XMLHTTP.3.0"); }
+    					catch (e2) { throw new Error("XMLHttpRequest is not supported"); }
+    				}
+    			};
+    		}
+    		var IE8or9 = ( L.Browser.ie && !window.atob && document.querySelector ),
+    			request = IE8or9 ? new XDomainRequest() : new XMLHttpRequest(),
+    			url = L.Util.template(this._getUrl(text), {s: text});
+
+    		//rnd = '&_='+Math.floor(Math.random()*10000);
+    		//TODO add rnd param or randomize callback name! in recordsFromAjax			
+    		
+    		request.open("GET", url);
+    		
+
+    		request.onload = function() {
+    			callAfter( JSON.parse(request.responseText) );
+    		};
+    		request.onreadystatechange = function() {
+    		    if(request.readyState === 4 && request.status === 200) {
+    		    	this.onload();
+    		    }
+    		};
+
+    		request.send();
+    		return request;   
+    	},
+
+      _searchInLayer: function(layer, retRecords, propName) {
+        var self = this, loc;
+
+        if(layer instanceof L.Control.Search.Marker) return;
+
+        if(layer instanceof L.Marker || layer instanceof L.CircleMarker)
+        {
+          if(self._getPath(layer.options,propName))
+          {
+            loc = layer.getLatLng();
+            loc.layer = layer;
+            retRecords[ self._getPath(layer.options,propName) ] = loc;
+          }
+          else if(self._getPath(layer.feature.properties,propName))
+          {
+            loc = layer.getLatLng();
+            loc.layer = layer;
+            retRecords[ self._getPath(layer.feature.properties,propName) ] = loc;
+          }
+          else {
+            //throw new Error("propertyName '"+propName+"' not found in marker"); 
+            console.warn("propertyName '"+propName+"' not found in marker"); 
+          }
+        }
+        else if(layer instanceof L.Path || layer instanceof L.Polyline || layer instanceof L.Polygon)
+        {
+          if(self._getPath(layer.options,propName))
+          {
+            loc = layer.getBounds().getCenter();
+            loc.layer = layer;
+            retRecords[ self._getPath(layer.options,propName) ] = loc;
+          }
+          else if(self._getPath(layer.feature.properties,propName))
+          {
+            loc = layer.getBounds().getCenter();
+            loc.layer = layer;
+            retRecords[ self._getPath(layer.feature.properties,propName) ] = loc;
+          }
+          else {
+            //throw new Error("propertyName '"+propName+"' not found in shape"); 
+            console.warn("propertyName '"+propName+"' not found in shape"); 
+          }
+        }
+        else if(layer.hasOwnProperty('feature'))//GeoJSON
+        {
+          if(layer.feature.properties.hasOwnProperty(propName))
+          {
+            if(layer.getLatLng && typeof layer.getLatLng === 'function') {
+              loc = layer.getLatLng();
+              loc.layer = layer;			
+              retRecords[ layer.feature.properties[propName] ] = loc;
+            } else if(layer.getBounds && typeof layer.getBounds === 'function') {
+              loc = layer.getBounds().getCenter();
+              loc.layer = layer;			
+              retRecords[ layer.feature.properties[propName] ] = loc;
+            } else {
+              console.warn("Unknown type of Layer");
+            }
+          }
+          else {
+            //throw new Error("propertyName '"+propName+"' not found in feature");
+            console.warn("propertyName '"+propName+"' not found in feature"); 
+          }
+        }
+        else if(layer instanceof L.LayerGroup)
+        {
+          layer.eachLayer(function (layer) {
+            self._searchInLayer(layer, retRecords, propName);
+          });
+        }
+      },
+    	
+    	_recordsFromLayer: function() {	//return table: key,value from layer
+    		var self = this,
+    			retRecords = {},
+    			propName = this.options.propertyName;
+    		
+    		this._layer.eachLayer(function (layer) {
+    			self._searchInLayer(layer, retRecords, propName);
+    		});
+    		
+    		return retRecords;
+    	},
+    	
+    	_autoType: function() {
+    		
+    		//TODO implements autype without selection(useful for mobile device)
+    		
+    		var start = this._input.value.length,
+    			firstRecord = this._tooltip.firstChild ? this._tooltip.firstChild._text : '',
+    			end = firstRecord.length;
+
+    		if (firstRecord.indexOf(this._input.value) === 0) { // If prefix match
+    			this._input.value = firstRecord;
+    			this._handleAutoresize();
+
+    			if (this._input.createTextRange) {
+    				var selRange = this._input.createTextRange();
+    				selRange.collapse(true);
+    				selRange.moveStart('character', start);
+    				selRange.moveEnd('character', end);
+    				selRange.select();
+    			}
+    			else if(this._input.setSelectionRange) {
+    				this._input.setSelectionRange(start, end);
+    			}
+    			else if(this._input.selectionStart) {
+    				this._input.selectionStart = start;
+    				this._input.selectionEnd = end;
+    			}
+    		}
+    	},
+
+    	_hideAutoType: function() {	// deselect text:
+
+    		var sel;
+    		if ((sel = this._input.selection) && sel.empty) {
+    			sel.empty();
+    		}
+    		else if (this._input.createTextRange) {
+    			sel = this._input.createTextRange();
+    			sel.collapse(true);
+    			var end = this._input.value.length;
+    			sel.moveStart('character', end);
+    			sel.moveEnd('character', end);
+    			sel.select();
+    		}
+    		else {
+    			if (this._input.getSelection) {
+    				this._input.getSelection().removeAllRanges();
+    			}
+    			this._input.selectionStart = this._input.selectionEnd;
+    		}
+    	},
+    	
+    	_handleKeypress: function (e) {	//run _input keyup event
+    		var self = this;
+
+    		switch(e.keyCode)
+    		{
+    			case 27://Esc
+    				this.collapse();
+    			break;
+    			case 13://Enter
+    				if(this._countertips == 1 || (this.options.firstTipSubmit && this._countertips > 0)) {
+              			if(this._tooltip.currentSelection == -1) {
+    						this._handleArrowSelect(1);
+              			}
+    				}
+    				this._handleSubmit();	//do search
+    			break;
+    			case 38://Up
+    				this._handleArrowSelect(-1);
+    			break;
+    			case 40://Down
+    				this._handleArrowSelect(1);
+    			break;
+    			case  8://Backspace
+    			case 45://Insert
+    			case 46://Delete
+    				this._autoTypeTmp = false;//disable temporarily autoType
+    			break;
+    			case 37://Left
+    			case 39://Right
+    			case 16://Shift
+    			case 17://Ctrl
+    			case 35://End
+    			case 36://Home
+    			break;
+    			default://All keys
+    				if(this._input.value.length)
+    					this._cancel.style.display = 'block';
+    				else
+    					this._cancel.style.display = 'none';
+
+    				if(this._input.value.length >= this.options.minLength)
+    				{
+    					clearTimeout(this.timerKeypress);	//cancel last search request while type in				
+    					this.timerKeypress = setTimeout(function() {	//delay before request, for limit jsonp/ajax request
+
+    						self._fillRecordsCache();
+    					
+    					}, this.options.delayType);
+    				}
+    				else
+    					this._hideTooltip();
+    		}
+
+    		this._handleAutoresize();
+    	},
+
+    	searchText: function(text) {
+    		var code = text.charCodeAt(text.length);
+
+    		this._input.value = text;
+
+    		this._input.style.display = 'block';
+    		L.DomUtil.addClass(this._container, 'search-exp');
+
+    		this._autoTypeTmp = false;
+
+    		this._handleKeypress({keyCode: code});
+    	},
+    	
+    	_fillRecordsCache: function() {
+
+    		var self = this,
+    			inputText = this._input.value, records;
+
+    		if(this._curReq && this._curReq.abort)
+    			this._curReq.abort();
+    		//abort previous requests
+
+    		L.DomUtil.addClass(this._container, 'search-load');	
+
+    		if(this.options.layer)
+    		{
+    			//TODO _recordsFromLayer must return array of objects, formatted from _formatData
+    			this._recordsCache = this._recordsFromLayer();
+    			
+    			records = this._filterData( this._input.value, this._recordsCache );
+
+    			this.showTooltip( records );
+
+    			L.DomUtil.removeClass(this._container, 'search-load');
+    		}
+    		else
+    		{
+    			if(this.options.sourceData)
+    				this._retrieveData = this.options.sourceData;
+
+    			else if(this.options.url)	//jsonp or ajax
+    				this._retrieveData = this.options.jsonpParam ? this._recordsFromJsonp : this._recordsFromAjax;
+
+    			this._curReq = this._retrieveData.call(this, inputText, function(data) {
+    				
+    				self._recordsCache = self._formatData.call(self, data);
+
+    				//TODO refact!
+    				if(self.options.sourceData)
+    					records = self._filterData( self._input.value, self._recordsCache );
+    				else
+    					records = self._recordsCache;
+
+    				self.showTooltip( records );
+     
+    				L.DomUtil.removeClass(self._container, 'search-load');
+    			});
+    		}
+    	},
+    	
+    	_handleAutoresize: function() {
+    	    var maxWidth;
+
+    		if (this._input.style.maxWidth !== this._map._container.offsetWidth) {
+    			maxWidth = this._map._container.clientWidth;
+
+    			// other side margin + padding + width border + width search-button + width search-cancel
+    			maxWidth -= 10 + 20 + 1 + 30 + 22; 
+
+    			this._input.style.maxWidth = maxWidth.toString() + 'px';
+    		}
+
+    		if (this.options.autoResize && (this._container.offsetWidth + 20 < this._map._container.offsetWidth)) {
+    			this._input.size = this._input.value.length < this._inputMinSize ? this._inputMinSize : this._input.value.length;
+    		}
+    	},
+
+    	_handleArrowSelect: function(velocity) {
+    	
+    		var searchTips = this._tooltip.hasChildNodes() ? this._tooltip.childNodes : [];
+    			
+    		for (i=0; i<searchTips.length; i++)
+    			L.DomUtil.removeClass(searchTips[i], 'search-tip-select');
+    		
+    		if ((velocity == 1 ) && (this._tooltip.currentSelection >= (searchTips.length - 1))) {// If at end of list.
+    			L.DomUtil.addClass(searchTips[this._tooltip.currentSelection], 'search-tip-select');
+    		}
+    		else if ((velocity == -1 ) && (this._tooltip.currentSelection <= 0)) { // Going back up to the search box.
+    			this._tooltip.currentSelection = -1;
+    		}
+    		else if (this._tooltip.style.display != 'none') {
+    			this._tooltip.currentSelection += velocity;
+    			
+    			L.DomUtil.addClass(searchTips[this._tooltip.currentSelection], 'search-tip-select');
+    			
+    			this._input.value = searchTips[this._tooltip.currentSelection]._text;
+
+    			// scroll:
+    			var tipOffsetTop = searchTips[this._tooltip.currentSelection].offsetTop;
+    			
+    			if (tipOffsetTop + searchTips[this._tooltip.currentSelection].clientHeight >= this._tooltip.scrollTop + this._tooltip.clientHeight) {
+    				this._tooltip.scrollTop = tipOffsetTop - this._tooltip.clientHeight + searchTips[this._tooltip.currentSelection].clientHeight;
+    			}
+    			else if (tipOffsetTop <= this._tooltip.scrollTop) {
+    				this._tooltip.scrollTop = tipOffsetTop;
+    			}
+    		}
+    	},
+
+    	_handleSubmit: function() {	//button and tooltip click and enter submit
+
+    		this._hideAutoType();
+    		
+    		this.hideAlert();
+    		this._hideTooltip();
+
+    		if(this._input.style.display == 'none')	//on first click show _input only
+    			this.expand();
+    		else
+    		{
+    			if(this._input.value === '')	//hide _input only
+    				this.collapse();
+    			else
+    			{
+    				var loc = this._getLocation(this._input.value);
+    				
+    				if(loc===false)
+    					this.showAlert();
+    				else
+    				{
+    					this.showLocation(loc, this._input.value);
+    					this.fire('search:locationfound', {
+    							latlng: loc,
+    							text: this._input.value,
+    							layer: loc.layer ? loc.layer : null
+    						});
+    				}
+    			}
+    		}
+    	},
+
+    	_getLocation: function(key) {	//extract latlng from _recordsCache
+
+    		if( this._recordsCache.hasOwnProperty(key) )
+    			return this._recordsCache[key];//then after use .loc attribute
+    		else
+    			return false;
+    	},
+
+    	_defaultMoveToLocation: function(latlng, title, map) {
+    		if(this.options.zoom)
+     			this._map.setView(latlng, this.options.zoom);
+     		else
+    			this._map.panTo(latlng);
+    	},
+
+    	showLocation: function(latlng, title) {	//set location on map from _recordsCache
+    		var self = this;
+
+    		self._map.once('moveend zoomend', function(e) {
+
+    			if(self._markerSearch) {
+    				self._markerSearch.addTo(self._map).setLatLng(latlng);
+    			}
+    			
+    		});
+
+    		self._moveToLocation(latlng, title, self._map);
+    		//FIXME autoCollapse option hide self._markerSearch before visualized!!
+    		if(self.options.autoCollapse)
+    			self.collapse();
+
+    		return self;
+    	}
+    });
+
+    L.Control.Search.Marker = L.Marker.extend({
+
+    	includes: L.version[0]==='1' ? L.Evented.prototype : L.Mixin.Events,
+    	
+    	options: {
+    		icon: new L.Icon.Default(),
+    		animate: true,
+    		circle: {
+    			radius: 10,
+    			weight: 3,
+    			color: '#e03',
+    			stroke: true,
+    			fill: false
+    		}
+    	},
+    	
+    	initialize: function (latlng, options) {
+    		L.setOptions(this, options);
+
+    		if(options.icon === true)
+    			options.icon = new L.Icon.Default();
+
+    		L.Marker.prototype.initialize.call(this, latlng, options);
+    		
+    		if( L.Control.Search.prototype._isObject(this.options.circle) )
+    			this._circleLoc = new L.CircleMarker(latlng, this.options.circle);
+    	},
+
+    	onAdd: function (map) {
+    		L.Marker.prototype.onAdd.call(this, map);
+    		if(this._circleLoc) {
+    			map.addLayer(this._circleLoc);
+    			if(this.options.animate)
+    				this.animate();
+    		}
+    	},
+
+    	onRemove: function (map) {
+    		L.Marker.prototype.onRemove.call(this, map);
+    		if(this._circleLoc)
+    			map.removeLayer(this._circleLoc);
+    	},
+    	
+    	setLatLng: function (latlng) {
+    		L.Marker.prototype.setLatLng.call(this, latlng);
+    		if(this._circleLoc)
+    			this._circleLoc.setLatLng(latlng);
+    		return this;
+    	},
+    	
+    	_initIcon: function () {
+    		if(this.options.icon)
+    			L.Marker.prototype._initIcon.call(this);
+    	},
+
+    	_removeIcon: function () {
+    		if(this.options.icon)
+    			L.Marker.prototype._removeIcon.call(this);
+    	},
+
+    	animate: function() {
+    	//TODO refact animate() more smooth! like this: http://goo.gl/DDlRs
+    		if(this._circleLoc)
+    		{
+    			var circle = this._circleLoc,
+    				tInt = 200,	//time interval
+    				ss = 5,	//frames
+    				mr = parseInt(circle._radius/ss),
+    				oldrad = this.options.circle.radius,
+    				newrad = circle._radius * 2,
+    				acc = 0;
+
+    			circle._timerAnimLoc = setInterval(function() {
+    				acc += 0.5;
+    				mr += acc;	//adding acceleration
+    				newrad -= mr;
+    				
+    				circle.setRadius(newrad);
+
+    				if(newrad<oldrad)
+    				{
+    					clearInterval(circle._timerAnimLoc);
+    					circle.setRadius(oldrad);//reset radius
+    					//if(typeof afterAnimCall == 'function')
+    						//afterAnimCall();
+    						//TODO use create event 'animateEnd' in L.Control.Search.Marker 
+    				}
+    			}, tInt);
+    		}
+    		
+    		return this;
+    	}
+    });
+
+    L.Map.addInitHook(function () {
+        if (this.options.searchControl) {
+            this.searchControl = L.control.search(this.options.searchControl);
+            this.addControl(this.searchControl);
+        }
+    });
+
+    L.control.search = function (options) {
+        return new L.Control.Search(options);
+    };
+
+    return L.Control.Search;
+
+    });
 
     (function() {
 
@@ -1841,16 +3218,39 @@
             fillOpacity: 0,
           },
           mapOptions: {
-            gestureHandling: false,
             mapTypeId: 'satellite',
+            gestureHandling: false,
+            searchControl: false,
+            loadingControl: false,
             _isMiniMap: true,
           }
+        },
+        editInOSMControl: {
+          position: "bottomright"
+        },
+        loadingControl: {
+          separate: true,
+          position: 'bottomright'
+        },
+        searchControl: {
+          url: 'https://nominatim.openstreetmap.org/search?format=json&accept-language={querylang}&q={s}',
+          querylang: 'en-US',
+          jsonpParam: 'json_callback',
+          propertyName: 'display_name',
+          propertyLoc: ['lat', 'lon'],
+          markerLocation: true,
+          autoType: false,
+          autoCollapse: true,
+          firstTipSubmit: true,
+          minLength: 1,
+          zoom: 10,
+          position: "topright",
         },
         disableDefaultUI: false,
         _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
       };
 
-      // See default options for a complete list of allowed values.
+      // See "default_options" for a complete list of allowed values.
       L.Map.mergeOptions({
         mapTypeId: 'streets',
         mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
@@ -1862,10 +3262,14 @@
         fullscreenControl: true,
         layersControl: true,
         minimapControl: true,
+        editInOSMControl: true,
+        loadingControl: true,
+        searchControl: true,
         disableDefaultUI: false,
         _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
       });
 
+      // Customize leaflet Map default aspect.
       L.Map.addInitHook(function() {
         disableDefaultUI.call(this);
         if (this.options._isMiniMap) return; // prevent infinite loops when loading the minimap control.
@@ -1879,9 +3283,11 @@
       function disableDefaultUI() {
         if (this.zoomControl) this.zoomControl.remove();
         if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+        if (this.searchControl && this.options.searchControl) this.searchControl.remove();
         if (this.attributionControl) this.attributionControl.remove();
       }
 
+      // Deep merge "default_options" and do some sanity check.
       function setDeafultOptions() {
         // Recursive merge leaflet map options.
         for (var i in default_options) {
@@ -1902,9 +3308,13 @@
         if (this.options.mapTypeIds.includes(this.options.mapTypeId) === false && this.options.mapTypeIds.length > 0) {
           this.options.mapTypeId = this.options.mapTypeIds[0];
         }
-
+        // Fix default mapTypeId if missing in mapTypeIds array.
+        if (this.options.searchControl && this.options.searchControl.querylang) {
+          this.options.searchControl.url = this.options.searchControl.url.replace('{querylang}', this.options.searchControl.querylang);
+        }
       }
 
+      // Initialize default leaflet map controls and layers.
       function initMap() {
         var controls = {},
           layers = {},
@@ -1936,6 +3346,11 @@
           this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
         }
 
+        // Edit in OSM link.
+        if (this.options.editInOSMControl) {
+          controls.editInOSM = new L.Control.EditInOSM(this.options.editInOSMControl);
+        }
+
         // Zoom Control.
         if (this.options.zoomControl && this.zoomControl) {
           this.zoomControl.setPosition(this.options.zoomControl.position);
@@ -1953,9 +3368,19 @@
           controls.locate = new L.Control.Locate(this.options.locateControl);
         }
 
+        // Loading Control.
+        if (this.options.loadingControl) {
+          controls.loading = new L.Control.Loading(this.options.loadingControl);
+        }
+
         // Fullscreen Control.
         if (this.options.fullscreenControl) {
           controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
+        }
+
+        // Search Control.
+        if (this.options.searchControl) {
+          controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
         }
 
         // Minimap Control.
@@ -2093,6 +3518,38 @@
           }
         },
       });
+
+      // Custom open in OSM Edit link.
+      L.Control.EditInOSM = L.Control.extend({
+        options: {
+          editor: false, // eg: "id", "potlatch2" or "remote"
+        },
+        _edit: function() {
+          var center = this._map.getCenter();
+          var z = this._map.getZoom();
+          var editor = this.options.editor ? '&editor=' + this.options.editor : '';
+          window.open('http://www.openstreetmap.org/edit?' + 'zoom=' + z + editor + '&lat=' + center.lat + '&lon=' + center.lng);
+        },
+        onAdd: function(map) {
+          var container = L.DomUtil.create('div', 'leaflet-control-attribution leaflet-edit-osm'),
+            // bar = L.DomUtil.create('div', 'leaflet-bar', container),
+            link = L.DomUtil.create('a', '', container);
+
+          link.href = '#';
+          link.innerHTML = '✎ Edit';
+          link.title = 'Edit in OpenStreetMap';
+
+          L.DomEvent
+            .on(link, 'click', L.DomEvent.stopPropagation)
+            .on(link, 'mousedown', L.DomEvent.stopPropagation)
+            .on(link, 'dblclick', L.DomEvent.stopPropagation)
+            .on(link, 'click', L.DomEvent.preventDefault)
+            .on(link, 'click', L.bind(this._edit, this), this);
+
+          return container;
+        }
+      });
+
 
       // Check if an array contains any element from another one.
       function inArray(array, items) {

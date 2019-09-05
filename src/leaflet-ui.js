@@ -4,6 +4,9 @@ import 'leaflet-pegman';
 import '@raruto/leaflet-gesture-handling';
 import 'leaflet-control-layers-inline';
 import 'leaflet-minimap';
+import 'leaflet-loading';
+import 'leaflet-search';
+
 
 (function() {
 
@@ -83,10 +86,33 @@ import 'leaflet-minimap';
         fillOpacity: 0,
       },
       mapOptions: {
-        gestureHandling: false,
         mapTypeId: 'satellite',
+        gestureHandling: false,
+        searchControl: false,
+        loadingControl: false,
         _isMiniMap: true,
       }
+    },
+    editInOSMControl: {
+      position: "bottomright"
+    },
+    loadingControl: {
+      separate: true,
+      position: 'bottomright'
+    },
+    searchControl: {
+      url: 'https://nominatim.openstreetmap.org/search?format=json&accept-language={querylang}&q={s}',
+      querylang: 'en-US',
+      jsonpParam: 'json_callback',
+      propertyName: 'display_name',
+      propertyLoc: ['lat', 'lon'],
+      markerLocation: true,
+      autoType: false,
+      autoCollapse: true,
+      firstTipSubmit: true,
+      minLength: 1,
+      zoom: 10,
+      position: "topright",
     },
     disableDefaultUI: false,
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
@@ -104,6 +130,9 @@ import 'leaflet-minimap';
     fullscreenControl: true,
     layersControl: true,
     minimapControl: true,
+    editInOSMControl: true,
+    loadingControl: true,
+    searchControl: true,
     disableDefaultUI: false,
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   });
@@ -122,6 +151,7 @@ import 'leaflet-minimap';
   function disableDefaultUI() {
     if (this.zoomControl) this.zoomControl.remove();
     if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+    if (this.searchControl && this.options.searchControl) this.searchControl.remove();
     if (this.attributionControl) this.attributionControl.remove();
   }
 
@@ -145,6 +175,10 @@ import 'leaflet-minimap';
     // Fix default mapTypeId if missing in mapTypeIds array.
     if (this.options.mapTypeIds.includes(this.options.mapTypeId) === false && this.options.mapTypeIds.length > 0) {
       this.options.mapTypeId = this.options.mapTypeIds[0];
+    }
+    // Fix default mapTypeId if missing in mapTypeIds array.
+    if (this.options.searchControl && this.options.searchControl.querylang) {
+      this.options.searchControl.url = this.options.searchControl.url.replace('{querylang}', this.options.searchControl.querylang);
     }
   }
 
@@ -180,6 +214,11 @@ import 'leaflet-minimap';
       this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
     }
 
+    // Edit in OSM link.
+    if (this.options.editInOSMControl) {
+      controls.editInOSM = new L.Control.EditInOSM(this.options.editInOSMControl);
+    }
+
     // Zoom Control.
     if (this.options.zoomControl && this.zoomControl) {
       this.zoomControl.setPosition(this.options.zoomControl.position);
@@ -197,9 +236,19 @@ import 'leaflet-minimap';
       controls.locate = new L.Control.Locate(this.options.locateControl);
     }
 
+    // Loading Control.
+    if (this.options.loadingControl) {
+      controls.loading = new L.Control.Loading(this.options.loadingControl);
+    }
+
     // Fullscreen Control.
     if (this.options.fullscreenControl) {
       controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
+    }
+
+    // Search Control.
+    if (this.options.searchControl) {
+      controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
     }
 
     // Minimap Control.
@@ -337,6 +386,38 @@ import 'leaflet-minimap';
       }
     },
   });
+
+  // Custom open in OSM Edit link.
+  L.Control.EditInOSM = L.Control.extend({
+    options: {
+      editor: false, // eg: "id", "potlatch2" or "remote"
+    },
+    _edit: function() {
+      var center = this._map.getCenter();
+      var z = this._map.getZoom();
+      var editor = this.options.editor ? '&editor=' + this.options.editor : '';
+      window.open('http://www.openstreetmap.org/edit?' + 'zoom=' + z + editor + '&lat=' + center.lat + '&lon=' + center.lng);
+    },
+    onAdd: function(map) {
+      var container = L.DomUtil.create('div', 'leaflet-control-attribution leaflet-edit-osm'),
+        // bar = L.DomUtil.create('div', 'leaflet-bar', container),
+        link = L.DomUtil.create('a', '', container);
+
+      link.href = '#';
+      link.innerHTML = '✎ Edit';
+      link.title = 'Edit in OpenStreetMap';
+
+      L.DomEvent
+        .on(link, 'click', L.DomEvent.stopPropagation)
+        .on(link, 'mousedown', L.DomEvent.stopPropagation)
+        .on(link, 'dblclick', L.DomEvent.stopPropagation)
+        .on(link, 'click', L.DomEvent.preventDefault)
+        .on(link, 'click', L.bind(this._edit, this), this);
+
+      return container;
+    }
+  });
+
 
   // Check if an array contains any element from another one.
   function inArray(array, items) {
