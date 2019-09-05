@@ -44,6 +44,7 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/l
         locateControl: true,
         fullscreenControl: true,
         layersControl: true,
+        minimapControl: true,
         disableDefaultUI: false,
       });
       map.once('idle',function(){ /* Waiting for map init */});
