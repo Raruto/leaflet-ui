@@ -400,7 +400,6 @@ import 'leaflet-search';
     },
     onAdd: function(map) {
       var container = L.DomUtil.create('div', 'leaflet-control-attribution leaflet-edit-osm'),
-        // bar = L.DomUtil.create('div', 'leaflet-bar', container),
         link = L.DomUtil.create('a', '', container);
 
       link.href = '#';
