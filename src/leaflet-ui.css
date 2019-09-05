@@ -3,6 +3,7 @@
 @import url("../node_modules/leaflet.fullscreen/Control.FullScreen.css");
 @import url("../node_modules/@raruto/leaflet-gesture-handling/dist/leaflet-gesture-handling.css");
 @import url("../node_modules/leaflet-control-layers-inline/leaflet-control-layers-inline.css");
+@import url("../node_modules/leaflet-minimap/dist/Control.MiniMap.min.css");
 
 .leaflet-pegman {
   box-sizing: content-box;
@@ -39,10 +40,6 @@
   margin: 10px 5.5px;
 }
 
-.post-content .leaflet-control a:hover {
-  background: #FFF;
-}
-
 .leaflet-control.opacity-control {
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 2.5px;
@@ -51,4 +48,12 @@
 
 .leaflet-control.opacity-control:hover {
   background-color: rgba(255, 255, 255, 0.85);
+}
+
+.leaflet-control-minimap.leaflet-control {
+  cursor: pointer;
+}
+
+.leaflet-control-layers-inline .leaflet-control-layers-base span {
+  line-height: 1;
 }

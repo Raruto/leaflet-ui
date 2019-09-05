@@ -1,169 +1,372 @@
-import * as gapi from 'google-maps'; // async
-
-import 'leaflet.gridlayer.googlemutant';
 import 'leaflet.locatecontrol';
 import 'leaflet.fullscreen';
 import 'leaflet-pegman';
 import '@raruto/leaflet-gesture-handling';
 import 'leaflet-control-layers-inline';
-
-// import './leaflet-ui.css';
-
-var G = Object.keys(gapi).length ? gapi : GoogleMapsLoader;
+import 'leaflet-minimap';
 
 (function() {
 
+  // You can ovveride them by passing one of the following to leaflet map constructor.
+  var default_options = {
+    mapTypes: {
+      streets: {
+        name: 'Streets',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: {
+          maxZoom: 19,
+          attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      },
+      terrain: {
+        name: 'Terrain',
+        url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
+        options: {
+          maxZoom: 22,
+          attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
+          // apikey: '<your apikey>',
+        },
+      },
+      satellite: {
+        name: 'Satellite',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          maxZoom: 18,
+          attribution: 'Map data: &copy; <a href="http://www.esri.com/">Esri</a> &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        },
+      },
+      topo: {
+        name: 'Topo',
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        options: {
+          maxZoom: 17,
+          attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+        },
+      },
+    },
+    zoomControl: {
+      position: 'bottomright'
+    },
+    pegmanControl: {
+      position: 'bottomright',
+      theme: "leaflet-pegman-v3-small",
+    },
+    locateControl: {
+      position: "bottomright"
+    },
+    fullscreenControl: {
+      position: 'topright',
+      title: 'Enter Fullscreen',
+      titleCancel: 'Exit Fullscreen',
+      forceSeparateButton: true,
+    },
+    layersControl: {
+      inline: true,
+      position: 'topleft'
+    },
+    minimapControl: {
+      position: 'bottomleft',
+      toggleDisplay: false,
+      toggleMapTypes: true, // Automatically switch between "satellite" and "roads" layers.
+      width: 75,
+      height: 75,
+      aimingRectOptions: {
+        color: '#000000',
+        weight: 1,
+        opacity: 0,
+        fillOpacity: 0,
+      },
+      shadowRectOptions: {
+        color: '#000000',
+        weight: 1,
+        opacity: 0,
+        fillOpacity: 0,
+      },
+      mapOptions: {
+        gestureHandling: false,
+        mapTypeId: 'satellite',
+        _isMiniMap: true,
+      }
+    },
+    disableDefaultUI: false,
+    _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
+  };
+
+  // See "default_options" for a complete list of allowed values.
   L.Map.mergeOptions({
-    mapTypeId: 'topo',
-    mapTypeIds: ['osm', 'terrain', 'satellite', 'topo'],
+    mapTypeId: 'streets',
+    mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
+    mapTypes: undefined,
     gestureHandling: true,
     zoomControl: true,
     pegmanControl: true,
     locateControl: true,
     fullscreenControl: true,
     layersControl: true,
+    minimapControl: true,
     disableDefaultUI: false,
+    _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   });
 
+  // Customize leaflet Map default aspect.
   L.Map.addInitHook(function() {
-    if (!!this.options.disableDefaultUI) {
-      this.zoomControl.remove();
-      this.attributionControl.remove();
-    } else {
-      this.zoomControl.remove();
-      this.attributionControl.remove();
-      if (!window.google && isGMap.call(this)) G.load(initMap.bind(this));
-      else initMap.call(this);
+    disableDefaultUI.call(this);
+    if (this.options._isMiniMap) return; // prevent infinite loops when loading the minimap control.
+    if (!this.options.disableDefaultUI) {
+      setDeafultOptions.call(this);
+      initMap.call(this);
     }
   });
 
-  function isGMap() {
-    return inArray(this.options.mapTypeIds.concat(this.options.mapTypeId), ['terrain', 'satellite']);
+  // Disable leaflet map default controls.
+  function disableDefaultUI() {
+    if (this.zoomControl) this.zoomControl.remove();
+    if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+    if (this.attributionControl) this.attributionControl.remove();
   }
 
+  // Deep merge "default_options" and do some sanity check.
+  function setDeafultOptions() {
+    // Recursive merge leaflet map options.
+    for (var i in default_options) {
+      if (this.options[i] === true || typeof this.options[i] === "undefined") {
+        this.options[i] = default_options[i];
+      } else if (typeof this.options[i] === "object" && this.options[i] instanceof Array === false) {
+        this.options[i] = deepMerge(default_options[i], this.options[i]);
+      }
+    }
+    // Append Thunderforest Api Key.
+    if (this.options.mapTypes.terrain.options.apikey) {
+      var url = this.options.mapTypes.terrain.url;
+      if (url.indexOf('apikey=') === -1) {
+        this.options.mapTypes.terrain.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
+      }
+    }
+    // Fix default mapTypeId if missing in mapTypeIds array.
+    if (this.options.mapTypeIds.includes(this.options.mapTypeId) === false && this.options.mapTypeIds.length > 0) {
+      this.options.mapTypeId = this.options.mapTypeIds[0];
+    }
+  }
+
+  // Initialize default leaflet map controls and layers.
   function initMap() {
     var controls = {},
       layers = {},
       baseMaps = {};
 
+    // Gesture Handling.
     if (this.options.gestureHandling) {
       this.gestureHandling.enable();
     }
 
-    if (this.options.layersControl) {
-
-      if (this.options.mapTypeIds.includes('osm')) {
-        baseMaps.OSM = layers.osm = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        });
+    // Load all user selected layers.
+    for (var i in this.options.mapTypeIds) {
+      var id = this.options.mapTypeIds[i];
+      if (this.options.mapTypes[id]) {
+        baseMaps[this.options.mapTypes[id].name] = layers[id] = new L.TileLayer(this.options.mapTypes[id].url, this.options.mapTypes[id].options);
+        layers[id].mapTypeId = id; // save mapTypeId for easy access.
       }
-
-      if (isGMap.call(this)) {
-
-        if (this.options.mapTypeIds.includes('terrain')) {
-          baseMaps.Terrain = layers.terrain = new L.GridLayer.GoogleMutant({
-            type: 'terrain',
-            maxZoom: 24,
-          });
-        }
-
-        if (this.options.mapTypeIds.includes('satellite')) {
-          baseMaps.Satellite = layers.satellite = new L.GridLayer.GoogleMutant({
-            type: 'satellite',
-            maxZoom: 24,
-          });
-        }
-
-      }
-
-      if (this.options.mapTypeIds.includes('topo')) {
-        baseMaps.Topo = layers.topo = new L.TileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-          maxZoom: 17,
-          attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
-        });
-      }
-
-      controls.baseLayers = new L.Control.Layers(baseMaps, null, {
-        inline: true,
-        position: 'topleft'
-      });
-
     }
 
-    if (this.options.attributionControl) {
+    // Layers Control.
+    if (this.options.layersControl) {
+      controls.layers = new L.Control.Layers(baseMaps, null, this.options.layersControl);
+    }
+
+    // Attribution Control.
+    if (this.options.attributionControl && this.attributionControl) {
       this.attributionControl.addTo(this);
       controls.attribution = this.attributionControl;
       this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
     }
 
-    if (this.options.zoomControl) {
-      this.zoomControl.setPosition('bottomright');
+    // Zoom Control.
+    if (this.options.zoomControl && this.zoomControl) {
+      this.zoomControl.setPosition(this.options.zoomControl.position);
       this.zoomControl.addTo(this);
       controls.zoom = this.zoomControl;
     }
 
+    // Pegman Control.
     if (this.options.pegmanControl) {
-      controls.pegman = new L.Control.Pegman({
-        position: 'bottomright',
-        theme: "leaflet-pegman-v3-small",
-      });
+      controls.pegman = new L.Control.Pegman(this.options.pegmanControl);
     }
 
+    // Locate Control.
     if (this.options.locateControl) {
-      controls.locate = new L.Control.Locate({
-        position: "bottomright"
-      });
+      controls.locate = new L.Control.Locate(this.options.locateControl);
     }
 
+    // Fullscreen Control.
     if (this.options.fullscreenControl) {
-      controls.fullscreen = new L.Control.FullScreen({
-        position: 'topright',
-        title: 'Enter Fullscreen',
-        titleCancel: 'Exit Fullscreen',
-        forceSeparateButton: true,
-      });
+      controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
     }
 
+    // Minimap Control.
+    if (this.options.minimapControl) {
+      var miniMapTypeId = this.options.minimapControl.mapOptions.mapTypeId;
+      var miniMapLayer = this.options.mapTypes[miniMapTypeId];
+      if (miniMapLayer) {
+        miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+        miniMapLayer.mapTypeId = miniMapTypeId; // save mapTypeId for easy access.
+        controls.minimap = new L.Control.MiniMap(miniMapLayer, this.options.minimapControl);
+        controls.minimap._mainMapBaseLayers = baseMaps; // save baseMaps for easy access.
+      }
+    }
+
+    // Load all user selected controls.
     for (var i in controls) {
       if (controls[i].addTo) {
         controls[i].addTo(this);
       }
     }
+    this.controls = controls; // save controls for easy access.
 
-    this.controls = controls;
-
-    if (!isGMap.call(this)) {
-      // needed some delay for sync loading
-      setTimeout(function() {
-        this.fire('idle');
-      }.bind(this), 50);
-    } else {
+    // Fire idle event.
+    this.whenReady(function() {
       this.fire('idle');
-    }
+    }.bind(this));
 
+    // Set default base layer.
     if (this.options.mapTypeId) {
-      var key = findKey(baseMaps, this.options.mapTypeId);
-      if (key) baseMaps[key].addTo(this); // fires 'baselayerchange'.
+      var baseLayer = this.options.mapTypes[this.options.mapTypeId];
+      if (baseLayer && baseMaps[baseLayer.name]) {
+        this.options.layers.unshift(baseMaps[baseLayer.name]); // Add to the array of layers that will be automatically loaded within the map initially.
+      }
     }
 
-
   }
 
+  // Conditionally load Leaflet Map Attributions.
   function updateLeafletAttribution(defaultAttribution, e) {
-    this.attributionControl.setPrefix((e && e.layer && e.layer instanceof L.GridLayer.GoogleMutant) ? false : defaultAttribution);
+    this.attributionControl.setPrefix((e && e.layer && L.GridLayer.GoogleMutant && e.layer instanceof L.GridLayer.GoogleMutant) ? false : defaultAttribution);
   }
 
-  function findKey(object, key) {
-    // Find key in object with ignorecase.
-    return Object.keys(object).find(k => k.toLowerCase() === key.toLowerCase());
-  }
+  var minimapProto = L.Control.MiniMap.prototype;
+  var onAddMinimapProto = minimapProto.onAdd;
 
+  // Customize MiniMap default core behavior.
+  L.Control.MiniMap.include({
+    onAdd: function(map) {
+      var container = onAddMinimapProto.call(this, map);
+      // Automatically switch between "satellite" and "roads" layers.
+      if (this.options.toggleMapTypes) {
+        L.DomEvent.on(map, 'baselayerchange', this._handleMainMapTypeChange, this);
+        L.DomEvent.on(this._container, 'click', this._handleMiniMapTypeToggle, this);
+      }
+      return container;
+    },
+    _handleMainMapTypeChange: function(e) {
+      if (!this._handligMiniMapTypeToggle) {
+        if (e && e.layer) {
+          var minimap = this,
+            mainmap = this._mainMap,
+            miniMapTypeId = minimap._layer.mapTypeId,
+            mainMapTypeId = e.layer.mapTypeId;
+
+
+          if (mainmap.options.mapTypeIds.length > 0 && inArray(mainmap.options.mapTypeIds, mainMapTypeId)) {
+            if (mainMapTypeId != miniMapTypeId) {
+              minimap._lastMapTypeId = mainMapTypeId;
+            }
+
+            var mapTypeId,
+              miniMapLayer;
+
+            if (mainMapTypeId == "satellite" && miniMapTypeId == "satellite") {
+              mapTypeId = minimap._lastMapTypeId;
+            } else if (mainMapTypeId != "satellite" && miniMapTypeId != "satellite") {
+              mapTypeId = "satellite";
+            }
+            miniMapLayer = mainmap.options.mapTypes[mapTypeId];
+
+            if (miniMapLayer) {
+              miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+              miniMapLayer.mapTypeId = mapTypeId; // save mapTypeId for easy access.
+              minimap._lastMapTypeId = miniMapTypeId;
+              minimap.changeLayer(miniMapLayer);
+            }
+
+          }
+        }
+      }
+    },
+    _handleMiniMapTypeToggle: function() {
+      this._handligMiniMapTypeToggle = true;
+      if (this._layer && this._mainMapBaseLayers) {
+        var minimap = this,
+          mainmap = this._mainMap,
+          miniMapTypeId = this._layer.mapTypeId,
+          mainMapTypeId;
+        for (var i in this._mainMapBaseLayers) {
+          if (mainmap.hasLayer(this._mainMapBaseLayers[i]) && miniMapTypeId != this._mainMapBaseLayers[i].mapTypeId) {
+            mainMapTypeId = this._mainMapBaseLayers[i].mapTypeId;
+            break;
+          }
+        }
+
+        if (mainmap.options.mapTypeIds.length > 0 && inArray(mainmap.options.mapTypeIds, miniMapTypeId)) {
+          var mapTypeId,
+            miniMapLayer;
+
+          mapTypeId = minimap._lastMapTypeId || mainmap.options.mapTypeId;
+
+          if (minimap._lastMapTypeId != "satellite" && miniMapTypeId != "satellite") {
+            mapTypeId = "satellite";
+          }
+
+          miniMapLayer = mainmap.options.mapTypes[mapTypeId];
+
+          if (miniMapLayer) {
+            miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+            miniMapLayer.mapTypeId = mapTypeId; // save mapTypeId for easy access.
+            minimap._lastMapTypeId = miniMapTypeId;
+
+            minimap.changeLayer(miniMapLayer);
+
+            for (var i in this._mainMapBaseLayers) {
+              this._mainMapBaseLayers[i].remove();
+              if (minimap._lastMapTypeId == this._mainMapBaseLayers[i].mapTypeId) {
+                this._mainMapBaseLayers[i].addTo(mainmap);
+              }
+            }
+
+          }
+        }
+        this._handligMiniMapTypeToggle = false;
+      }
+    },
+  });
+
+  // Check if an array contains any element from another one.
   function inArray(array, items) {
-    // Check if an array contains any element from another one.
     return array.some(r => items.includes(r));
   }
 
+  // Simple object check.
+  function isObject(item) {
+    return (item && typeof item === 'object' && !Array.isArray(item));
+  }
 
+  // Deep merge two objects (note: circular references not supported).
+  function deepMerge(target, ...sources) {
+    if (!sources.length) return target;
+    const source = sources.shift();
+    if (isObject(target) && isObject(source)) {
+      for (const key in source) {
+        if (isObject(source[key])) {
+          if (!target[key]) Object.assign(target, {
+            [key]: {}
+          });
+          deepMerge(target[key], source[key]);
+        } else {
+          Object.assign(target, {
+            [key]: source[key]
+          });
+        }
+      }
+    }
+    return deepMerge(target, ...sources);
+  }
 
 })();

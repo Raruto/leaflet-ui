@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@raruto/leaflet-gesture-handling": "^1.2.2",
-    "google-maps": "^3.3.0",
     "leaflet-control-layers-inline": "0.0.3",
+    "leaflet-minimap": "^3.6.1",
     "leaflet-pegman": "^0.0.8",
     "leaflet-pointable": "^0.0.3",
     "leaflet.fullscreen": "^1.5.1",
