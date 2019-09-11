@@ -140,7 +140,9 @@ import 'leaflet-search';
   // Customize leaflet Map default aspect.
   L.Map.addInitHook(function() {
     disableDefaultUI.call(this);
-    if (this.options._isMiniMap) return; // prevent infinite loops when loading the minimap control.
+    if (this.options._isMiniMap) {
+      return; // prevent infinite loops when loading the minimap control.
+    }
     if (!this.options.disableDefaultUI) {
       setDeafultOptions.call(this);
       initMap.call(this);
@@ -179,6 +181,10 @@ import 'leaflet-search';
     // Fix default mapTypeId if missing in mapTypeIds array.
     if (this.options.searchControl && this.options.searchControl.querylang) {
       this.options.searchControl.url = this.options.searchControl.url.replace('{querylang}', this.options.searchControl.querylang);
+    }
+    // Avoid missing center/zoom values when using minimap control.
+    if (this.options.minimapControl && !this.options.center && !this.options.zoom) {
+      this.setView([0, 0], 0);
     }
   }
 
