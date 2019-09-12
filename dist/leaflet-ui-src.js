@@ -3278,6 +3278,7 @@
         searchControl: true,
         printControl: true,
         disableDefaultUI: false,
+        apiKeys: undefined, // eg. thunderforest, google, ...
         _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
       });
 
@@ -3309,6 +3310,16 @@
             this.options[i] = default_options[i];
           } else if (typeof this.options[i] === "object" && this.options[i] instanceof Array === false) {
             this.options[i] = deepMerge(default_options[i], this.options[i]);
+          }
+        }
+
+        // Set deafult tile providers Api Keys (if any).
+        if (this.options.apiKeys) {
+          if (this.options.apiKeys.thunderforest) {
+            this.options.mapTypes.terrain.options.apikey = this.options.apiKeys.thunderforest;
+          }
+          if (this.options.apiKeys.google) {
+            this.options.pegmanControl.apiKey = this.options.apiKeys.google;
           }
         }
         // Append Thunderforest Api Key.
