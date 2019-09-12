@@ -41,6 +41,7 @@
   "dependencies": {
     "@raruto/leaflet-gesture-handling": "^1.2.2",
     "leaflet-control-layers-inline": "0.0.3",
+    "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
     "leaflet-pegman": "^0.0.8",

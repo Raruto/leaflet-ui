@@ -6,6 +6,7 @@ import 'leaflet-control-layers-inline';
 import 'leaflet-minimap';
 import 'leaflet-loading';
 import 'leaflet-search';
+import 'leaflet-easyprint';
 
 
 (function() {
@@ -115,6 +116,13 @@ import 'leaflet-search';
       zoom: 10,
       position: "bottomright",
     },
+    printControl: {
+      position: 'bottomright',
+      hideControlContainer: true,
+      exportOnly: true,
+      sizeModes: [ /*'Current',*/ 'A4Portrait', 'A4Landscape'],
+      //tileWait: 1200,
+    },
     disableDefaultUI: false,
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   };
@@ -134,6 +142,7 @@ import 'leaflet-search';
     editInOSMControl: true,
     loadingControl: true,
     searchControl: true,
+    printControl: true,
     disableDefaultUI: false,
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   });
@@ -249,6 +258,11 @@ import 'leaflet-search';
     // Search Control.
     if (this.options.searchControl) {
       controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
+    }
+
+    // Print Control.
+    if (this.options.printControl) {
+      controls.print = new L.Control.EasyPrint(this.options.printControl);
     }
 
     // Loading Control.
