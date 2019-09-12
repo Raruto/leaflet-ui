@@ -103,6 +103,7 @@ import 'leaflet-search';
     searchControl: {
       url: 'https://nominatim.openstreetmap.org/search?format=json&accept-language={querylang}&q={s}',
       querylang: 'en-US',
+      detectUserLang: true,
       jsonpParam: 'json_callback',
       propertyName: 'display_name',
       propertyLoc: ['lat', 'lon'],
@@ -112,7 +113,7 @@ import 'leaflet-search';
       firstTipSubmit: true,
       minLength: 1,
       zoom: 10,
-      position: "topright",
+      position: "bottomright",
     },
     disableDefaultUI: false,
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
@@ -178,7 +179,11 @@ import 'leaflet-search';
     if (this.options.mapTypeIds.includes(this.options.mapTypeId) === false && this.options.mapTypeIds.length > 0) {
       this.options.mapTypeId = this.options.mapTypeIds[0];
     }
-    // Fix default mapTypeId if missing in mapTypeIds array.
+    // Auto detect user "querylang" value when using search control.
+    if (this.options.searchControl && this.options.searchControl.detectUserLang) {
+      this.options.searchControl.querylang = window.navigator.languages ? window.navigator.languages[0] : (window.navigator.userLanguage || window.navigator.language);
+    }
+    // Replace default "querylang" value when using search control.
     if (this.options.searchControl && this.options.searchControl.querylang) {
       this.options.searchControl.url = this.options.searchControl.url.replace('{querylang}', this.options.searchControl.querylang);
     }
@@ -187,7 +192,6 @@ import 'leaflet-search';
       this.setView([0, 0], 0);
     }
   }
-
   // Initialize default leaflet map controls and layers.
   function initMap() {
     var controls = {},
@@ -242,6 +246,11 @@ import 'leaflet-search';
       controls.locate = new L.Control.Locate(this.options.locateControl);
     }
 
+    // Search Control.
+    if (this.options.searchControl) {
+      controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
+    }
+
     // Loading Control.
     if (this.options.loadingControl) {
       controls.loading = new L.Control.Loading(this.options.loadingControl);
@@ -250,11 +259,6 @@ import 'leaflet-search';
     // Fullscreen Control.
     if (this.options.fullscreenControl) {
       controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
-    }
-
-    // Search Control.
-    if (this.options.searchControl) {
-      controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
     }
 
     // Minimap Control.

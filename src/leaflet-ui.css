@@ -7,16 +7,17 @@
 @import url("../node_modules/leaflet-loading/src/Control.Loading.css");
 @import url("../node_modules/leaflet-search/dist/leaflet-search.min.css");
 
-.leaflet-pegman {
+/* .leaflet-pegman {
   box-sizing: content-box;
-}
+} */
 
+/*
 .leaflet-control-layers.leaflet-control {
   display: inline-block;
   float: none;
   clear: none;
 }
-
+*/
 .leaflet-control-locate a {
   background-image: url(https://unpkg.com/@raruto/leaflet-elevation@0.3.9/images/elevation-locate.png);
 }
@@ -25,6 +26,7 @@
   display: none;
 }
 
+/*
 .leaflet-control.opacity-control {
   display: inline-block;
   float: none;
@@ -51,7 +53,7 @@
 .leaflet-control.opacity-control:hover {
   background-color: rgba(255, 255, 255, 0.85);
 }
-
+*/
 .leaflet-control-minimap.leaflet-control {
   cursor: pointer;
 }
@@ -70,4 +72,18 @@
 
 .leaflet-edit-osm.leaflet-control-attribution.leaflet-control {
   clear: both;
+}
+
+.leaflet-right .leaflet-control-search {
+  float: right;
+  margin-left: 0;
+  margin-top: 0;
+}
+
+.leaflet-control-search .search-input {
+  width: 215px;
+}
+
+.leaflet-control-search .search-tooltip {
+  width: 260px;
 }
