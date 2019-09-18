@@ -3185,6 +3185,11 @@
         zoomControl: {
           position: 'bottomright'
         },
+        scaleControl: {
+          width: 200,
+          position: 'bottomright',
+          imperial: false,
+        },
         pegmanControl: {
           position: 'bottomright',
           theme: "leaflet-pegman-v3-small",
@@ -3268,6 +3273,7 @@
         mapTypes: undefined,
         gestureHandling: true,
         zoomControl: true,
+        scaleControl: true,
         pegmanControl: true,
         locateControl: true,
         fullscreenControl: true,
@@ -3383,6 +3389,11 @@
           controls.editInOSM = new L.Control.EditInOSM(this.options.editInOSMControl);
         }
 
+        // Scale Control.
+        if (this.options.scaleControl) {
+          controls.scale = new L.Control.Scale(this.options.scaleControl);
+        }
+
         // Zoom Control.
         if (this.options.zoomControl && this.zoomControl) {
           this.zoomControl.setPosition(this.options.zoomControl.position);
@@ -3443,7 +3454,14 @@
         // Fire idle event.
         this.whenReady(function() {
           this.fire('idle');
-        }.bind(this));
+          // Prevent adding multiple default base layers when using multiple maps.
+          if (this.options.mapTypeId) {
+            var baseLayer = this.options.mapTypes[this.options.mapTypeId];
+            if (baseLayer && baseMaps[baseLayer.name]) {
+              this.options.layers = this.options.layers.filter(item => item._leaflet_id !== baseMaps[baseLayer.name]._leaflet_id);
+            }
+          }
+        }, this);
 
         // Set default base layer.
         if (this.options.mapTypeId) {

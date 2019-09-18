@@ -65,12 +65,22 @@
   padding-right: 5px;
 }
 
-.leaflet-edit-osm~.leaflet-control-attribution.leaflet-control {
-  clear: none;
-}
-
 .leaflet-edit-osm.leaflet-control-attribution.leaflet-control {
   clear: both;
+}
+
+.leaflet-control-zoom~.leaflet-control-scale.leaflet-control {
+  clear: both;
+  margin: 0;
+}
+
+.leaflet-control-scale-line {
+  line-height: 1;
+}
+
+.leaflet-control-scale~.leaflet-control-attribution.leaflet-control,
+.leaflet-edit-osm~.leaflet-control-attribution.leaflet-control {
+  clear: none;
 }
 
 .leaflet-right .leaflet-control-search {
