@@ -311,7 +311,7 @@ var lazy_options = {
 
     // Fullscreen Control.
     if (this.options.fullscreenControl) {
-      controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
+      controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(this.options.fullscreenControl);
     }
 
     // Minimap Control.

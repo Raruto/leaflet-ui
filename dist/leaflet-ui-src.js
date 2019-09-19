@@ -913,16 +913,16 @@
     		forcePseudoFullscreen: false,
     		fullscreenElement: false
     	},
-    	
+
     	onAdd: function (map) {
     		var className = 'leaflet-control-zoom-fullscreen', container, content = '';
-    		
+
     		if (map.zoomControl && !this.options.forceSeparateButton) {
     			container = map.zoomControl._container;
     		} else {
     			container = L.DomUtil.create('div', 'leaflet-bar');
     		}
-    		
+
     		if (this.options.content) {
     			content = this.options.content;
     		} else {
@@ -936,7 +936,7 @@
 
     		return container;
     	},
-    	
+
     	_createButton: function (title, className, content, container, fn, context) {
     		this.link = L.DomUtil.create('a', className, container);
     		this.link.href = '#';
@@ -950,12 +950,12 @@
     			.addListener(this.link, 'click', L.DomEvent.stopPropagation)
     			.addListener(this.link, 'click', L.DomEvent.preventDefault)
     			.addListener(this.link, 'click', fn, context);
-    		
+
     		L.DomEvent
     			.addListener(container, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
     			.addListener(container, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
     			.addListener(container, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, context);
-    		
+
     		L.DomEvent
     			.addListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
     			.addListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
@@ -963,7 +963,7 @@
 
     		return this.link;
     	},
-    	
+
     	toggleFullScreen: function () {
     		var map = this._map;
     		map._exitFired = false;
@@ -987,13 +987,14 @@
     			map._isFullscreen = true;
     		}
     	},
-    	
+
     	_toggleTitle: function () {
     		this.link.title = this._map._isFullscreen ? this.options.title : this.options.titleCancel;
     	},
-    	
+
     	_handleFullscreenChange: function () {
     		var map = this._map;
+    		if(!map) return;
     		map.invalidateSize();
     		if (!fullScreenApi.isFullScreen() && !map._exitFired) {
     			map.fire('exitFullscreen');
@@ -1019,7 +1020,7 @@
     	return new L.Control.FullScreen(options);
     };
 
-    /* 
+    /*
     Native FullScreen JavaScript API
     -------------
     Assumes Mozilla naming conventions instead of W3C for now
@@ -1028,17 +1029,17 @@
 
     */
 
-    	var 
-    		fullScreenApi = { 
+    	var
+    		fullScreenApi = {
     			supportsFullScreen: false,
-    			isFullScreen: function () { return false; }, 
-    			requestFullScreen: function () {}, 
+    			isFullScreen: function () { return false; },
+    			requestFullScreen: function () {},
     			cancelFullScreen: function () {},
     			fullScreenEventName: '',
     			prefix: ''
     		},
     		browserPrefixes = 'webkit moz o ms khtml'.split(' ');
-    	
+
     	// check for native support
     	if (typeof document.exitFullscreen !== 'undefined') {
     		fullScreenApi.supportsFullScreen = true;
@@ -1056,7 +1057,7 @@
     			fullScreenApi.supportsFullScreen = true;
     		}
     	}
-    	
+
     	// update methods to do something useful
     	if (fullScreenApi.supportsFullScreen) {
     		if (fullScreenApi.prefix === 'ms') {
@@ -3446,7 +3447,7 @@
 
         // Fullscreen Control.
         if (this.options.fullscreenControl) {
-          controls.fullscreen = new L.Control.FullScreen(this.options.fullscreenControl);
+          controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(this.options.fullscreenControl);
         }
 
         // Minimap Control.
