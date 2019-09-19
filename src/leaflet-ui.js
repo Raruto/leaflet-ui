@@ -8,6 +8,16 @@ import 'leaflet-loading';
 import 'leaflet-search';
 import 'leaflet-easyprint';
 
+var currentScript = document.currentScript;
+
+var lazy_options = {
+  pluginsBaseURL: 'https://unpkg.com/',
+  leaflet: [
+    "leaflet@1.3.4/dist/leaflet.css",
+    "leaflet@1.3.4/dist/leaflet.js"
+  ],
+};
+
 
 (function() {
 
@@ -129,6 +139,13 @@ import 'leaflet-easyprint';
       //tileWait: 1200,
     },
     disableDefaultUI: false,
+    pluginsBaseURL: 'https://unpkg.com/',
+    plugins: [
+      // "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.css",
+      // "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.js",
+      // "leaflet-kmz@0.3.1/dist/leaflet-kmz.js",
+      // "leaflet-transparency@0.0.5/leaflet-transparency.min.js"
+    ],
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   };
 
@@ -337,6 +354,13 @@ import 'leaflet-easyprint';
       }
     }
 
+    // Load custom plugins.
+    if (this.options.plugins) {
+      var that = this;
+      var dependencies = !window.L ? [lazy_options.leaflet, this.options.plugins] : [this.options.plugins];
+      if (!lazy_options.loader) lazy_options.loader = loadSyncScripts(dependencies);
+      lazy_options.loader.then(() => that.fire('plugins_loaded'));
+    }
   }
 
   // Conditionally load Leaflet Map Attributions.
@@ -470,6 +494,45 @@ import 'leaflet-easyprint';
     }
   });
 
+  // Parallel download multiple scripts.
+  function loadAsyncScripts(urls) {
+    return Promise.all(urls.map((url) => loadScript(url)));
+  }
+
+  // Sequential download multiple scripts.
+  function loadSyncScripts(urls) {
+    return urls.reduce((prev, curr) => prev.then(() => loadAsyncScripts(curr)), Promise.resolve());
+  }
+
+  // Dynamically load a single script.
+  function loadScript(url) {
+    return new Promise((resolve, reject) => {
+
+      let type = url.split('.').pop();
+      let tag = type == 'css' ? 'link' : 'script';
+      let script = document.createElement(tag);
+      let head = document.head;
+      let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
+      let prev_tag = lazy_options["prev_" + tag] || root_script;
+
+      if (type == 'css') {
+        script.rel = 'stylesheet';
+      }
+
+      script.addEventListener('load', resolve, {
+        once: true
+      });
+      script.setAttribute(type == 'css' ? 'href' : 'src', lazy_options.pluginsBaseURL + url);
+
+      if (prev_tag.parentNode && prev_tag.nextSibling)
+        prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
+      else
+        head.appendChild(script);
+
+      lazy_options["parent_" + tag] = script;
+
+    });
+  }
 
   // Check if an array contains any element from another one.
   function inArray(array, items) {
