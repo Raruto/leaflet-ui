@@ -1,7 +1,4 @@
-import {
-  version
-} from '../package.json';
-
+import { version } from '../package.json';
 import 'leaflet.locatecontrol';
 import 'leaflet.fullscreen';
 import 'leaflet-pegman';
@@ -38,7 +35,7 @@ var lazyLoader = {
       let script = document.createElement(tag);
       let head = document.head;
       let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
-      let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader["prev_link"] ? lazyLoader["prev_link"] : root_script);
+      let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
 
       if (type == 'css') {
         script.rel = 'stylesheet';
@@ -210,7 +207,7 @@ var lazyLoader = {
     searchControl: true,
     printControl: true,
     disableDefaultUI: false,
-    apiKeys: undefined, // eg. thunderforest, google, ...
+    apiKeys: undefined, // eg. { thunderforest: "", google: "", ... }
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   });
 
@@ -237,7 +234,7 @@ var lazyLoader = {
   // Deep merge "default_options" and do some sanity check.
   function setDeafultOptions() {
     // Recursive merge leaflet map options.
-    for (var i in default_options) {
+    for (let i in default_options) {
       if (this.options[i] === true || typeof this.options[i] === "undefined") {
         this.options[i] = default_options[i];
       } else if (typeof this.options[i] === "object" && this.options[i] instanceof Array === false) {
@@ -290,7 +287,7 @@ var lazyLoader = {
     }
 
     // Load all user selected layers.
-    for (var i in this.options.mapTypeIds) {
+    for (let i in this.options.mapTypeIds) {
       var id = this.options.mapTypeIds[i];
       if (this.options.mapTypes[id]) {
         baseMaps[this.options.mapTypes[id].name] = layers[id] = new L.TileLayer(this.options.mapTypes[id].url, this.options.mapTypes[id].options);
@@ -370,7 +367,7 @@ var lazyLoader = {
     }
 
     // Load all user selected controls.
-    for (var i in controls) {
+    for (let i in controls) {
       if (controls[i].addTo) {
         controls[i].addTo(this);
       }
@@ -399,7 +396,6 @@ var lazyLoader = {
 
     // Load custom plugins.
     if (this.options.plugins) {
-      var that = this;
       if (!lazyLoader.loader) {
         var core_plugins = ["leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css"];
         if (!window.L) {
@@ -408,7 +404,10 @@ var lazyLoader = {
         }
         lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, this.options.plugins]);
       }
-      lazyLoader.loader.then(() => that.fire('plugins_loaded'));
+      lazyLoader.loader
+        .then(function() {
+          this.fire('plugins_loaded');
+        }.bind(this));
     }
   }
 
@@ -473,7 +472,7 @@ var lazyLoader = {
           mainmap = this._mainMap,
           miniMapTypeId = this._layer.mapTypeId,
           mainMapTypeId;
-        for (var i in this._mainMapBaseLayers) {
+        for (let i in this._mainMapBaseLayers) {
           if (mainmap.hasLayer(this._mainMapBaseLayers[i]) && miniMapTypeId != this._mainMapBaseLayers[i].mapTypeId) {
             mainMapTypeId = this._mainMapBaseLayers[i].mapTypeId;
             break;
@@ -499,7 +498,7 @@ var lazyLoader = {
 
             minimap.changeLayer(miniMapLayer);
 
-            for (var i in this._mainMapBaseLayers) {
+            for (let i in this._mainMapBaseLayers) {
               this._mainMapBaseLayers[i].remove();
               if (minimap._lastMapTypeId == this._mainMapBaseLayers[i].mapTypeId) {
                 this._mainMapBaseLayers[i].addTo(mainmap);
