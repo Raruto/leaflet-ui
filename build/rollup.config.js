@@ -4,7 +4,7 @@ import commonJS from 'rollup-plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
 import postcssCopy from 'postcss-copy';
-import rollupGitVersion from 'rollup-plugin-git-version'
+import rollupGitVersion from 'rollup-plugin-git-version';
 
 let plugin = require('../package.json');
 
@@ -14,14 +14,9 @@ let output = {
   format: "umd",
   sourcemap: true,
   name: plugin.name,
-  // globals: {
-  //   'jszip': 'JSZip',
-  //   'geojson-vt': 'geojsonvt',
-  //   '@tmcw/togeojson': 'toGeoJSON',
-  // }
+
 };
 
-// let external = ['jszip', 'geojson-vt', '@tmcw/togeojson', 'leaflet-pointable'];
 let plugins = [
   resolve(),
   commonJS({
@@ -30,24 +25,28 @@ let plugins = [
   rollupGitVersion()
 ];
 
-export default [{
+export default [
+  //** "leaflet-ui-src.js" **//
+  {
     input: input,
     output: output,
     plugins: plugins,
-    // external: external,
   },
+
+  //** "leaflet-ui.js" **//
   {
     input: input,
     output: Object.assign({}, output, {
       file: "dist/" + plugin.name + ".js"
     }),
     plugins: plugins.concat(terser()),
-    // external: external
   },
+
+  //** "leaflet-ui.css" **//
   {
-    input: 'src/leaflet-ui.css',
+    input: "src/" + plugin.name + ".css",
     output: {
-      file: 'dist/leaflet-ui.css',
+      file: "dist/" + plugin.name + ".css",
       format: 'es'
     },
     plugins: [
@@ -62,12 +61,6 @@ export default [{
             dest: "dist",
             template: "images/[path][name].[ext]",
           })
-          // postcss_url(),
-          // postcss_url({
-          //      url: "copy",
-          //      basePath: path.resolve("."),
-          //      assetPath: "resources"
-          // })
         ]
       })
     ]

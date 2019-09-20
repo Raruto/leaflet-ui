@@ -207,6 +207,7 @@ var lazyLoader = {
     searchControl: true,
     printControl: true,
     disableDefaultUI: false,
+    includeLeafletCSS: true,
     apiKeys: undefined, // eg. { thunderforest: "", google: "", ... }
     _isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   });
@@ -401,6 +402,18 @@ var lazyLoader = {
         if (!window.L) {
           core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
           core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
+        } else if (this.options.includeLeafletCSS && L.version) {
+          let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
+          let core_css_exists = false;
+          for (let i = 0; i < document.styleSheets.length; i++) {
+            if (document.styleSheets[i].href && document.styleSheets[i].href.indexOf(core_css_url) > 0) {
+              core_css_exists = true;
+              break;
+            }
+          }
+          if (!core_css_exists) {
+            core_plugins.unshift(core_css_url);
+          }
         }
         lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, this.options.plugins]);
       }
