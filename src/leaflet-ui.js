@@ -1,3 +1,7 @@
+import {
+  version
+} from '../package.json';
+
 import 'leaflet.locatecontrol';
 import 'leaflet.fullscreen';
 import 'leaflet-pegman';
@@ -8,14 +12,53 @@ import 'leaflet-loading';
 import 'leaflet-search';
 import 'leaflet-easyprint';
 
-var currentScript = document.currentScript;
+const currentScript = document.currentScript;
+const currentVersion = version.split("+")[0].trim();
 
-var lazy_options = {
-  pluginsBaseURL: 'https://unpkg.com/',
-  leaflet: [
-    "leaflet@1.3.4/dist/leaflet.css",
-    "leaflet@1.3.4/dist/leaflet.js"
-  ],
+var lazyLoader = {
+
+  baseURL: 'https://unpkg.com/',
+
+  // Sequentially download multiple scripts.
+  loadSyncScripts: function(urls) {
+    return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
+  },
+
+  // Parallel download multiple scripts.
+  loadAsyncScripts: function(urls) {
+    return Promise.all(urls.map((url) => lazyLoader.loadScript(url)));
+  },
+
+  // Dynamically load a single script.
+  loadScript: function(url) {
+    return new Promise((resolve, reject) => {
+
+      let type = url.split('.').pop();
+      let tag = type == 'css' ? 'link' : 'script';
+      let script = document.createElement(tag);
+      let head = document.head;
+      let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
+      let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader["prev_link"] ? lazyLoader["prev_link"] : root_script);
+
+      if (type == 'css') {
+        script.rel = 'stylesheet';
+      }
+
+      script.addEventListener('load', resolve, {
+        once: true
+      });
+      script.setAttribute(type == 'css' ? 'href' : 'src', lazyLoader.baseURL + url);
+
+      if (prev_tag.parentNode && prev_tag.nextSibling)
+        prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
+      else
+        head.appendChild(script);
+
+      lazyLoader["prev_" + tag] = script;
+
+    });
+  }
+
 };
 
 
@@ -139,7 +182,7 @@ var lazy_options = {
       //tileWait: 1200,
     },
     disableDefaultUI: false,
-    pluginsBaseURL: 'https://unpkg.com/',
+    // TODO: pluginsBaseURL: 'https://unpkg.com/',
     plugins: [
       // "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.css",
       // "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.js",
@@ -357,9 +400,15 @@ var lazy_options = {
     // Load custom plugins.
     if (this.options.plugins) {
       var that = this;
-      var dependencies = !window.L ? [lazy_options.leaflet, this.options.plugins] : [this.options.plugins];
-      if (!lazy_options.loader) lazy_options.loader = loadSyncScripts(dependencies);
-      lazy_options.loader.then(() => that.fire('plugins_loaded'));
+      if (!lazyLoader.loader) {
+        var core_plugins = ["leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css"];
+        if (!window.L) {
+          core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
+          core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
+        }
+        lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, this.options.plugins]);
+      }
+      lazyLoader.loader.then(() => that.fire('plugins_loaded'));
     }
   }
 
@@ -493,46 +542,6 @@ var lazy_options = {
       return container;
     }
   });
-
-  // Parallel download multiple scripts.
-  function loadAsyncScripts(urls) {
-    return Promise.all(urls.map((url) => loadScript(url)));
-  }
-
-  // Sequential download multiple scripts.
-  function loadSyncScripts(urls) {
-    return urls.reduce((prev, curr) => prev.then(() => loadAsyncScripts(curr)), Promise.resolve());
-  }
-
-  // Dynamically load a single script.
-  function loadScript(url) {
-    return new Promise((resolve, reject) => {
-
-      let type = url.split('.').pop();
-      let tag = type == 'css' ? 'link' : 'script';
-      let script = document.createElement(tag);
-      let head = document.head;
-      let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
-      let prev_tag = lazy_options["prev_" + tag] || root_script;
-
-      if (type == 'css') {
-        script.rel = 'stylesheet';
-      }
-
-      script.addEventListener('load', resolve, {
-        once: true
-      });
-      script.setAttribute(type == 'css' ? 'href' : 'src', lazy_options.pluginsBaseURL + url);
-
-      if (prev_tag.parentNode && prev_tag.nextSibling)
-        prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
-      else
-        head.appendChild(script);
-
-      lazy_options["parent_" + tag] = script;
-
-    });
-  }
 
   // Check if an array contains any element from another one.
   function inArray(array, items) {

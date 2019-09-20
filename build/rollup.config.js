@@ -6,6 +6,7 @@ import commonJS from 'rollup-plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
 import postcssCopy from 'postcss-copy';
+import rollupGitVersion from 'rollup-plugin-git-version'
 
 let plugin = require('../package.json');
 
@@ -27,7 +28,8 @@ let plugins = [
   resolve(),
   commonJS({
     include: '../node_modules/**'
-  })
+  }),
+  rollupGitVersion()
 ];
 
 export default [{
