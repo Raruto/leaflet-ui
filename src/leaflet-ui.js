@@ -37,6 +37,7 @@ var lazyLoader = {
       let head = document.head;
       let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
       let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
+      let base_url = (url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
 
       if (type == 'css') {
         script.rel = 'stylesheet';
@@ -45,7 +46,7 @@ var lazyLoader = {
       script.addEventListener('load', resolve, {
         once: true
       });
-      script.setAttribute(type == 'css' ? 'href' : 'src', lazyLoader.baseURL + url);
+      script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
 
       if (prev_tag.parentNode && prev_tag.nextSibling)
         prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
