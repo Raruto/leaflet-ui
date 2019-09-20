@@ -3,7 +3,7 @@
   factory();
 }(function () { 'use strict';
 
-  var version = "0.1.5+master.0a497e8";
+  var version = "0.1.6+master.0761099";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
@@ -996,7 +996,7 @@
 
   	_handleFullscreenChange: function () {
   		var map = this._map;
-  		if(!map) return;
+  		//if(!map) return;
   		map.invalidateSize();
   		if (!fullScreenApi.isFullScreen() && !map._exitFired) {
   			map.fire('exitFullscreen');
@@ -3149,6 +3149,7 @@
   const currentScript = document.currentScript;
   const currentVersion = version.split("+")[0].trim();
 
+
   var lazyLoader = {
 
     baseURL: 'https://unpkg.com/',
@@ -3659,6 +3660,31 @@
           }
           this._handligMiniMapTypeToggle = false;
         }
+      },
+    });
+
+    var fullscreenProto = L.Control.FullScreen.prototype;
+    var onRemoveFullScreenProto = fullscreenProto.onRemove;
+
+    // FIX: https://github.com/brunob/leaflet.fullscreen/issues/70
+    L.Control.FullScreen.include({
+      onRemove: function(map) {
+        if (onRemoveFullScreenProto) {
+          onRemoveFullScreenProto.call(this, map);
+          return;
+        }
+        L.DomEvent
+          .removeListener(this.link, 'click', L.DomEvent.stopPropagation)
+          .removeListener(this.link, 'click', L.DomEvent.preventDefault)
+          .removeListener(this.link, 'click', this.toggleFullScreen, this);
+        L.DomEvent
+          .removeListener(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
+          .removeListener(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
+          .removeListener(this._container, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
+        L.DomEvent
+          .removeListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
+          .removeListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
+          .removeListener(document, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
       },
     });
 
