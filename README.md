@@ -13,11 +13,9 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/l
     <head>
     ...
     <style> html, body, #map { height: 100%; width: 100%; padding: 0; margin: 0; } </style>
-    <!-- Leaflet (JS/CSS) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css">
+    <!-- Leaflet -->
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
     <!-- Leaflet-UI -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-ui@latest/dist/leaflet-ui.css">
     <script src="https://unpkg.com/leaflet-ui@latest/dist/leaflet-ui.js"></script>
     ...
     </head>
