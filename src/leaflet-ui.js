@@ -438,6 +438,13 @@ var lazyLoader = {
   L.Control.MiniMap.include({
     onAdd: function(map) {
       var container = onAddMinimapProto.call(this, map);
+
+      // Disable mouse handlers
+      if (this._miniMap) {
+        this._miniMap.doubleClickZoom.disable();
+        this._miniMap.touchZoom.disable();
+        this._miniMap.scrollWheelZoom.disable();
+      }
       // Automatically switch between "satellite" and "roads" layers.
       if (this.options.toggleMapTypes) {
         L.DomEvent.on(map, 'baselayerchange', this._handleMainMapTypeChange, this);
@@ -524,31 +531,6 @@ var lazyLoader = {
         }
         this._handligMiniMapTypeToggle = false;
       }
-    },
-  });
-
-  var fullscreenProto = L.Control.FullScreen.prototype;
-  var onRemoveFullScreenProto = fullscreenProto.onRemove;
-
-  // FIX: https://github.com/brunob/leaflet.fullscreen/issues/70
-  L.Control.FullScreen.include({
-    onRemove: function(map) {
-      if (onRemoveFullScreenProto) {
-        onRemoveFullScreenProto.call(this, map);
-        return;
-      }
-      L.DomEvent
-        .removeListener(this.link, 'click', L.DomEvent.stopPropagation)
-        .removeListener(this.link, 'click', L.DomEvent.preventDefault)
-        .removeListener(this.link, 'click', this.toggleFullScreen, this);
-      L.DomEvent
-        .removeListener(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-        .removeListener(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-        .removeListener(this._container, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
-      L.DomEvent
-        .removeListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-        .removeListener(document, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-        .removeListener(document, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
     },
   });
 
