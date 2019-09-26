@@ -45,7 +45,7 @@
     "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
-    "leaflet-pegman": "0.0.9",
+    "leaflet-pegman": "0.1.0",
     "leaflet-pointable": "^0.0.3",
     "leaflet-search": "^2.9.8",
     "leaflet.fullscreen": "^1.6.0",
