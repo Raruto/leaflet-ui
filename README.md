@@ -1,8 +1,13 @@
 # leaflet-ui
 
-Leaflet bundle for common user interface customizations
+Leaflet preset for common user interface customizations
 
 _For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html)_
+
+<p align="center">
+    <a href="https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html"><img src="https://raruto.github.io/img/leaflet-ui.png" alt="Leaflet default UI" /></a>
+</p>
+
 
 * * *
 
