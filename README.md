@@ -1,6 +1,6 @@
 # leaflet-ui
 
-Leaflet preset for common user interface customizations
+Leaflet presets for common user interface customizations
 
 _For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html)_
 
