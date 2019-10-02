@@ -31,7 +31,7 @@ var lazyLoader = {
 	loadScript: function(url) {
 		return new Promise((resolve, reject) => {
 
-			let type = url.split('.').pop();
+			let type = url.split('.').pop().split('?')[0];
 			let tag = type == 'css' ? 'link' : 'script';
 			let script = document.createElement(tag);
 			let head = document.head;
