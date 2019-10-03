@@ -48,6 +48,7 @@
     "leaflet-pegman": "0.1.0",
     "leaflet-pointable": "^0.0.3",
     "leaflet-search": "^2.9.8",
+    "leaflet.control.resizer": "0.0.1",
     "leaflet.fullscreen": "^1.6.0",
     "leaflet.gridlayer.googlemutant": "^0.8.0",
     "leaflet.locatecontrol": "^0.67.0"

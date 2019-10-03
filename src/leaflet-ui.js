@@ -8,6 +8,7 @@ import 'leaflet-minimap';
 import 'leaflet-loading';
 import 'leaflet-search';
 import 'leaflet-easyprint';
+import 'leaflet.control.resizer';
 
 const currentScript = document.currentScript;
 const currentVersion = version.split("+")[0].trim();
@@ -184,6 +185,9 @@ var lazyLoader = {
 			sizeModes: [ /*'Current',*/ 'A4Portrait', 'A4Landscape'],
 			//tileWait: 1200,
 		},
+		resizerControl: {
+			direction: 's'
+		},
 		disableDefaultUI: false,
 		// TODO: pluginsBaseURL: 'https://unpkg.com/',
 		plugins: [
@@ -211,7 +215,8 @@ var lazyLoader = {
 		editInOSMControl: true,
 		loadingControl: true,
 		searchControl: true,
-		printControl: true,
+		printControl: false,
+		resizerControl: false,
 		disableDefaultUI: false,
 		includeLeafletCSS: true,
 		apiKeys: undefined, // eg. { thunderforest: "", google: "", ... }
@@ -371,6 +376,11 @@ var lazyLoader = {
 				controls.minimap = new L.Control.MiniMap(miniMapLayer, this.options.minimapControl);
 				controls.minimap._mainMapBaseLayers = baseMaps; // save baseMaps for easy access.
 			}
+		}
+
+		// Resizer Control.
+		if (this.options.resizerControl) {
+			controls.resizer = new L.Control.Resizer(this.options.resizerControl);
 		}
 
 		// Load all user selected controls.
