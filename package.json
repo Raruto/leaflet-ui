@@ -29,7 +29,7 @@
   "devDependencies": {
     "postcss-copy": "^7.1.0",
     "postcss-import": "^12.0.1",
-    "rollup": "^1.21.4",
+    "rollup": "^1.25.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-git-version": "^0.2.1",
     "rollup-plugin-node-resolve": "^5.2.0",
@@ -41,11 +41,11 @@
   },
   "dependencies": {
     "@raruto/leaflet-gesture-handling": "^1.2.4",
-    "leaflet-control-layers-inline": "0.0.4",
+    "leaflet-control-layers-inline": "0.0.5",
     "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
-    "leaflet-pegman": "0.1.0",
+    "leaflet-pegman": "0.1.1",
     "leaflet-pointable": "^0.0.3",
     "leaflet-search": "^2.9.8",
     "leaflet.control.resizer": "0.0.1",

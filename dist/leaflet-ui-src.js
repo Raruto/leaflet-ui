@@ -1,9 +1,9 @@
 (function (factory) {
   typeof define === 'function' && define.amd ? define(factory) :
   factory();
-}(function () { 'use strict';
+}((function () { 'use strict';
 
-  var version = "0.2.4+master.e9d641c";
+  var version = "0.2.5+master.b1bed45";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
@@ -743,9 +743,6 @@
                   case 'always':
                       this.setView();
                       break;
-                  case false:
-                      // don't set the view
-                      break;
               }
 
               this._justClicked = false;
@@ -1142,601 +1139,602 @@
    * @desc Leaflet plugin that allows an easy integration with the Google StreetView Service API
    */
   L.Control.Pegman = L.Control.extend({
-    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
-    options: {
-      position: 'bottomright',
-      theme: "leaflet-pegman-v3-default", // or "leaflet-pegman-v3-small"
-      debug: false,
-      apiKey: '',
-      libraries: '',
-      mutant: {
-        attribution: 'Map data: &copy; <a href="https://www.google.com/intl/en/help/terms_maps.html">Google</a>',
-        pane: "overlayPane",
-        type: null, // Non-image map type (used to force a transparent background)
-      },
-      pano: {
-        enableCloseButton: true,
-      }
-    },
-
-    __interactURL: 'https://unpkg.com/interactjs@1.2.9/dist/interact.min.js',
-    __gmapsURL: 'https://maps.googleapis.com/maps/api/js?v=3',
-    __mutantURL: 'https://unpkg.com/leaflet.gridlayer.googlemutant@0.8.0/Leaflet.GoogleMutant.js',
-
-    initialize: function(options) {
-
-      if (typeof options.logging !== "undefined") options.debug = options.logging;
-
-      L.Util.setOptions(this, options);
-
-      // Grab Left/Right/Up/Down Direction of Mouse for Pegman Image
-      this._mousePos = {
-        direction: {},
-        old: {},
-      };
-
-      this._pegmanMarkerCoords = null;
-      this._streetViewCoords = null;
-      this._streetViewLayerEnabled = false;
-
-      this._dropzoneMapOpts = {
-        accept: '.draggable', // Only Accept Elements Matching this CSS Selector
-        overlap: 0.75, // Require a 75% Element Overlap for a Drop to be Possible
-        ondropactivate: L.bind(this.onDropZoneActivated, this),
-        ondragenter: L.bind(this.onDropZoneDragEntered, this),
-        ondragleave: L.bind(this.onDropZoneDragLeaved, this),
-        ondrop: L.bind(this.onDropZoneDropped, this),
-        ondropdeactivate: L.bind(this.onDropZoneDeactivated, this),
-      };
-      this._draggableMarkerOpts = {
-        inertia: false,
-        onmove: L.bind(this.onDraggableMove, this),
-        onend: L.bind(this.onDraggableEnd, this),
-      };
-
-      this._pegmanMarkerOpts = {
-        draggable: true,
-        icon: L.icon({
-          className: "pegman-marker",
-          iconSize: [52, 52],
-          iconAnchor: [26, 13],
-          iconUrl: 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=",
-        }),
-      };
-      this._lazyLoaderAdded = false;
-    },
-
-    onAdd: function(map) {
-      this._map = map;
-
-      this._container = L.DomUtil.create('div', 'leaflet-pegman pegman-control leaflet-bar');
-      this._pegman = L.DomUtil.create('div', 'pegman draggable drag-drop', this._container);
-      this._pegmanButton = L.DomUtil.create('div', 'pegman-button', this._container);
-      this._pegmanMarker = L.marker([0, 0], this._pegmanMarkerOpts);
-      this._panoDiv = L.DomUtil.create('div', 'pano-canvas', this._map._container);
-
-      L.DomUtil.addClass(this._map._container, this.options.theme);
-
-      L.DomEvent.disableClickPropagation(this._panoDiv);
-      // L.DomEvent.on(this._container, 'click mousedown touchstart dblclick', this._disableClickPropagation, this);
-      L.DomEvent.on(this._container, 'click mousedown dblclick', this._disableClickPropagation, this);
-
-      this._container.addEventListener('touchstart', this._loadScripts.bind(this, !L.Browser.touch), { once: true });
-      this._container.addEventListener('mousedown', this._loadScripts.bind(this, true), { once: true });
-      this._container.addEventListener('mouseover', this._loadScripts.bind(this, false), { once: true });
-
-
-      this._loadInteractHandlers();
-      this._loadGoogleHandlers();
-
-      L.DomEvent.on(document, 'mousemove', this.mouseMoveTracking, this);
-      L.DomEvent.on(document, 'keyup', this.keyUpTracking, this);
-
-      this._pegmanMarker.on("dragend", this.onPegmanMarkerDragged, this);
-      this._map.on("click", this.onMapClick, this);
-      this._map.on("layeradd", this.onMapLayerAdd, this);
-
-      return this._container;
-    },
-
-    onRemove: function(map) {
-      this._googleStreetViewLayer.remove();
-      this._pegmanMarker.remove();
-
-      L.DomUtil.remove(this._panoDiv);
-
-      L.DomEvent.off(document, 'mousemove', this.mouseMoveTracking, this);
-      L.DomEvent.off(document, 'keyup', this.keyUpTracking, this);
-    },
-
-    _log: function(args) {
-      if (this.options.debug) {
-        console.log(args);
-      }
-    },
-
-    _addClasses: function(el, classNames) {
-      classNames = classNames.split(" ");
-      for (var s in classNames) {
-        L.DomUtil.addClass(el, classNames[s]);
-      }
-    },
-
-    _removeClasses: function(el, classNames) {
-      classNames = classNames.split(" ");
-      for (var s in classNames) {
-        L.DomUtil.removeClass(el, classNames[s]);
-      }
-    },
-
-    _removeAttributes: function(el, attrNames) {
-      for (var a in attrNames) {
-        el.removeAttribute(attrNames[a]);
-      }
-    },
-
-    _insertAfter: function(targetNode, newNode) {
-      targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    },
-
-    _translateElement: function(el, dx, dy) {
-      if (dx === false && dy === false) {
-        this._removeAttributes(this._pegman, ["style", "data-x", "data-y"]);
-      }
-      // Element's position is preserved within the data-x/data-y attributes
-      var x = (parseFloat(el.getAttribute('data-x')) || 0) + dx;
-      var y = (parseFloat(el.getAttribute('data-y')) || 0) + dy;
-
-      // Translate element
-      el.style.webkitTransform = el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-
-      // Update position attributes
-      el.setAttribute('data-x', x);
-      el.setAttribute('data-y', y);
-    },
-
-    _updateClasses: function(action) {
-      switch (action) {
-        case "pegman-dragging":
-          this._removeClasses(this._pegman, "dropped");
-          this._addClasses(this._container, "dragging");
-          break;
-        case "pegman-dragged":
-          this._removeClasses(this._pegman, "can-drop dragged left right active dropped");
-          this._removeAttributes(this._pegman, ["style", "data-x", "data-y"]);
-          break;
-        case "dropzone-actived":
-          this._addClasses(this._map._container, "drop-active");
-          break;
-        case "dropzone-drag-entered":
-          this._addClasses(this._pegman, "active can-drop");
-          this._addClasses(this._map._container, "drop-target");
-          break;
-        case "dropzone-drag-leaved":
-          this._removeClasses(this._map._container, "drop-target");
-          this._removeClasses(this._pegman, "can-drop");
-          break;
-        case "dropzone-drop":
-          this._removeClasses(this._container, "dragging");
-          this._removeClasses(this._pegman, "active left right");
-          this._addClasses(this._pegman, "dropped");
-          this._removeClasses(this._pegman, "can-drop dragged left right active dropped");
-          break;
-        case "dropzone-deactivated":
-          this._removeClasses(this._pegman, "active left right");
-          this._removeClasses(this._map._container, "drop-active drop-target");
-          break;
-        case "mousemove-top":
-          this._addClasses(this._pegman, "top");
-          this._removeClasses(this._pegman, "bottom right left");
-          break;
-        case "mousemove-bottom":
-          this._addClasses(this._pegman, "bottom");
-          this._removeClasses(this._pegman, "top right left");
-          break;
-        case "mousemove-left":
-          this._addClasses(this._pegman, "left");
-          this._removeClasses(this._pegman, "right top bottom");
-          break;
-        case "mousemove-right":
-          this._addClasses(this._pegman, "right");
-          this._removeClasses(this._pegman, "left top bottom");
-          break;
-        case "pegman-added":
-          this._addClasses(this._container, "active");
-          break;
-        case "pegman-removed":
-          this._removeClasses(this._container, "active");
-          break;
-        case "streetview-shown":
-          this._addClasses(this._container, "streetview-layer-active");
-          break;
-        case "streetview-hidden":
-          this._removeClasses(this._container, "streetview-layer-active");
-          break;
-        default:
-          throw "Unhandled event:" + action;
-      }
-      this.fire("svpc_" + action);
-    },
-
-    onDraggableMove: function(e) {
-      this.mouseMoveTracking(e);
-      this.pegmanRemove();
-      this._updateClasses("pegman-dragging");
-      this._translateElement(this._pegman, e.dx, e.dy);
-    },
-
-    onDraggableEnd: function(e) {
-      this._pegmanMarkerCoords = this._map.mouseEventToLatLng(e);
-      this.pegmanAdd();
-      this._updateClasses("pegman-dragged");
-    },
-
-    onDropZoneActivated: function(e) {
-      this._updateClasses("dropzone-actived");
-    },
-
-    onDropZoneDragEntered: function(e) {
-      this.showStreetViewLayer();
-      this._updateClasses("dropzone-drag-entered");
-    },
-
-    onDropZoneDragLeaved: function(e) {
-      this._updateClasses("dropzone-drag-leaved");
-    },
-
-    onDropZoneDropped: function(e) {
-      this._updateClasses("dropzone-drop");
-      this._translateElement(this._pegman, false, false);
-    },
-
-    onDropZoneDeactivated: function(e) {
-      this._updateClasses("dropzone-deactivated");
-    },
-
-    onPegmanMarkerDragged: function(e) {
-      this._pegmanMarkerCoords = this._pegmanMarker.getLatLng();
-      this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
-    },
-
-    onMapClick: function(e) {
-      if (this._streetViewLayerEnabled)
-        this.findStreetViewData(e.latlng.lat, e.latlng.lng);
-    },
-
-    onMapLayerAdd: function(e) {
-      if (this._googleStreetViewLayer)
-        this._googleStreetViewLayer.bringToFront();
-    },
-
-    onStreetViewPanoramaClose: function() {
-      this.clear();
-    },
-
-    clear: function() {
-      this.pegmanRemove();
-      this.hideStreetViewLayer();
-      this.closeStreetViewPanorama();
-    },
-
-    toggleStreetViewLayer: function(e) {
-      if (this._streetViewLayerEnabled) this.clear();
-      else this.showStreetViewLayer();
-      this._log("streetview-layer-toggled");
-    },
-
-    pegmanAdd: function() {
-      this._pegmanMarker.addTo(this._map);
-      this._pegmanMarker.setLatLng(this._pegmanMarkerCoords);
-      this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
-      this._updateClasses("pegman-added");
-    },
-
-    pegmanRemove: function() {
-      this._pegmanMarker.removeFrom(this._map);
-      this._updateClasses("pegman-removed");
-    },
-
-    closeStreetViewPanorama: function() {
-      this._panoDiv.style.display = "none";
-    },
-
-    openStreetViewPanorama: function() {
-      this._panoDiv.style.display = "block";
-    },
-
-    hideStreetViewLayer: function() {
-      if (this._googleStreetViewLayer) {
-        this._googleStreetViewLayer.removeFrom(this._map);
-        this._streetViewLayerEnabled = false;
-        this._updateClasses("streetview-hidden");
-      }
-    },
-
-    showStreetViewLayer: function() {
-      if (this._googleStreetViewLayer) {
-        this._googleStreetViewLayer.addTo(this._map);
-        this._streetViewLayerEnabled = true;
-        this._updateClasses("streetview-shown");
-      }
-    },
-
-    findStreetViewData: function(lat, lng) {
-      this._streetViewCoords = new google.maps.LatLng(lat, lng);
-      var zoom = this._map.getZoom();
-      var searchRadius = 100;
-
-      if (zoom < 6) searchRadius = 5000;
-      else if (zoom < 10) searchRadius = 500;
-      else if (zoom < 15) searchRadius = 250;
-      else if (zoom >= 17) searchRadius = 50;
-      else searchRadius = 100;
-
-      this._streetViewService.getPanoramaByLocation(this._streetViewCoords, searchRadius, L.bind(this.processStreetViewServiceData, this));
-    },
-
-    processStreetViewServiceData: function(data, status) {
-      if (status == google.maps.StreetViewStatus.OK) {
-        this.openStreetViewPanorama();
-        this._panorama.setPano(data.location.pano);
-        this._panorama.setPov({
-          heading: google.maps.geometry.spherical.computeHeading(data.location.latLng, this._streetViewCoords),
-          pitch: 0,
-          zoom: 0
-        });
-        this._panorama.setVisible(true);
-      } else {
-        console.warn("Street View data not found for this location.");
-        // this.clear(); // TODO: add a visual feedback when no SV data available
-      }
-    },
-
-    /**
-     * mouseMoveTracking
-     * @desc internal function used to style pegman while dragging
-     */
-    mouseMoveTracking: function(e) {
-      var mousePos = this._mousePos;
-
-      // Top <--> Bottom
-      if (e.pageY < mousePos.old.y) {
-        mousePos.direction.y = 'top';
-        this._updateClasses("mousemove-top");
-      } else if (e.pageY > mousePos.old.y) {
-        mousePos.direction.y = 'bottom';
-        this._updateClasses("mousemove-bottom");
-      }
-      // Left <--> Right
-      if (e.pageX < mousePos.old.x) {
-        mousePos.direction.x = 'left';
-        this._updateClasses("mousemove-left");
-      } else if (e.pageX > mousePos.old.x) {
-        mousePos.direction.x = 'right';
-        this._updateClasses("mousemove-right");
-      }
-
-      mousePos.old.x = e.pageX;
-      mousePos.old.y = e.pageY;
-    },
-
-    /**
-     * keyUpTracking
-     * @desc internal function used to track keyup events
-     */
-    keyUpTracking: function(e) {
-      if (e.keyCode == 27) {
-        this._log('escape pressed');
-        this.clear();
-      }
-    },
-
-    _disableClickPropagation: function(e) {
-      L.DomEvent.stopPropagation(e);
-      L.DomEvent.preventDefault(e);
-    },
-
-    _loadGoogleHandlers: function(toggleStreetView) {
-      if (typeof google !== 'object' || typeof google.maps !== 'object' || typeof L.GridLayer.GoogleMutant !== 'function') return;
-      this._initGoogleMaps(toggleStreetView);
-      this._initMouseTracker();
-    },
-
-    _initGoogleMaps: function(toggleStreetView) {
-      this._googleStreetViewLayer = L.gridLayer.googleMutant(this.options.mutant);
-      this._googleStreetViewLayer.addGoogleLayer('StreetViewCoverageLayer');
-
-      this._panorama = new google.maps.StreetViewPanorama(this._panoDiv, this.options.pano);
-      this._streetViewService = new google.maps.StreetViewService();
-
-      google.maps.event.addListener(this._panorama, 'closeclick', L.bind(this.onStreetViewPanoramaClose, this));
-
-      if (toggleStreetView) {
-        this.showStreetViewLayer();
-      }
-    },
-
-    _initMouseTracker: function() {
-      if (!this._googleStreetViewLayer) return;
-
-      var tileSize = this._googleStreetViewLayer.getTileSize();
-
-      this.tileWidth = tileSize.x;
-      this.tileHeight = tileSize.y;
-
-      this.defaultDraggableCursor = this._map._container.style.cursor;
-
-      this._map.on("mousemove", this._setMouseCursor, this);
-    },
-
-    _setMouseCursor: function(e) {
-      var coords = this._getTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
-      var img = this._getTileImage(coords);
-      var pixel = this._getTilePixelPoint(img, e.originalEvent);
-      var hasTileData = this._hasTileData(img, pixel);
-      this._map._container.style.cursor = hasTileData ? 'pointer' : this.defaultDraggableCursor;
-    },
-
-    _getTileCoords: function(lat, lon, zoom) {
-      var xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
-      var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(this._toRad(lat)) + 1 / Math.cos(this._toRad(lat))) / Math.PI) / 2 * (1 << zoom)));
-      return {
-        x: xtile,
-        y: ytile,
-        z: zoom,
-      };
-    },
-
-    _getTileImage: function(coords) {
-      if (!this._googleStreetViewLayer || !this._googleStreetViewLayer._tiles) return;
-      var key = this._googleStreetViewLayer._tileCoordsToKey(coords);
-      var tile = this._googleStreetViewLayer._tiles[key];
-      if (!tile) return;
-      var img = tile.el.querySelector('img');
-      if (!img) return;
-      this._downloadTile(img.src, this._tileLoaded); // crossOrigin = "Anonymous"
-      return img;
-    },
-
-    _getTilePixelPoint: function(img, e) {
-      if (!img) return;
-      var imgRect = img.getBoundingClientRect();
-      var imgPos = {
-        pageY: (imgRect.top + window.scrollY).toFixed(0),
-        pageX: (imgRect.left + window.scrollX).toFixed(0)
-      };
-      var mousePos = {
-        x: e.pageX - imgPos.pageX,
-        y: e.pageY - imgPos.pageY
-      };
-      return mousePos;
-    },
-
-    _hasTileData: function(img, pixelPoint) {
-      if (!this.tileContext || !pixelPoint) return;
-      var pixelData = this.tileContext.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data;
-      var alpha = pixelData[3];
-      var hasTileData = (alpha != 0);
-      return hasTileData;
-    },
-
-    _toRad: function(number) {
-      return number * Math.PI / 180;
-    },
-
-    _downloadTile: function(imageSrc, callback) {
-      if (!imageSrc) return;
-      var img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.addEventListener("load", callback.bind(this, img), false);
-      img.src = imageSrc;
-    },
-
-    _tileLoaded: function(img) {
-      this.tileCanvas = document.createElement("canvas");
-      this.tileContext = this.tileCanvas.getContext("2d");
-
-      this.tileCanvas.width = this.tileWidth;
-      this.tileCanvas.height = this.tileHeight;
-
-      this.tileContext.drawImage(img, 0, 0);
-    },
-
-    _loadInteractHandlers: function() {
-      // TODO: trying to replace "interact.js" with default "L.Draggable" object
-      // var draggable = new L.Draggable(this._container);
-      // draggable.enable();
-      // draggable.on('drag', function(e) { console.log(e); });
-      if (typeof interact !== 'function') return;
-
-      // Enable Draggable Element to be Dropped into Map Container
-      this._draggable = interact(this._pegman).draggable(this._draggableMarkerOpts);
-      this._dropzone = interact(this._map._container).dropzone(this._dropzoneMapOpts);
-
-      this._draggable.styleCursor(false);
-
-      // Toggle on/off SV Layer on Pegman's Container single clicks
-      interact(this._container).on("tap", L.bind(this.toggleStreetViewLayer, this));
-
-      // Prevent map drags (Desktop / Mobile) while dragging pegman control
-      L.DomEvent.on(this._container, "touchstart", function(e) { this._map.dragging.disable(); }, this);
-      L.DomEvent.on(this._container, "touchend", function(e) { this._map.dragging.enable(); }, this);
-    },
-
-    _loadScripts: function(toggleStreetView) {
-      if (this._lazyLoaderAdded) return;
-      this._lazyLoaderAdded = true;
-
-      this._loadJS(this.__interactURL, this._loadInteractHandlers.bind(this), typeof interact !== 'function');
-      this._loadJS(this.__gmapsURL + '&key=' + this.options.apiKey + '&libraries=' + this.options.libraries + '&callback=?', this._loadGoogleHandlers.bind(this, toggleStreetView), typeof google !== 'object' || typeof google.maps !== 'object');
-      this._loadJS(this.__mutantURL, this._loadGoogleHandlers.bind(this, toggleStreetView), typeof L.GridLayer.GoogleMutant !== 'function');
-
-    },
-
-    _loadJS: function(url, callback, condition) {
-      if (!condition) {
-        callback();
-        return;
-      }
-      if (url.indexOf('callback=?') !== -1) {
-        this._jsonp(url, callback);
-      } else {
-        var script = document.createElement('script');
-        script.src = url;
-        var loaded = function() {
-          script.onload = script.onreadystatechange = null;
-          this._log(url + " loaded");
-          callback();
-        }.bind(this);
-        script.onload = script.onreadystatechange = loaded;
-
-        var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
-        head.insertBefore(script, head.firstChild);
-      }
-    },
-
-    _jsonp: function(url, callback, params) {
-      var query = url.indexOf('?') === -1 ? '?' : '&';
-      params = params || {};
-      for (var key in params) {
-        if (params.hasOwnProperty(key)) {
-          query += encodeURIComponent(key) + '=' + encodeURIComponent(params[key]) + '&';
-        }
-      }
-
-      var timestamp = new Date().getUTCMilliseconds();
-      var jsonp = "json_call_" + timestamp; // uniqueId('json_call');
-      window[jsonp] = function(data) {
-        callback(data);
-        window[jsonp] = undefined;
-      };
-
-      var script = document.createElement('script');
-      if (url.indexOf('callback=?') !== -1) {
-        script.src = url.replace('callback=?', 'callback=' + jsonp) + query.slice(0, -1);
-      } else {
-        script.src = url + query + 'callback=' + jsonp;
-      }
-      var loaded = function() {
-        if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
-          script.onload = script.onreadystatechange = null;
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-        }
-      };
-      script.async = true;
-      script.onload = script.onreadystatechange = loaded;
-      var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
-      // Use insertBefore instead of appendChild to circumvent an IE6 bug.
-      // This arises when a base node is used.
-      head.insertBefore(script, head.firstChild);
-    },
+  	includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
+  	options: {
+  		position: 'bottomright',
+  		theme: "leaflet-pegman-v3-default", // or "leaflet-pegman-v3-small"
+  		debug: false,
+  		apiKey: '',
+  		libraries: '',
+  		mutant: {
+  			attribution: 'Map data: &copy; <a href="https://www.google.com/intl/en/help/terms_maps.html">Google</a>',
+  			pane: "overlayPane",
+  			type: null, // Non-image map type (used to force a transparent background)
+  		},
+  		pano: {
+  			enableCloseButton: true,
+  		}
+  	},
+
+  	__interactURL: 'https://unpkg.com/interactjs@1.2.9/dist/interact.min.js',
+  	__gmapsURL: 'https://maps.googleapis.com/maps/api/js?v=3',
+  	__mutantURL: 'https://unpkg.com/leaflet.gridlayer.googlemutant@0.8.0/Leaflet.GoogleMutant.js',
+
+  	initialize: function(options) {
+
+  		if (typeof options.logging !== "undefined") options.debug = options.logging;
+
+  		L.Util.setOptions(this, options);
+
+  		// Grab Left/Right/Up/Down Direction of Mouse for Pegman Image
+  		this._mousePos = {
+  			direction: {},
+  			old: {},
+  		};
+
+  		this._pegmanMarkerCoords = null;
+  		this._streetViewCoords = null;
+  		this._streetViewLayerEnabled = false;
+
+  		this._dropzoneMapOpts = {
+  			accept: '.draggable', // Only Accept Elements Matching this CSS Selector
+  			overlap: 0.75, // Require a 75% Element Overlap for a Drop to be Possible
+  			ondropactivate: L.bind(this.onDropZoneActivated, this),
+  			ondragenter: L.bind(this.onDropZoneDragEntered, this),
+  			ondragleave: L.bind(this.onDropZoneDragLeaved, this),
+  			ondrop: L.bind(this.onDropZoneDropped, this),
+  			ondropdeactivate: L.bind(this.onDropZoneDeactivated, this),
+  		};
+  		this._draggableMarkerOpts = {
+  			inertia: false,
+  			onmove: L.bind(this.onDraggableMove, this),
+  			onend: L.bind(this.onDraggableEnd, this),
+  		};
+
+  		this._pegmanMarkerOpts = {
+  			draggable: true,
+  			icon: L.icon({
+  				className: "pegman-marker",
+  				iconSize: [52, 52],
+  				iconAnchor: [26, 13],
+  				iconUrl: 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=",
+  			}),
+  		};
+  		this._lazyLoaderAdded = false;
+  	},
+
+  	onAdd: function(map) {
+  		this._map = map;
+
+  		this._container = L.DomUtil.create('div', 'leaflet-pegman pegman-control leaflet-bar');
+  		this._pegman = L.DomUtil.create('div', 'pegman draggable drag-drop', this._container);
+  		this._pegmanButton = L.DomUtil.create('div', 'pegman-button', this._container);
+  		this._pegmanMarker = L.marker([0, 0], this._pegmanMarkerOpts);
+  		this._panoDiv = this.options.panoDiv ? document.querySelector(this.options.panoDiv) : L.DomUtil.create('div', '', this._map._container);
+
+  		L.DomUtil.addClass(this._panoDiv, 'pano-canvas');
+  		L.DomUtil.addClass(this._map._container, this.options.theme);
+
+  		L.DomEvent.disableClickPropagation(this._panoDiv);
+  		// L.DomEvent.on(this._container, 'click mousedown touchstart dblclick', this._disableClickPropagation, this);
+  		L.DomEvent.on(this._container, 'click mousedown dblclick', this._disableClickPropagation, this);
+
+  		this._container.addEventListener('touchstart', this._loadScripts.bind(this, !L.Browser.touch), { once: true });
+  		this._container.addEventListener('mousedown', this._loadScripts.bind(this, true), { once: true });
+  		this._container.addEventListener('mouseover', this._loadScripts.bind(this, false), { once: true });
+
+
+  		this._loadInteractHandlers();
+  		this._loadGoogleHandlers();
+
+  		L.DomEvent.on(document, 'mousemove', this.mouseMoveTracking, this);
+  		L.DomEvent.on(document, 'keyup', this.keyUpTracking, this);
+
+  		this._pegmanMarker.on("dragend", this.onPegmanMarkerDragged, this);
+  		this._map.on("click", this.onMapClick, this);
+  		this._map.on("layeradd", this.onMapLayerAdd, this);
+
+  		return this._container;
+  	},
+
+  	onRemove: function(map) {
+  		this._googleStreetViewLayer.remove();
+  		this._pegmanMarker.remove();
+
+  		L.DomUtil.remove(this._panoDiv);
+
+  		L.DomEvent.off(document, 'mousemove', this.mouseMoveTracking, this);
+  		L.DomEvent.off(document, 'keyup', this.keyUpTracking, this);
+  	},
+
+  	_log: function(args) {
+  		if (this.options.debug) {
+  			console.log(args);
+  		}
+  	},
+
+  	_addClasses: function(el, classNames) {
+  		classNames = classNames.split(" ");
+  		for (var s in classNames) {
+  			L.DomUtil.addClass(el, classNames[s]);
+  		}
+  	},
+
+  	_removeClasses: function(el, classNames) {
+  		classNames = classNames.split(" ");
+  		for (var s in classNames) {
+  			L.DomUtil.removeClass(el, classNames[s]);
+  		}
+  	},
+
+  	_removeAttributes: function(el, attrNames) {
+  		for (var a in attrNames) {
+  			el.removeAttribute(attrNames[a]);
+  		}
+  	},
+
+  	_insertAfter: function(targetNode, newNode) {
+  		targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
+  	},
+
+  	_translateElement: function(el, dx, dy) {
+  		if (dx === false && dy === false) {
+  			this._removeAttributes(this._pegman, ["style", "data-x", "data-y"]);
+  		}
+  		// Element's position is preserved within the data-x/data-y attributes
+  		var x = (parseFloat(el.getAttribute('data-x')) || 0) + dx;
+  		var y = (parseFloat(el.getAttribute('data-y')) || 0) + dy;
+
+  		// Translate element
+  		el.style.webkitTransform = el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+
+  		// Update position attributes
+  		el.setAttribute('data-x', x);
+  		el.setAttribute('data-y', y);
+  	},
+
+  	_updateClasses: function(action) {
+  		switch (action) {
+  			case "pegman-dragging":
+  				this._removeClasses(this._pegman, "dropped");
+  				this._addClasses(this._container, "dragging");
+  				break;
+  			case "pegman-dragged":
+  				this._removeClasses(this._pegman, "can-drop dragged left right active dropped");
+  				this._removeAttributes(this._pegman, ["style", "data-x", "data-y"]);
+  				break;
+  			case "dropzone-actived":
+  				this._addClasses(this._map._container, "drop-active");
+  				break;
+  			case "dropzone-drag-entered":
+  				this._addClasses(this._pegman, "active can-drop");
+  				this._addClasses(this._map._container, "drop-target");
+  				break;
+  			case "dropzone-drag-leaved":
+  				this._removeClasses(this._map._container, "drop-target");
+  				this._removeClasses(this._pegman, "can-drop");
+  				break;
+  			case "dropzone-drop":
+  				this._removeClasses(this._container, "dragging");
+  				this._removeClasses(this._pegman, "active left right");
+  				this._addClasses(this._pegman, "dropped");
+  				this._removeClasses(this._pegman, "can-drop dragged left right active dropped");
+  				break;
+  			case "dropzone-deactivated":
+  				this._removeClasses(this._pegman, "active left right");
+  				this._removeClasses(this._map._container, "drop-active drop-target");
+  				break;
+  			case "mousemove-top":
+  				this._addClasses(this._pegman, "top");
+  				this._removeClasses(this._pegman, "bottom right left");
+  				break;
+  			case "mousemove-bottom":
+  				this._addClasses(this._pegman, "bottom");
+  				this._removeClasses(this._pegman, "top right left");
+  				break;
+  			case "mousemove-left":
+  				this._addClasses(this._pegman, "left");
+  				this._removeClasses(this._pegman, "right top bottom");
+  				break;
+  			case "mousemove-right":
+  				this._addClasses(this._pegman, "right");
+  				this._removeClasses(this._pegman, "left top bottom");
+  				break;
+  			case "pegman-added":
+  				this._addClasses(this._container, "active");
+  				break;
+  			case "pegman-removed":
+  				this._removeClasses(this._container, "active");
+  				break;
+  			case "streetview-shown":
+  				this._addClasses(this._container, "streetview-layer-active");
+  				break;
+  			case "streetview-hidden":
+  				this._removeClasses(this._container, "streetview-layer-active");
+  				break;
+  			default:
+  				throw "Unhandled event:" + action;
+  		}
+  		this.fire("svpc_" + action);
+  	},
+
+  	onDraggableMove: function(e) {
+  		this.mouseMoveTracking(e);
+  		this.pegmanRemove();
+  		this._updateClasses("pegman-dragging");
+  		this._translateElement(this._pegman, e.dx, e.dy);
+  	},
+
+  	onDraggableEnd: function(e) {
+  		this._pegmanMarkerCoords = this._map.mouseEventToLatLng(e);
+  		this.pegmanAdd();
+  		this._updateClasses("pegman-dragged");
+  	},
+
+  	onDropZoneActivated: function(e) {
+  		this._updateClasses("dropzone-actived");
+  	},
+
+  	onDropZoneDragEntered: function(e) {
+  		this.showStreetViewLayer();
+  		this._updateClasses("dropzone-drag-entered");
+  	},
+
+  	onDropZoneDragLeaved: function(e) {
+  		this._updateClasses("dropzone-drag-leaved");
+  	},
+
+  	onDropZoneDropped: function(e) {
+  		this._updateClasses("dropzone-drop");
+  		this._translateElement(this._pegman, false, false);
+  	},
+
+  	onDropZoneDeactivated: function(e) {
+  		this._updateClasses("dropzone-deactivated");
+  	},
+
+  	onPegmanMarkerDragged: function(e) {
+  		this._pegmanMarkerCoords = this._pegmanMarker.getLatLng();
+  		this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
+  	},
+
+  	onMapClick: function(e) {
+  		if (this._streetViewLayerEnabled)
+  			this.findStreetViewData(e.latlng.lat, e.latlng.lng);
+  	},
+
+  	onMapLayerAdd: function(e) {
+  		if (this._googleStreetViewLayer)
+  			this._googleStreetViewLayer.bringToFront();
+  	},
+
+  	onStreetViewPanoramaClose: function() {
+  		this.clear();
+  	},
+
+  	clear: function() {
+  		this.pegmanRemove();
+  		this.hideStreetViewLayer();
+  		this.closeStreetViewPanorama();
+  	},
+
+  	toggleStreetViewLayer: function(e) {
+  		if (this._streetViewLayerEnabled) this.clear();
+  		else this.showStreetViewLayer();
+  		this._log("streetview-layer-toggled");
+  	},
+
+  	pegmanAdd: function() {
+  		this._pegmanMarker.addTo(this._map);
+  		this._pegmanMarker.setLatLng(this._pegmanMarkerCoords);
+  		this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
+  		this._updateClasses("pegman-added");
+  	},
+
+  	pegmanRemove: function() {
+  		this._pegmanMarker.removeFrom(this._map);
+  		this._updateClasses("pegman-removed");
+  	},
+
+  	closeStreetViewPanorama: function() {
+  		this._panoDiv.style.display = "none";
+  	},
+
+  	openStreetViewPanorama: function() {
+  		this._panoDiv.style.display = "block";
+  	},
+
+  	hideStreetViewLayer: function() {
+  		if (this._googleStreetViewLayer) {
+  			this._googleStreetViewLayer.removeFrom(this._map);
+  			this._streetViewLayerEnabled = false;
+  			this._updateClasses("streetview-hidden");
+  		}
+  	},
+
+  	showStreetViewLayer: function() {
+  		if (this._googleStreetViewLayer) {
+  			this._googleStreetViewLayer.addTo(this._map);
+  			this._streetViewLayerEnabled = true;
+  			this._updateClasses("streetview-shown");
+  		}
+  	},
+
+  	findStreetViewData: function(lat, lng) {
+  		this._streetViewCoords = new google.maps.LatLng(lat, lng);
+  		var zoom = this._map.getZoom();
+  		var searchRadius = 100;
+
+  		if (zoom < 6) searchRadius = 5000;
+  		else if (zoom < 10) searchRadius = 500;
+  		else if (zoom < 15) searchRadius = 250;
+  		else if (zoom >= 17) searchRadius = 50;
+  		else searchRadius = 100;
+
+  		this._streetViewService.getPanoramaByLocation(this._streetViewCoords, searchRadius, L.bind(this.processStreetViewServiceData, this));
+  	},
+
+  	processStreetViewServiceData: function(data, status) {
+  		if (status == google.maps.StreetViewStatus.OK) {
+  			this.openStreetViewPanorama();
+  			this._panorama.setPano(data.location.pano);
+  			this._panorama.setPov({
+  				heading: google.maps.geometry.spherical.computeHeading(data.location.latLng, this._streetViewCoords),
+  				pitch: 0,
+  				zoom: 0
+  			});
+  			this._panorama.setVisible(true);
+  		} else {
+  			console.warn("Street View data not found for this location.");
+  			// this.clear(); // TODO: add a visual feedback when no SV data available
+  		}
+  	},
+
+  	/**
+  	 * mouseMoveTracking
+  	 * @desc internal function used to style pegman while dragging
+  	 */
+  	mouseMoveTracking: function(e) {
+  		var mousePos = this._mousePos;
+
+  		// Top <--> Bottom
+  		if (e.pageY < mousePos.old.y) {
+  			mousePos.direction.y = 'top';
+  			this._updateClasses("mousemove-top");
+  		} else if (e.pageY > mousePos.old.y) {
+  			mousePos.direction.y = 'bottom';
+  			this._updateClasses("mousemove-bottom");
+  		}
+  		// Left <--> Right
+  		if (e.pageX < mousePos.old.x) {
+  			mousePos.direction.x = 'left';
+  			this._updateClasses("mousemove-left");
+  		} else if (e.pageX > mousePos.old.x) {
+  			mousePos.direction.x = 'right';
+  			this._updateClasses("mousemove-right");
+  		}
+
+  		mousePos.old.x = e.pageX;
+  		mousePos.old.y = e.pageY;
+  	},
+
+  	/**
+  	 * keyUpTracking
+  	 * @desc internal function used to track keyup events
+  	 */
+  	keyUpTracking: function(e) {
+  		if (e.keyCode == 27) {
+  			this._log('escape pressed');
+  			this.clear();
+  		}
+  	},
+
+  	_disableClickPropagation: function(e) {
+  		L.DomEvent.stopPropagation(e);
+  		L.DomEvent.preventDefault(e);
+  	},
+
+  	_loadGoogleHandlers: function(toggleStreetView) {
+  		if (typeof google !== 'object' || typeof google.maps !== 'object' || typeof L.GridLayer.GoogleMutant !== 'function') return;
+  		this._initGoogleMaps(toggleStreetView);
+  		this._initMouseTracker();
+  	},
+
+  	_initGoogleMaps: function(toggleStreetView) {
+  		this._googleStreetViewLayer = L.gridLayer.googleMutant(this.options.mutant);
+  		this._googleStreetViewLayer.addGoogleLayer('StreetViewCoverageLayer');
+
+  		this._panorama = new google.maps.StreetViewPanorama(this._panoDiv, this.options.pano);
+  		this._streetViewService = new google.maps.StreetViewService();
+
+  		google.maps.event.addListener(this._panorama, 'closeclick', L.bind(this.onStreetViewPanoramaClose, this));
+
+  		if (toggleStreetView) {
+  			this.showStreetViewLayer();
+  		}
+  	},
+
+  	_initMouseTracker: function() {
+  		if (!this._googleStreetViewLayer) return;
+
+  		var tileSize = this._googleStreetViewLayer.getTileSize();
+
+  		this.tileWidth = tileSize.x;
+  		this.tileHeight = tileSize.y;
+
+  		this.defaultDraggableCursor = this._map._container.style.cursor;
+
+  		this._map.on("mousemove", this._setMouseCursor, this);
+  	},
+
+  	_setMouseCursor: function(e) {
+  		var coords = this._getTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
+  		var img = this._getTileImage(coords);
+  		var pixel = this._getTilePixelPoint(img, e.originalEvent);
+  		var hasTileData = this._hasTileData(img, pixel);
+  		this._map._container.style.cursor = hasTileData ? 'pointer' : this.defaultDraggableCursor;
+  	},
+
+  	_getTileCoords: function(lat, lon, zoom) {
+  		var xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
+  		var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(this._toRad(lat)) + 1 / Math.cos(this._toRad(lat))) / Math.PI) / 2 * (1 << zoom)));
+  		return {
+  			x: xtile,
+  			y: ytile,
+  			z: zoom,
+  		};
+  	},
+
+  	_getTileImage: function(coords) {
+  		if (!this._googleStreetViewLayer || !this._googleStreetViewLayer._tiles) return;
+  		var key = this._googleStreetViewLayer._tileCoordsToKey(coords);
+  		var tile = this._googleStreetViewLayer._tiles[key];
+  		if (!tile) return;
+  		var img = tile.el.querySelector('img');
+  		if (!img) return;
+  		this._downloadTile(img.src, this._tileLoaded); // crossOrigin = "Anonymous"
+  		return img;
+  	},
+
+  	_getTilePixelPoint: function(img, e) {
+  		if (!img) return;
+  		var imgRect = img.getBoundingClientRect();
+  		var imgPos = {
+  			pageY: (imgRect.top + window.scrollY).toFixed(0),
+  			pageX: (imgRect.left + window.scrollX).toFixed(0)
+  		};
+  		var mousePos = {
+  			x: e.pageX - imgPos.pageX,
+  			y: e.pageY - imgPos.pageY
+  		};
+  		return mousePos;
+  	},
+
+  	_hasTileData: function(img, pixelPoint) {
+  		if (!this.tileContext || !pixelPoint) return;
+  		var pixelData = this.tileContext.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data;
+  		var alpha = pixelData[3];
+  		var hasTileData = (alpha != 0);
+  		return hasTileData;
+  	},
+
+  	_toRad: function(number) {
+  		return number * Math.PI / 180;
+  	},
+
+  	_downloadTile: function(imageSrc, callback) {
+  		if (!imageSrc) return;
+  		var img = new Image();
+  		img.crossOrigin = "Anonymous";
+  		img.addEventListener("load", callback.bind(this, img), false);
+  		img.src = imageSrc;
+  	},
+
+  	_tileLoaded: function(img) {
+  		this.tileCanvas = document.createElement("canvas");
+  		this.tileContext = this.tileCanvas.getContext("2d");
+
+  		this.tileCanvas.width = this.tileWidth;
+  		this.tileCanvas.height = this.tileHeight;
+
+  		this.tileContext.drawImage(img, 0, 0);
+  	},
+
+  	_loadInteractHandlers: function() {
+  		// TODO: trying to replace "interact.js" with default "L.Draggable" object
+  		// var draggable = new L.Draggable(this._container);
+  		// draggable.enable();
+  		// draggable.on('drag', function(e) { console.log(e); });
+  		if (typeof interact !== 'function') return;
+
+  		// Enable Draggable Element to be Dropped into Map Container
+  		this._draggable = interact(this._pegman).draggable(this._draggableMarkerOpts);
+  		this._dropzone = interact(this._map._container).dropzone(this._dropzoneMapOpts);
+
+  		this._draggable.styleCursor(false);
+
+  		// Toggle on/off SV Layer on Pegman's Container single clicks
+  		interact(this._container).on("tap", L.bind(this.toggleStreetViewLayer, this));
+
+  		// Prevent map drags (Desktop / Mobile) while dragging pegman control
+  		L.DomEvent.on(this._container, "touchstart", function(e) { this._map.dragging.disable(); }, this);
+  		L.DomEvent.on(this._container, "touchend", function(e) { this._map.dragging.enable(); }, this);
+  	},
+
+  	_loadScripts: function(toggleStreetView) {
+  		if (this._lazyLoaderAdded) return;
+  		this._lazyLoaderAdded = true;
+
+  		this._loadJS(this.__interactURL, this._loadInteractHandlers.bind(this), typeof interact !== 'function');
+  		this._loadJS(this.__gmapsURL + '&key=' + this.options.apiKey + '&libraries=' + this.options.libraries + '&callback=?', this._loadGoogleHandlers.bind(this, toggleStreetView), typeof google !== 'object' || typeof google.maps !== 'object');
+  		this._loadJS(this.__mutantURL, this._loadGoogleHandlers.bind(this, toggleStreetView), typeof L.GridLayer.GoogleMutant !== 'function');
+
+  	},
+
+  	_loadJS: function(url, callback, condition) {
+  		if (!condition) {
+  			callback();
+  			return;
+  		}
+  		if (url.indexOf('callback=?') !== -1) {
+  			this._jsonp(url, callback);
+  		} else {
+  			var script = document.createElement('script');
+  			script.src = url;
+  			var loaded = function() {
+  				script.onload = script.onreadystatechange = null;
+  				this._log(url + " loaded");
+  				callback();
+  			}.bind(this);
+  			script.onload = script.onreadystatechange = loaded;
+
+  			var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+  			head.insertBefore(script, head.firstChild);
+  		}
+  	},
+
+  	_jsonp: function(url, callback, params) {
+  		var query = url.indexOf('?') === -1 ? '?' : '&';
+  		params = params || {};
+  		for (var key in params) {
+  			if (params.hasOwnProperty(key)) {
+  				query += encodeURIComponent(key) + '=' + encodeURIComponent(params[key]) + '&';
+  			}
+  		}
+
+  		var timestamp = new Date().getUTCMilliseconds();
+  		var jsonp = "json_call_" + timestamp; // uniqueId('json_call');
+  		window[jsonp] = function(data) {
+  			callback(data);
+  			window[jsonp] = undefined;
+  		};
+
+  		var script = document.createElement('script');
+  		if (url.indexOf('callback=?') !== -1) {
+  			script.src = url.replace('callback=?', 'callback=' + jsonp) + query.slice(0, -1);
+  		} else {
+  			script.src = url + query + 'callback=' + jsonp;
+  		}
+  		var loaded = function() {
+  			if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
+  				script.onload = script.onreadystatechange = null;
+  				if (script && script.parentNode) {
+  					script.parentNode.removeChild(script);
+  				}
+  			}
+  		};
+  		script.async = true;
+  		script.onload = script.onreadystatechange = loaded;
+  		var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+  		// Use insertBefore instead of appendChild to circumvent an IE6 bug.
+  		// This arises when a base node is used.
+  		head.insertBefore(script, head.firstChild);
+  	},
 
   });
 
   L.control.pegman = function(options) {
-    return new L.Control.Pegman(options);
+  	return new L.Control.Pegman(options);
   };
 
   !function(t,a){"object"==typeof exports&&"undefined"!=typeof module?a(exports):"function"==typeof define&&define.amd?define("leaflet-gesture-handling",["exports"],a):a((t=t||self)["leaflet-gesture-handling"]={});}(undefined,function(t){var e={ar:{touch:"استخدم إصبعين لتحريك الخريطة",scroll:"‏استخدم ctrl + scroll لتصغير/تكبير الخريطة",scrollMac:"يمكنك استخدام ⌘ + التمرير لتكبير/تصغير الخريطة"},bg:{touch:"Използвайте два пръста, за да преместите картата",scroll:"Задръжте бутона Ctrl натиснат, докато превъртате, за да промените мащаба на картата",scrollMac:"Задръжте бутона ⌘ натиснат, докато превъртате, за да промените мащаба на картата"},bn:{touch:"মানচিত্রটিকে সরাতে দুটি আঙ্গুল ব্যবহার করুন",scroll:"ম্যাপ জুম করতে ctrl + scroll ব্যবহার করুন",scrollMac:"ম্যাপে জুম করতে ⌘ বোতাম টিপে স্ক্রল করুন"},ca:{touch:"Fes servir dos dits per moure el mapa",scroll:"Prem la tecla Control mentre et desplaces per apropar i allunyar el mapa",scrollMac:"Prem la tecla ⌘ mentre et desplaces per apropar i allunyar el mapa"},cs:{touch:"K posunutí mapy použijte dva prsty",scroll:"Velikost zobrazení mapy změňte podržením klávesy Ctrl a posouváním kolečka myši",scrollMac:"Velikost zobrazení mapy změníte podržením klávesy ⌘ a posunutím kolečka myši / touchpadu"},da:{touch:"Brug to fingre til at flytte kortet",scroll:"Brug ctrl + rullefunktionen til at zoome ind og ud på kortet",scrollMac:"Brug ⌘ + rullefunktionen til at zoome ind og ud på kortet"},de:{touch:"Verschieben der Karte mit zwei Fingern",scroll:"Verwende Strg+Scrollen zum Zoomen der Karte",scrollMac:"⌘"},el:{touch:"Χρησιμοποιήστε δύο δάχτυλα για μετακίνηση στον χάρτη",scroll:"Χρησιμοποιήστε το πλήκτρο Ctrl και κύλιση, για να μεγεθύνετε τον χάρτη",scrollMac:"Χρησιμοποιήστε το πλήκτρο ⌘ + κύλιση για εστίαση στον χάρτη"},en:{touch:"Use two fingers to move the map",scroll:"Use ctrl + scroll to zoom the map",scrollMac:"Use ⌘ + scroll to zoom the map"},"en-AU":{touch:"Use two fingers to move the map",scroll:"Use ctrl + scroll to zoom the map",scrollMac:"Use ⌘ + scroll to zoom the map"},"en-GB":{touch:"Use two fingers to move the map",scroll:"Use ctrl + scroll to zoom the map",scrollMac:"Use ⌘ + scroll to zoom the map"},es:{touch:"Para mover el mapa, utiliza dos dedos",scroll:"Mantén pulsada la tecla Ctrl mientras te desplazas para acercar o alejar el mapa",scrollMac:"Mantén pulsada la tecla ⌘ mientras te desplazas para acercar o alejar el mapa"},eu:{touch:"Erabili bi hatz mapa mugitzeko",scroll:"Mapan zooma aplikatzeko, sakatu Ktrl eta egin gora edo behera",scrollMac:"Eduki sakatuta ⌘ eta egin gora eta behera mapa handitu eta txikitzeko"},fa:{touch:"برای حرکت دادن نقشه از دو انگشت استفاده کنید.",scroll:"‏برای بزرگ‌نمایی نقشه از ctrl + scroll استفاده کنید",scrollMac:"برای بزرگ‌نمایی نقشه، از ⌘ + پیمایش استفاده کنید."},fi:{touch:"Siirrä karttaa kahdella sormella.",scroll:"Zoomaa karttaa painamalla Ctrl-painiketta ja vierittämällä.",scrollMac:"Zoomaa karttaa pitämällä painike ⌘ painettuna ja vierittämällä."},fil:{touch:"Gumamit ng dalawang daliri upang iusog ang mapa",scroll:"Gamitin ang ctrl + scroll upang i-zoom ang mapa",scrollMac:"Gamitin ang ⌘ + scroll upang i-zoom ang mapa"},fr:{touch:"Utilisez deux doigts pour déplacer la carte",scroll:"Vous pouvez zoomer sur la carte à l'aide de CTRL+Molette de défilement",scrollMac:"Vous pouvez zoomer sur la carte à l'aide de ⌘+Molette de défilement"},gl:{touch:"Utiliza dous dedos para mover o mapa",scroll:"Preme Ctrl mentres te desprazas para ampliar o mapa",scrollMac:"Preme ⌘ e desprázate para ampliar o mapa"},gu:{touch:"નકશો ખસેડવા બે આંગળીઓનો ઉપયોગ કરો",scroll:"નકશાને ઝૂમ કરવા માટે ctrl + સ્ક્રોલનો ઉપયોગ કરો",scrollMac:"નકશાને ઝૂમ કરવા ⌘ + સ્ક્રોલનો ઉપયોગ કરો"},hi:{touch:"मैप एक जगह से दूसरी जगह ले जाने के लिए दो उंगलियों का इस्तेमाल करें",scroll:"मैप को ज़ूम करने के लिए ctrl + स्क्रोल का उपयोग करें",scrollMac:"मैप को ज़ूम करने के लिए ⌘ + स्क्रोल का उपयोग करें"},hr:{touch:"Pomičite kartu pomoću dva prsta",scroll:"Upotrijebite Ctrl i klizač miša da biste zumirali kartu",scrollMac:"Upotrijebite gumb ⌘ dok se pomičete za zumiranje karte"},hu:{touch:"Két ujjal mozgassa a térképet",scroll:"A térkép a ctrl + görgetés használatával nagyítható",scrollMac:"A térkép a ⌘ + görgetés használatával nagyítható"},id:{touch:"Gunakan dua jari untuk menggerakkan peta",scroll:"Gunakan ctrl + scroll untuk memperbesar atau memperkecil peta",scrollMac:"Gunakan ⌘ + scroll untuk memperbesar atau memperkecil peta"},it:{touch:"Utilizza due dita per spostare la mappa",scroll:"Utilizza CTRL + scorrimento per eseguire lo zoom della mappa",scrollMac:"Utilizza ⌘ + scorrimento per eseguire lo zoom della mappa"},iw:{touch:"הזז את המפה באמצעות שתי אצבעות",scroll:"‏אפשר לשנות את מרחק התצוגה במפה באמצעות מקש ctrl וגלילה",scrollMac:"אפשר לשנות את מרחק התצוגה במפה באמצעות מקש ⌘ וגלילה"},ja:{touch:"地図を移動させるには指 2 本で操作します",scroll:"地図をズームするには、Ctrl キーを押しながらスクロールしてください",scrollMac:"地図をズームするには、⌘ キーを押しながらスクロールしてください"},kn:{touch:"Use two fingers to move the map",scroll:"Use Ctrl + scroll to zoom the map",scrollMac:"Use ⌘ + scroll to zoom the map"},ko:{touch:"지도를 움직이려면 두 손가락을 사용하세요.",scroll:"지도를 확대/축소하려면 Ctrl을 누른 채 스크롤하세요.",scrollMac:"지도를 확대하려면 ⌘ + 스크롤 사용"},lt:{touch:"Perkelkite žemėlapį dviem pirštais",scroll:"Slinkite nuspaudę klavišą „Ctrl“, kad pakeistumėte žemėlapio mastelį",scrollMac:"Paspauskite klavišą ⌘ ir slinkite, kad priartintumėte žemėlapį"},lv:{touch:"Lai pārvietotu karti, bīdiet to ar diviem pirkstiem",scroll:"Kartes tālummaiņai izmantojiet ctrl + ritināšanu",scrollMac:"Lai veiktu kartes tālummaiņu, izmantojiet ⌘ + ritināšanu"},ml:{touch:"മാപ്പ് നീക്കാൻ രണ്ട് വിരലുകൾ ഉപയോഗിക്കുക",scroll:"കൺട്രോൾ + സ്‌ക്രോൾ ഉപയോഗിച്ച് ‌മാപ്പ് ‌സൂം ചെയ്യുക",scrollMac:"⌘ + സ്‌ക്രോൾ ഉപയോഗിച്ച് ‌മാപ്പ് ‌സൂം ചെയ്യുക"},mr:{touch:"नकाशा हलविण्यासाठी दोन बोटे वापरा",scroll:"नकाशा झूम करण्यासाठी ctrl + scroll वापरा",scrollMac:"नकाशावर झूम करण्यासाठी ⌘ + स्क्रोल वापरा"},nl:{touch:"Gebruik twee vingers om de kaart te verplaatsen",scroll:"Gebruik Ctrl + scrollen om in- en uit te zoomen op de kaart",scrollMac:"Gebruik ⌘ + scrollen om in en uit te zoomen op de kaart"},no:{touch:"Bruk to fingre for å flytte kartet",scroll:"Hold ctrl-tasten inne og rull for å zoome på kartet",scrollMac:"Hold inne ⌘-tasten og rull for å zoome på kartet"},pl:{touch:"Przesuń mapę dwoma palcami",scroll:"Naciśnij CTRL i przewiń, by przybliżyć mapę",scrollMac:"Naciśnij ⌘ i przewiń, by przybliżyć mapę"},pt:{touch:"Use dois dedos para mover o mapa",scroll:"Pressione Ctrl e role a tela simultaneamente para aplicar zoom no mapa",scrollMac:"Use ⌘ e role a tela simultaneamente para aplicar zoom no mapa"},"pt-BR":{touch:"Use dois dedos para mover o mapa",scroll:"Pressione Ctrl e role a tela simultaneamente para aplicar zoom no mapa",scrollMac:"Use ⌘ e role a tela simultaneamente para aplicar zoom no mapa"},"pt-PT":{touch:"Utilize dois dedos para mover o mapa",scroll:"Utilizar ctrl + deslocar para aumentar/diminuir zoom do mapa",scrollMac:"Utilize ⌘ + deslocar para aumentar/diminuir o zoom do mapa"},ro:{touch:"Folosiți două degete pentru a deplasa harta",scroll:"Apăsați tasta ctrl și derulați simultan pentru a mări harta",scrollMac:"Folosiți ⌘ și derulați pentru a mări/micșora harta"},ru:{touch:"Чтобы переместить карту, проведите по ней двумя пальцами",scroll:"Чтобы изменить масштаб, прокручивайте карту, удерживая клавишу Ctrl.",scrollMac:"Чтобы изменить масштаб, нажмите ⌘ + прокрутка"},sk:{touch:"Mapu môžete posunúť dvoma prstami",scroll:"Ak chcete priblížiť mapu, stlačte kláves ctrl a posúvajte",scrollMac:"Ak chcete priblížiť mapu, stlačte kláves ⌘ a posúvajte kolieskom myši"},sl:{touch:"Premaknite zemljevid z dvema prstoma",scroll:"Zemljevid povečate tako, da držite tipko Ctrl in vrtite kolesce na miški",scrollMac:"Uporabite ⌘ + funkcijo pomika, da povečate ali pomanjšate zemljevid"},sr:{touch:"Мапу померајте помоћу два прста",scroll:"Притисните ctrl тастер док померате да бисте зумирали мапу",scrollMac:"Притисните тастер ⌘ док померате да бисте зумирали мапу"},sv:{touch:"Använd två fingrar för att flytta kartan",scroll:"Använd ctrl + rulla för att zooma kartan",scrollMac:"Använd ⌘ + rulla för att zooma på kartan"},ta:{touch:"மேப்பை நகர்த்த இரண்டு விரல்களைப் பயன்படுத்தவும்",scroll:"மேப்பை பெரிதாக்கி/சிறிதாக்கிப் பார்க்க, ctrl பட்டனைப் பிடித்தபடி, மேலே/கீழே ஸ்க்ரால் செய்யவும்",scrollMac:"மேப்பை பெரிதாக்கி/சிறிதாக்கிப் பார்க்க, ⌘ பட்டனைப் பிடித்தபடி, மேலே/கீழே ஸ்க்ரால் செய்யவும்"},te:{touch:"మ్యాప్‌ని తరలించడం కోసం రెండు వేళ్లను ఉపయోగించండి",scroll:"మ్యాప్‌ని జూమ్ చేయడానికి ctrl బటన్‌ను నొక్కి ఉంచి, స్క్రోల్ చేయండి",scrollMac:"మ్యాప్ జూమ్ చేయాలంటే ⌘ + స్క్రోల్ ఉపయోగించండి"},th:{touch:"ใช้ 2 นิ้วเพื่อเลื่อนแผนที่",scroll:"กด Ctrl ค้างไว้ แล้วเลื่อนหน้าจอเพื่อซูมแผนที่",scrollMac:"กด ⌘ แล้วเลื่อนหน้าจอเพื่อซูมแผนที่"},tl:{touch:"Gumamit ng dalawang daliri upang iusog ang mapa",scroll:"Gamitin ang ctrl + scroll upang i-zoom ang mapa",scrollMac:"Gamitin ang ⌘ + scroll upang i-zoom ang mapa"},tr:{touch:"Haritada gezinmek için iki parmağınızı kullanın",scroll:"Haritayı yakınlaştırmak için ctrl + kaydırma kombinasyonunu kullanın",scrollMac:"Haritayı yakınlaştırmak için ⌘ tuşuna basıp ekranı kaydırın"},uk:{touch:"Переміщуйте карту двома пальцями",scroll:"Щоб змінювати масштаб карти, прокручуйте коліщатко миші, утримуючи клавішу Ctrl",scrollMac:"Щоб змінити масштаб карти, використовуйте ⌘ + прокручування"},vi:{touch:"Sử dụng hai ngón tay để di chuyển bản đồ",scroll:"Sử dụng ctrl + cuộn để thu phóng bản đồ",scrollMac:"Sử dụng ⌘ + cuộn để thu phóng bản đồ"},"zh-CN":{touch:"使用双指移动地图",scroll:"按住 Ctrl 并滚动鼠标滚轮才可缩放地图",scrollMac:"按住 ⌘ 并滚动鼠标滚轮才可缩放地图"},"zh-TW":{touch:"同時以兩指移動地圖",scroll:"按住 ctrl 鍵加上捲動滑鼠可以縮放地圖",scrollMac:"按 ⌘ 加上滾動捲軸可以縮放地圖"}},a=!1,l={text:{},duration:1700},o=L.Handler.extend({_isScrolling:!1,_isTouching:!1,_isFading:!1,addHooks:function(){this._handleTouch=L.bind(this._handleTouch,this),this._setGestureHandlingOptions(),this._disableInteractions(),this._map._container.addEventListener("touchstart",this._handleTouch),this._map._container.addEventListener("touchmove",this._handleTouch),this._map._container.addEventListener("touchend",this._handleTouch),this._map._container.addEventListener("touchcancel",this._handleTouch),this._map._container.addEventListener("click",this._handleTouch),L.DomEvent.on(this._map._container,"mousewheel",this._handleScroll,this),L.DomEvent.on(this._map,"mouseover",this._handleMouseOver,this),L.DomEvent.on(this._map,"mouseout",this._handleMouseOut,this),L.DomEvent.on(this._map,"movestart",this._handleDragging,this),L.DomEvent.on(this._map,"move",this._handleDragging,this),L.DomEvent.on(this._map,"moveend",this._handleDragging,this),L.DomEvent.off(this._map,"enterFullscreen",this._onEnterFullscreen,this),L.DomEvent.off(this._map,"exitFullscreen",this._onExitFullscreen,this),L.DomEvent.on(this._map,"enterFullscreen",this._onEnterFullscreen,this),L.DomEvent.on(this._map,"exitFullscreen",this._onExitFullscreen,this),L.DomUtil.addClass(this._map._container,"leaflet-gesture-handling");},removeHooks:function(){this._enableInteractions(),this._map._container.removeEventListener("touchstart",this._handleTouch),this._map._container.removeEventListener("touchmove",this._handleTouch),this._map._container.removeEventListener("touchend",this._handleTouch),this._map._container.removeEventListener("touchcancel",this._handleTouch),this._map._container.removeEventListener("click",this._handleTouch),L.DomEvent.off(this._map._container,"mousewheel",this._handleScroll,this),L.DomEvent.off(this._map,"mouseover",this._handleMouseOver,this),L.DomEvent.off(this._map,"mouseout",this._handleMouseOut,this),L.DomEvent.off(this._map,"movestart",this._handleDragging,this),L.DomEvent.off(this._map,"move",this._handleDragging,this),L.DomEvent.off(this._map,"moveend",this._handleDragging,this),L.DomUtil.removeClass(this._map._container,"leaflet-gesture-handling");},_handleDragging:function(t){"movestart"==t.type||"move"==t.type?a=!0:"moveend"==t.type&&(a=!1);},_disableInteractions:function(){this._map.dragging.disable(),this._map.scrollWheelZoom.disable(),this._map.tap&&this._map.tap.disable();},_enableInteractions:function(){this._map.dragging.enable(),this._map.scrollWheelZoom.enable(),this._map.tap&&this._map.tap.enable();},_enableWarning:function(t){clearTimeout(this._isFading),L.DomUtil.addClass(this._map._container,"leaflet-gesture-handling-"+t),L.DomUtil.addClass(this._map._container,"leaflet-gesture-handling-warning");},_disableWarning:function(t,a){clearTimeout(this._isFading),this._isFading=setTimeout(L.bind(function(t){L.DomUtil.removeClass(this._map._container,"leaflet-gesture-handling-"+t);},this,t),a||this._map.options.gestureHandlingOptions.duration),L.DomUtil.removeClass(this._map._container,"leaflet-gesture-handling-warning");},_isLanguageContent:function(t){return t&&t.touch&&t.scroll&&t.scrollMac},_isMacUser:function(){return 0<=navigator.platform.toUpperCase().indexOf("MAC")},_parseGestureHandlingOptions:function(){var t=L.extend(this._map.options.gestureHandlingOptions,l);return this._map.options.gestureHandlingText&&(t.text=this._map.options.gestureHandlingText),t},_setGestureHandlingOptions:function(){var t=this._parseGestureHandlingOptions(),a=this._isLanguageContent(t.text)?t.text:this._getLanguageContent(t.locale);this._map._container.setAttribute("data-gesture-handling-touch-content",a.touch),this._map._container.setAttribute("data-gesture-handling-scroll-content",a.scroll),this._touchWarning=a.touch,this._scrollWarning=a.scroll;},_getUserLanguage:function(){return navigator.languages?navigator.languages[0]:navigator.language||navigator.userLanguage},_getLanguageContent:function(t){t=t||this._getUserLanguage()||"en";var a=e[t];return (a=(a=a||-1===t.indexOf("-")?a:e[t.split("-")[0]])||e.en).scroll=this._isMacUser()?a.scrollMac:a.scroll,a},_hasClass:function(t,a){for(var e=0;e<a.length;e++)if(L.DomUtil.hasClass(t,a[e]))return !0;return !1},_handleTouch:function(t){this._hasClass(t.target,["leaflet-control-minimap","leaflet-interactive","leaflet-popup-content","leaflet-popup-content-wrapper","leaflet-popup-close-button","leaflet-control-zoom-in","leaflet-control-zoom-out"])?L.DomUtil.hasClass(t.target,"leaflet-interactive")&&"touchmove"===t.type&&1===t.touches.length?this._enableTouchWarning():this._disableTouchWarning():"touchmove"!==t.type&&"touchstart"!==t.type?this._disableTouchWarning():1===t.touches.length?this._enableTouchWarning():this._disableTouchWarning();},_enableTouchWarning:function(){this._enableWarning("touch"),this._disableInteractions();},_disableTouchWarning:function(t){clearTimeout(this._isTouching),this._isTouching=setTimeout(L.bind(function(){this._disableWarning("touch"),this._enableInteractions();},this),t||0);},_enableScrollWarning:function(){this._enableWarning("scroll"),this._map.scrollWheelZoom.disable();},_disableScrollWarning:function(t){clearTimeout(this._isScrolling),this._isScrolling=setTimeout(L.bind(function(){this._disableWarning("scroll"),this._map.scrollWheelZoom.enable();},this),t||0);},_handleScroll:function(t){t.metaKey||t.ctrlKey?(t.preventDefault(),this._disableScrollWarning()):(this._enableScrollWarning(),this._disableScrollWarning(this._map.options.gestureHandlingOptions.duration));},_handleMouseOver:function(t){this._enableInteractions();},_handleMouseOut:function(t){a||this._disableInteractions();},_onExitFullscreen:function(){this._map.options.gestureHandling&&this._map.gestureHandling.enable();},_onEnterFullscreen:function(){this._map.options.gestureHandling&&this._map.gestureHandling.disable();}});L.Map.mergeOptions({gestureHandlingOptions:l}),L.Map.addInitHook("addHandler","gestureHandling",o),t.GestureHandling=o,t.default=o,Object.defineProperty(t,"__esModule",{value:!0});});
@@ -1771,6 +1769,9 @@
         if (this.options.inline) {
           this.options.collapsed = false;
           L.DomUtil.addClass(this._container, "leaflet-control-layers-inline");
+        }
+        if (this.options.className) {
+          L.DomUtil.addClass(this._container, this.options.className);
         }
         return this._container;
       },
@@ -3943,5 +3944,5 @@
 
   })();
 
-}));
+})));
 //# sourceMappingURL=leaflet-ui-src.js.map
