@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.2.7+master.1875884";
+  var version = "0.2.8+master.81d98ca";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
@@ -3773,7 +3773,6 @@
   				this.once('plugins_loaded', function() {
   					if (initHooks < this._initHooks.length)
   						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
-  							console.log(this._initHooks, i);
   							this._initHooks[i].call(this);
   						}
   				});

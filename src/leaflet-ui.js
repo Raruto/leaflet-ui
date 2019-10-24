@@ -441,7 +441,6 @@ var lazyLoader = {
 				this.once('plugins_loaded', function() {
 					if (initHooks < this._initHooks.length)
 						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
-							console.log(this._initHooks, i);
 							this._initHooks[i].call(this);
 						}
 				});
