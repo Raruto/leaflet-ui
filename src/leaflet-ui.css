@@ -77,7 +77,6 @@
 .leaflet-control-resizer-s,
 .leaflet-control-resizer-se {
 	border-bottom: none !important;
-	;
 }
 
 .leaflet-control-resizer-e,
@@ -89,4 +88,10 @@
 .leaflet-control-resizer-transparent:hover::after,
 .leaflet-control-resizer-transparent-fakedhover::after {
 	border-width: 2px;
+}
+
+.leaflet-control-resizer-corner-e,
+.leaflet-control-resizer-corner-s,
+.leaflet-control-resizer-corner-se {
+	pointer-events: none;
 }
