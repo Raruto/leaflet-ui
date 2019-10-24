@@ -434,6 +434,19 @@ var lazyLoader = {
 				}
 				lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, this.options.plugins]);
 			}
+
+			// Lazy load initHooks
+			if (this._initHooks) {
+				let initHooks = this._initHooks.length;
+				this.on('plugins_loaded', function() {
+					if (initHooks < this._initHooks.length)
+						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
+							console.log(this._initHooks, i);
+							this._initHooks[i].call(this);
+						}
+				});
+			}
+
 			lazyLoader.loader
 				.then(function() {
 					this.fire('plugins_loaded');
