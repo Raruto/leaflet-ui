@@ -307,9 +307,25 @@ var lazyLoader = {
 			}
 		}
 
+		// Keep a reference of previous mapTypeId
+		this._lastMapTypeId = this.options.mapTypeId;
+		this._prevMapTypeId = this.options.mapTypeId;
+		this.on('baselayerchange', function(e) {
+			if (e && e.layer && e.layer.mapTypeId) {
+				this._prevMapTypeId = this._lastMapTypeId;
+				this._lastMapTypeId = e.layer.mapTypeId;
+			}
+		});
+
+		// Keep default baselayers to the lower level
+		this.on('baselayerchange', function(e) {
+			if (e && e.layer && e.layer.mapTypeId && e.layer.bringToBack) e.layer.bringToBack();
+		});
+
 		// Layers Control.
 		if (this.options.layersControl) {
 			controls.layers = new L.Control.Layers(baseMaps, null, this.options.layersControl);
+			this.on('zoomend', autoToggleSatelliteLayer, this);
 		}
 
 		// Attribution Control.
@@ -454,14 +470,47 @@ var lazyLoader = {
 		}
 	}
 
-	// Conditionally load Leaflet Map Attributions.
+	// Conditionally show leaflet attribution when showing GoogleMutant tiles
 	function updateLeafletAttribution(defaultAttribution, e) {
 		if (e && e.layer) {
-			// Remove leaflet attribution when showing GoogleMutant tiles
 			this.attributionControl.setPrefix((L.GridLayer.GoogleMutant && e.layer instanceof L.GridLayer.GoogleMutant) ? false : defaultAttribution);
-			// Keep default baselayers to the lower level
-			if (e.layer.mapTypeId && e.layer.bringToBack) e.layer.bringToBack();
 		}
+	}
+
+	// Automatically show satellite layer at higher zoom levels
+	function autoToggleSatelliteLayer(e) {
+		let zoom = this.getZoom();
+		let control = this.controls.layers;
+		let inputs = control._layerControlInputs;
+
+		for (let i in inputs) {
+			let input = inputs[i];
+			let layer = control._getLayer(input.layerId).layer;
+			let mapTypeId = layer.mapTypeId;
+			if (mapTypeId == "satellite") {
+				if (zoom >= 18 && !layer._map && !layer._isAutoToggled) {
+					layer._isAutoToggled = true;
+					input.click();
+					break;
+				} else if (zoom < 18 && layer._map && layer._isAutoToggled) {
+					for (let j in inputs) {
+						let input = inputs[j];
+						let layer = control._getLayer(input.layerId).layer;
+						let mapTypeId = layer.mapTypeId;
+						if (mapTypeId == this._prevMapTypeId) {
+							input.click();
+							break;
+						}
+					}
+					layer._isAutoToggled = false;
+					break;
+				} else if (zoom < 18 && !layer._map && layer._isAutoToggled) {
+					layer._isAutoToggled = false;
+					break;
+				}
+			}
+		}
+
 	}
 
 	var minimapProto = L.Control.MiniMap.prototype;
