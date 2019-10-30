@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.2.8+master.81d98ca";
+  var version = "0.2.9+master.0f94263";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
@@ -3787,7 +3787,12 @@
 
   	// Conditionally load Leaflet Map Attributions.
   	function updateLeafletAttribution(defaultAttribution, e) {
-  		this.attributionControl.setPrefix((e && e.layer && L.GridLayer.GoogleMutant && e.layer instanceof L.GridLayer.GoogleMutant) ? false : defaultAttribution);
+  		if (e && e.layer) {
+  			// Remove leaflet attribution when showing GoogleMutant tiles
+  			this.attributionControl.setPrefix((L.GridLayer.GoogleMutant && e.layer instanceof L.GridLayer.GoogleMutant) ? false : defaultAttribution);
+  			// Keep default baselayers to the lower level
+  			if (e.layer.mapTypeId && e.layer.bringToBack) e.layer.bringToBack();
+  		}
   	}
 
   	var minimapProto = L.Control.MiniMap.prototype;
