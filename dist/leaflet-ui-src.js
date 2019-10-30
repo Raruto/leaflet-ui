@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.2.9+master.0f94263";
+  var version = "0.3.0+master.6edcb30";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
@@ -3775,6 +3775,7 @@
   						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
   							this._initHooks[i].call(this);
   						}
+  					this.fire('initHooks_called');
   				});
   			}
 

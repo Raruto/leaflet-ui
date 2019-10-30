@@ -443,6 +443,7 @@ var lazyLoader = {
 						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
 							this._initHooks[i].call(this);
 						}
+					this.fire('initHooks_called');
 				});
 			}
 
