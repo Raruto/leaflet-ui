@@ -412,17 +412,19 @@ var lazyLoader = {
 			this.fire('idle');
 			// Prevent adding multiple default base layers when using multiple maps.
 			if (this.options.mapTypeId) {
-				var baseLayer = this.options.mapTypes[this.options.mapTypeId];
+				let baseLayer = this.options.mapTypes[this.options.mapTypeId];
 				if (baseLayer && baseMaps[baseLayer.name]) {
 					this.options.layers = this.options.layers.filter(item => item._leaflet_id !== baseMaps[baseLayer.name]._leaflet_id);
-					baseMaps[baseLayer.name].bringToBack();
+					let layer = baseMaps[baseLayer.name];
+					if (layer.setZIndex) layer.setZIndex(0);
+					else if (layer.bringToBack) layer.bringToBack();
 				}
 			}
 		}, this);
 
 		// Set default base layer.
 		if (this.options.mapTypeId) {
-			var baseLayer = this.options.mapTypes[this.options.mapTypeId];
+			let baseLayer = this.options.mapTypes[this.options.mapTypeId];
 			if (baseLayer && baseMaps[baseLayer.name]) {
 				this.options.layers.unshift(baseMaps[baseLayer.name]); // Add to the array of layers that will be automatically loaded within the map initially.
 			}
