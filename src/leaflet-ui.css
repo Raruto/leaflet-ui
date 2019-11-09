@@ -2,6 +2,7 @@
 @import url("../node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css");
 @import url("../node_modules/leaflet.fullscreen/Control.FullScreen.css");
 @import url("../node_modules/@raruto/leaflet-gesture-handling/dist/leaflet-gesture-handling.css");
+@import url("../node_modules/@raruto/leaflet-edit-osm/leaflet-edit-osm.css");
 @import url("../node_modules/leaflet-control-layers-inline/leaflet-control-layers-inline.css");
 @import url("../node_modules/leaflet-minimap/dist/Control.MiniMap.min.css");
 @import url("../node_modules/leaflet-loading/src/Control.Loading.css");
@@ -24,14 +25,6 @@
   line-height: 1;
 }
 
-.leaflet-edit-osm.leaflet-control a {
-  padding-right: 5px;
-}
-
-.leaflet-edit-osm.leaflet-control-attribution.leaflet-control {
-  clear: both;
-}
-
 .leaflet-control-zoom~.leaflet-control-scale.leaflet-control {
   clear: both;
   margin: 0;
@@ -41,8 +34,7 @@
   line-height: 1;
 }
 
-.leaflet-control-scale~.leaflet-control-attribution.leaflet-control,
-.leaflet-edit-osm~.leaflet-control-attribution.leaflet-control {
+.leaflet-control-scale~.leaflet-control-attribution.leaflet-control {
   clear: none;
 }
 
