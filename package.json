@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c build/rollup.config.js",
-    "watch": "rollup -c build/rollup.config.js --watch"
+    "watch": "rollup -c build/rollup.config.js --watch",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -29,19 +30,19 @@
   "devDependencies": {
     "postcss-copy": "^7.1.0",
     "postcss-import": "^12.0.1",
-    "rollup": "^1.26.3",
+    "rollup": "^1.31.0",
     "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-git-version": "^0.2.1",
+    "rollup-plugin-git-version": "^0.3.1",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-postcss": "^2.0.3",
-    "rollup-plugin-terser": "^5.1.2"
+    "rollup-plugin-postcss": "^2.0.6",
+    "rollup-plugin-terser": "^5.2.0"
   },
   "peerDependencies": {
-    "leaflet": "^1.5.1"
+    "leaflet": "^1.6.0"
   },
   "dependencies": {
     "@raruto/leaflet-edit-osm": "0.0.1",
-    "@raruto/leaflet-gesture-handling": "^1.2.4",
+    "@raruto/leaflet-gesture-handling": "^1.2.5",
     "leaflet-control-layers-inline": "0.0.5",
     "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
@@ -52,6 +53,6 @@
     "leaflet.control.resizer": "0.0.1",
     "leaflet.fullscreen": "^1.6.0",
     "leaflet.gridlayer.googlemutant": "^0.8.0",
-    "leaflet.locatecontrol": "^0.68.0"
+    "leaflet.locatecontrol": "^0.70.0"
   }
 }
