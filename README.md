@@ -2,10 +2,10 @@
 
 Leaflet presets for common user interface customizations
 
-_For a working example see [demo](https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html)_
+_For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/leaflet-ui.html)_
 
 <p align="center">
-    <a href="https://raruto.github.io/examples/leaflet-ui/leaflet-ui.html"><img src="https://raruto.github.io/img/leaflet-ui.png" alt="Leaflet default UI" /></a>
+    <a href="https://raruto.github.io/leaflet-ui/examples/leaflet-ui.html"><img src="https://raruto.github.io/img/leaflet-ui.png" alt="Leaflet default UI" /></a>
 </p>
 
 
