@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.4.0+master.5716165f";
+  var version = "0.4.1+master.5716165f";
 
   /*!
   Copyright (c) 2016 Dominik Moritz
