@@ -68,6 +68,16 @@ var lazyLoader = {
 	// You can ovveride them by passing one of the following to leaflet map constructor.
 	var default_options = {
 		mapTypes: {
+			atlas: {
+				name: 'Atlas',
+				url: 'https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}.png',
+				options: {
+					maxZoom: 24,
+					maxNativeZoom: 22,
+					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
+					// apikey: '<your apikey>',
+				},
+			},
 			streets: {
 				name: 'Streets',
 				url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -77,9 +87,19 @@ var lazyLoader = {
 					attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 				},
 			},
+			cycle: {
+				name: 'Cycle',
+				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
+				options: {
+					maxZoom: 24,
+					maxNativeZoom: 22,
+					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
+					// apikey: '<your apikey>',
+				},
+			},
 			terrain: {
 				name: 'Terrain',
-				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
@@ -258,17 +278,31 @@ var lazyLoader = {
 		// Set deafult tile providers Api Keys (if any).
 		if (this.options.apiKeys) {
 			if (this.options.apiKeys.thunderforest) {
+				this.options.mapTypes.atlas.options.apikey = this.options.apiKeys.thunderforest;
 				this.options.mapTypes.terrain.options.apikey = this.options.apiKeys.thunderforest;
+				this.options.mapTypes.cycle.options.apikey = this.options.apiKeys.thunderforest;
 			}
 			if (this.options.apiKeys.google) {
 				this.options.pegmanControl.apiKey = this.options.apiKeys.google;
 			}
 		}
 		// Append Thunderforest Api Key.
+		if (this.options.mapTypes.atlas.options.apikey) {
+			var url = this.options.mapTypes.atlas.url;
+			if (url.indexOf('apikey=') === -1) {
+				this.options.mapTypes.atlas.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
+			}
+		}
 		if (this.options.mapTypes.terrain.options.apikey) {
 			var url = this.options.mapTypes.terrain.url;
 			if (url.indexOf('apikey=') === -1) {
 				this.options.mapTypes.terrain.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
+			}
+		}
+		if (this.options.mapTypes.cycle.options.apikey) {
+			var url = this.options.mapTypes.cycle.url;
+			if (url.indexOf('apikey=') === -1) {
+				this.options.mapTypes.cycle.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
 			}
 		}
 		// Fix default mapTypeId if missing in mapTypeIds array.
