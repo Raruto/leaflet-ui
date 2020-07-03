@@ -8,6 +8,7 @@
 @import url("../node_modules/leaflet-loading/src/Control.Loading.css");
 @import url("../node_modules/leaflet-search/dist/leaflet-search.min.css");
 @import url("../node_modules/leaflet.control.resizer/L.Control.Resizer.css");
+@import url("../node_modules/leaflet.visualclick/dist/L.VisualClick.css");
 
 .leaflet-control-locate a {
   background-image: url(https://unpkg.com/@raruto/leaflet-elevation@0.3.9/images/elevation-locate.png);

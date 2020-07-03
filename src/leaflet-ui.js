@@ -10,6 +10,7 @@ import 'leaflet-loading';
 import 'leaflet-search';
 import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
+import 'leaflet.visualclick';
 
 const currentScript = document.currentScript;
 const currentVersion = version.split("+")[0].trim();
@@ -226,6 +227,7 @@ var lazyLoader = {
 		mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
 		mapTypes: undefined,
 		gestureHandling: true,
+		visualClick: true,
 		zoomControl: true,
 		scaleControl: true,
 		pegmanControl: true,

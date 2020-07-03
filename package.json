@@ -53,6 +53,7 @@
     "leaflet.control.resizer": "0.0.1",
     "leaflet.fullscreen": "^1.6.0",
     "leaflet.gridlayer.googlemutant": "^0.8.0",
-    "leaflet.locatecontrol": "^0.70.0"
+    "leaflet.locatecontrol": "^0.70.0",
+    "leaflet.visualclick": "^1.1.4"
   }
 }
