@@ -1265,6 +1265,8 @@
 
   		L.DomEvent.off(document, 'mousemove', this.mouseMoveTracking, this);
   		L.DomEvent.off(document, 'keyup', this.keyUpTracking, this);
+
+  		map.off("mousemove", this._setMouseCursor, this);
   	},
 
   	_log: function(args) {

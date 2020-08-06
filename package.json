@@ -43,11 +43,11 @@
   "dependencies": {
     "@raruto/leaflet-edit-osm": "0.0.2",
     "@raruto/leaflet-gesture-handling": "^1.3.0",
-    "leaflet-control-layers-inline": "0.0.6",
+    "leaflet-control-layers-inline": "0.0.7",
     "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
-    "leaflet-pegman": "0.1.3",
+    "leaflet-pegman": "0.1.5",
     "leaflet-pointable": "^0.0.4",
     "leaflet-search": "^2.9.8",
     "leaflet.control.resizer": "0.0.1",
