@@ -40,7 +40,7 @@ var lazyLoader = {
 			let head = document.head;
 			let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
 			let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
-			let base_url = (url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
+			let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
 
 			if (type == 'css') {
 				script.rel = 'stylesheet';
