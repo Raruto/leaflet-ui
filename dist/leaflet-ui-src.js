@@ -2107,7 +2107,7 @@
   		this._map._container.addEventListener("touchcancel", this._handleTouch);
   		this._map._container.addEventListener("click", this._handleTouch);
 
-  		L.DomEvent.on(this._map._container, "mousewheel", this._handleScroll, this);
+  		L.DomEvent.on(this._map._container, "wheel", this._handleScroll, this);
   		L.DomEvent.on(this._map._container, "mouseenter", this._handleMouseOver, this);
   		L.DomEvent.on(this._map._container, "mouseleave", this._handleMouseOut, this);
 
@@ -2134,7 +2134,7 @@
   		this._map._container.removeEventListener("touchcancel", this._handleTouch);
   		this._map._container.removeEventListener("click", this._handleTouch);
 
-  		L.DomEvent.off(this._map._container, "mousewheel", this._handleScroll, this);
+  		L.DomEvent.off(this._map._container, "wheel", this._handleScroll, this);
   		L.DomEvent.off(this._map._container, "mouseenter", this._handleMouseOver, this);
   		L.DomEvent.off(this._map._container, "mouseleave", this._handleMouseOut, this);
 
