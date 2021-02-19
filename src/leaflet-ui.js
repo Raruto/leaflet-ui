@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import 'leaflet-rotate';
 import 'leaflet.locatecontrol';
 import 'leaflet.fullscreen';
 import 'leaflet-pegman';
@@ -130,6 +131,9 @@ var lazyLoader = {
 		zoomControl: {
 			position: 'bottomright'
 		},
+		rotateControl: {
+			position: 'bottomright'
+		},
 		scaleControl: {
 			width: 200,
 			position: 'bottomright',
@@ -176,6 +180,7 @@ var lazyLoader = {
 				searchControl: false,
 				loadingControl: false,
 				_isMiniMap: true,
+				rotateControl: false
 			}
 		},
 		editInOSMControl: {
@@ -261,6 +266,7 @@ var lazyLoader = {
 	// Disable leaflet map default controls.
 	function disableDefaultUI() {
 		if (this.zoomControl) this.zoomControl.remove();
+		if (this.rotateControl) this.rotateControl.remove();
 		if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
 		if (this.searchControl && this.options.searchControl) this.searchControl.remove();
 		if (this.attributionControl) this.attributionControl.remove();
@@ -387,6 +393,13 @@ var lazyLoader = {
 			this.zoomControl.setPosition(this.options.zoomControl.position);
 			this.zoomControl.addTo(this);
 			controls.zoom = this.zoomControl;
+		}
+
+		// Rotate Control.
+		if (this.options.rotateControl && this.rotateControl) {
+			this.rotateControl.setPosition(this.options.rotateControl.position);
+			this.rotateControl.addTo(this);
+			controls.rotate = this.rotateControl;
 		}
 
 		// Pegman Control.

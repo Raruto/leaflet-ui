@@ -39,6 +39,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
       var map = L.map('map', {
         center: [41.4583, 12.7059],
         zoom: 5,
+
         // Optional customizations
         mapTypeId: 'topo',
         mapTypeIds: ['osm', 'terrain', 'satellite', 'topo'],
@@ -53,6 +54,9 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
         loadingControl: true,
         searchControl: true,
         disableDefaultUI: false,
+
+        // Experimental feature
+        rotate: true,
       });
       map.once('idle',function(){ /* Waiting for map init */});
     </script>
