@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.4.8+master.6a02a866";
+  var version = "0.5.0+master.6a02a866";
 
   /**
    * L.DomUtil
