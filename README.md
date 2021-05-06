@@ -42,7 +42,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
 
         // Optional customizations
         mapTypeId: 'topo',
-        mapTypeIds: ['osm', 'terrain', 'satellite', 'topo'],
+        mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
         gestureHandling: true,
         zoomControl: true,
         pegmanControl: true,
