@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.5.0+master.6a02a866";
+  var version = "0.5.0+master.f634be9e";
 
   /**
    * L.DomUtil
@@ -360,7 +360,7 @@
 
       _initInteraction: function() {
           var ret = markerProto._initInteraction.call(this);
-          if (this.dragging && this._map && this._map._rotate) {
+          if (this.dragging && this.dragging.enabled() && this._map && this._map._rotate) {
               // L.Handler.MarkerDrag is used internally by L.Marker to make the markers draggable
               markerDragProto = markerDragProto || Object.getPrototypeOf(this.dragging);
               this.dragging._onDragStart = MarkerDrag._onDragStart.bind(this.dragging);
@@ -1514,6 +1514,8 @@
               setView: 'untilPanOrZoom',
               /** Keep the current map zoom level when setting the view and only pan. */
               keepCurrentZoomLevel: false,
+  	    /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
+  	    initialZoomLevel: false,
               /**
                * This callback can be used to override the viewport tracking
                * This function should return a LatLngBounds object.
@@ -1612,6 +1614,8 @@
               iconLoading: 'fa fa-spinner fa-spin',
               /** The element to be created for icons. For example span or i */
               iconElementTag: 'span',
+              /** The element to be created for the text. For example small or span */
+              textElementTag: 'small',
               /** Padding around the accuracy circle. */
               circlePadding: [0, 0],
               /** Use metric units. */
@@ -1624,7 +1628,20 @@
               createButtonCallback: function (container, options) {
                   var link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
                   link.title = options.strings.title;
+                  link.role = 'button';
+                  link.href = '#';
                   var icon = L.DomUtil.create(options.iconElementTag, options.icon, link);
+
+                  if (options.strings.text !== undefined) {
+                      var text = L.DomUtil.create(options.textElementTag, 'leaflet-locate-text', link);
+                      text.textContent = options.strings.text;
+  		            link.classList.add('leaflet-locate-text-active');
+                      link.parentNode.style.display = "flex";
+                      if (options.icon.length > 0) {
+                          icon.classList.add('leaflet-locate-icon');
+                      }
+                  }
+                  
                   return { link: link, icon: icon };
               },
               /** This event is called in case of any location error that is not a time out error. */
@@ -1679,7 +1696,8 @@
           onAdd: function (map) {
               var container = L.DomUtil.create('div',
                   'leaflet-control-locate leaflet-bar leaflet-control');
-
+              this._container = container;
+              this._map = map;
               this._layer = this.options.layer || new L.LayerGroup();
               this._layer.addTo(map);
               this._event = undefined;
@@ -1690,11 +1708,16 @@
               this._link = linkAndIcon.link;
               this._icon = linkAndIcon.icon;
 
-              L.DomEvent
-                  .on(this._link, 'click', L.DomEvent.stopPropagation)
-                  .on(this._link, 'click', L.DomEvent.preventDefault)
-                  .on(this._link, 'click', this._onClick, this)
-                  .on(this._link, 'dblclick', L.DomEvent.stopPropagation);
+              L.DomEvent.on(
+                this._link,
+                "click",
+                function (ev) {
+                  L.DomEvent.stopPropagation(ev);
+                  L.DomEvent.preventDefault(ev);
+                  this._onClick();
+                },
+                this
+              ).on(this._link, "dblclick", L.DomEvent.stopPropagation);
 
               this._resetVariables();
 
@@ -1715,7 +1738,7 @@
               if (this._active && !this._event) {
                   // click while requesting
                   this.stop();
-              } else if (this._active && this._event !== undefined) {
+              } else if (this._active) {
                   var behaviors = this.options.clickBehavior;
                   var behavior = behaviors.outOfView;
                   if (this._map.getBounds().contains(this._event.latlng)) {
@@ -1804,6 +1827,7 @@
           _activate: function() {
               if (!this._active) {
                   this._map.locate(this.options.locateOptions);
+                  this._map.fire('locateactivate', this);
                   this._active = true;
 
                   // bind event listeners
@@ -1840,6 +1864,7 @@
            */
           _deactivate: function() {
               this._map.stopLocate();
+              this._map.fire('locatedeactivate', this);
               this._active = false;
 
               if (!this.options.cacheLocation) {
@@ -1871,6 +1896,10 @@
                   this._event = undefined;  // clear the current location so we can get back into the bounds
                   this.options.onLocationOutsideMapBounds(this);
               } else {
+  		if (this._justClicked && this.options.initialZoomLevel !== false) {
+                      var f = this.options.flyTo ? this._map.flyTo : this._map.setView;
+                      f.bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel);
+  		} else
                   if (this.options.keepCurrentZoomLevel) {
                       var f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
                       f.bind(this._map)([this._event.latitude, this._event.longitude]);
@@ -2512,12 +2541,23 @@
   		},
   		pano: {
   			enableCloseButton: true,
+  			fullscreenControl: false,
+  			imageDateControl: true
+  		},
+  		marker: {
+  			draggable: true,
+  			icon: L.icon({
+  				className: "pegman-marker",
+  				iconSize: [52, 52],
+  				iconAnchor: [24, 33],
+  				iconUrl: 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=",
+  			}),
   		}
   	},
 
   	__interactURL: 'https://unpkg.com/interactjs@1.2.9/dist/interact.min.js',
   	__gmapsURL: 'https://maps.googleapis.com/maps/api/js?v=3',
-  	__mutantURL: 'https://unpkg.com/leaflet.gridlayer.googlemutant@0.8.0/Leaflet.GoogleMutant.js',
+  	__mutantURL: 'https://unpkg.com/leaflet.gridlayer.googlemutant@0.10.0/Leaflet.GoogleMutant.js',
 
   	initialize: function(options) {
 
@@ -2550,15 +2590,6 @@
   			onend: L.bind(this.onDraggableEnd, this),
   		};
 
-  		this._pegmanMarkerOpts = {
-  			draggable: true,
-  			icon: L.icon({
-  				className: "pegman-marker",
-  				iconSize: [52, 52],
-  				iconAnchor: [26, 13],
-  				iconUrl: 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=",
-  			}),
-  		};
   		this._lazyLoaderAdded = false;
   	},
 
@@ -2568,7 +2599,7 @@
   		this._container = L.DomUtil.create('div', 'leaflet-pegman pegman-control leaflet-bar');
   		this._pegman = L.DomUtil.create('div', 'pegman draggable drag-drop', this._container);
   		this._pegmanButton = L.DomUtil.create('div', 'pegman-button', this._container);
-  		this._pegmanMarker = L.marker([0, 0], this._pegmanMarkerOpts);
+  		this._pegmanMarker = L.marker([0, 0], this.options.marker);
   		this._panoDiv = this.options.panoDiv ? document.querySelector(this.options.panoDiv) : L.DomUtil.create('div', '', this._map._container);
 
   		L.DomUtil.addClass(this._panoDiv, 'pano-canvas');
@@ -2581,7 +2612,6 @@
   		this._container.addEventListener('touchstart', this._loadScripts.bind(this, !L.Browser.touch), { once: true });
   		this._container.addEventListener('mousedown', this._loadScripts.bind(this, true), { once: true });
   		this._container.addEventListener('mouseover', this._loadScripts.bind(this, false), { once: true });
-
 
   		this._loadInteractHandlers();
   		this._loadGoogleHandlers();
@@ -2729,6 +2759,7 @@
   	onDraggableEnd: function(e) {
   		this._pegmanMarkerCoords = this._map.mouseEventToLatLng(e);
   		this.pegmanAdd();
+  		this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
   		this._updateClasses("pegman-dragged");
   	},
 
@@ -2760,8 +2791,9 @@
   	},
 
   	onMapClick: function(e) {
-  		if (this._streetViewLayerEnabled)
+  		if (this._streetViewLayerEnabled) {
   			this.findStreetViewData(e.latlng.lat, e.latlng.lng);
+  		}
   	},
 
   	onMapLayerAdd: function(e) {
@@ -2771,6 +2803,20 @@
 
   	onStreetViewPanoramaClose: function() {
   		this.clear();
+  	},
+
+  	onPanoramaPositionChanged: function() {
+  		var pos = this._panorama.getPosition();
+  		pos = L.latLng(pos.lat(), pos.lng());
+  		if (this._map && !this._map.getBounds().pad(-0.05).contains(pos)) {
+  			this._map.panTo(pos);
+  		}
+  		this._pegmanMarker.setLatLng(pos);
+  	},
+
+  	onPanoramaPovChanged: function() {
+  		var pov = this._panorama.getPov();
+  		this._pegmanMarker.getElement().style.backgroundPosition = "0 " + -Math.abs((Math.round(pov.heading / (360 / 16)) % 16) * Math.round(835 / 16)) + 'px'; // sprite_height = 835px; num_rows = 16; pegman_angle = [0, 360] deg
   	},
 
   	clear: function() {
@@ -2822,7 +2868,23 @@
   	},
 
   	findStreetViewData: function(lat, lng) {
+  		if (typeof google === 'undefined') {
+  			this._loadScripts(true);
+  			return this.once('svpc_streetview-shown', L.bind(this.findStreetViewData, this, lat, lng));
+  		}
+
+  		if (!this._pegmanMarker._map && this._map) {
+  			this._pegmanMarkerCoords = L.latLng(lat, lng);
+  			return this.pegmanAdd();
+  		}
+
+  		// var searchRadiusPx = 24,
+  		// 	latlng = L.latLng(lat, lng),
+  		// 	p = this._map.project(latlng).add([searchRadiusPx, 0]),
+  		// 	searchRadius = latlng.distanceTo(this._map.unproject(p));
+
   		this._streetViewCoords = new google.maps.LatLng(lat, lng);
+
   		var zoom = this._map.getZoom();
   		var searchRadius = 100;
 
@@ -2908,7 +2970,9 @@
   		this._panorama = new google.maps.StreetViewPanorama(this._panoDiv, this.options.pano);
   		this._streetViewService = new google.maps.StreetViewService();
 
-  		google.maps.event.addListener(this._panorama, 'closeclick', L.bind(this.onStreetViewPanoramaClose, this));
+  		this._panorama.addListener('closeclick', L.bind(this.onStreetViewPanoramaClose, this));
+  		this._panorama.addListener('position_changed', L.bind(this.onPanoramaPositionChanged, this));
+  		this._panorama.addListener('pov_changed', L.bind(this.onPanoramaPovChanged, this));
 
   		if (toggleStreetView) {
   			this.showStreetViewLayer();
@@ -3198,8 +3262,8 @@
   	//French
   	fr: {
   		touch: "Utilisez deux\u00a0doigts pour d\u00e9placer la carte",
-  		scroll: "Vous pouvez zoomer sur la carte \u00e0 l'aide de CTRL+Molette de d\u00e9filement",
-  		scrollMac: "Vous pouvez zoomer sur la carte \u00e0 l'aide de \u2318+Molette de d\u00e9filement"
+  		scroll: "Vous pouvez zoomer sur la carte \u00e0 l'aide de CTRL + Molette de d\u00e9filement",
+  		scrollMac: "Vous pouvez zoomer sur la carte \u00e0 l'aide de \u2318 + Molette de d\u00e9filement"
   	},
   	//Galician
   	gl: {
@@ -4118,16 +4182,16 @@
   })();
 
   /* 
-   * Leaflet Control Search v2.9.7 - 2019-01-14 
+   * Leaflet Control Search v2.9.9 - 2020-12-01 
    * 
-   * Copyright 2019 Stefano Cudini 
+   * Copyright 2020 Stefano Cudini 
    * stefano.cudini@gmail.com 
-   * http://labs.easyblog.it/ 
+   * https://opengeo.tech/ 
    * 
    * Licensed under the MIT license. 
    * 
    * Demo: 
-   * http://labs.easyblog.it/maps/leaflet-search/ 
+   * https://opengeo.tech/maps/leaflet-search/ 
    * 
    * Source: 
    * git@github.com:stefanocudini/leaflet-search.git 
@@ -4691,10 +4755,6 @@
           loc.layer = layer;
           retRecords[ self._getPath(layer.feature.properties,propName) ] = loc;
         }
-        else {
-          //throw new Error("propertyName '"+propName+"' not found in marker"); 
-          console.warn("propertyName '"+propName+"' not found in marker"); 
-        }
       }
       else if(layer instanceof L.Path || layer instanceof L.Polyline || layer instanceof L.Polygon)
       {
@@ -4710,10 +4770,6 @@
           loc.layer = layer;
           retRecords[ self._getPath(layer.feature.properties,propName) ] = loc;
         }
-        else {
-          //throw new Error("propertyName '"+propName+"' not found in shape"); 
-          console.warn("propertyName '"+propName+"' not found in shape"); 
-        }
       }
       else if(layer.hasOwnProperty('feature'))//GeoJSON
       {
@@ -4727,13 +4783,7 @@
             loc = layer.getBounds().getCenter();
             loc.layer = layer;			
             retRecords[ layer.feature.properties[propName] ] = loc;
-          } else {
-            console.warn("Unknown type of Layer");
           }
-        }
-        else {
-          //throw new Error("propertyName '"+propName+"' not found in feature");
-          console.warn("propertyName '"+propName+"' not found in feature"); 
         }
       }
       else if(layer instanceof L.LayerGroup)
@@ -4887,7 +4937,7 @@
 
   		L.DomUtil.addClass(this._container, 'search-load');	
 
-  		if(this.options.layer)
+  		if(this._layer)
   		{
   			//TODO _recordsFromLayer must return array of objects, formatted from _formatData
   			this._recordsCache = this._recordsFromLayer();

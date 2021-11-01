@@ -42,19 +42,19 @@
   },
   "dependencies": {
     "@raruto/leaflet-edit-osm": "0.0.2",
-    "@raruto/leaflet-gesture-handling": "^1.3.4",
+    "@raruto/leaflet-gesture-handling": "^1.3.5",
     "leaflet-control-layers-inline": "0.0.7",
     "leaflet-easyprint": "^2.1.9",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
-    "leaflet-pegman": "0.1.5",
+    "leaflet-pegman": "^0.1.6",
     "leaflet-pointable": "^0.0.4",
-    "leaflet-rotate": "^0.1.2",
+    "leaflet-rotate": "^0.1.3",
     "leaflet-search": "^2.9.8",
-    "leaflet.control.resizer": "0.0.1",
+    "leaflet.control.resizer": "^0.0.1",
     "leaflet.fullscreen": "^1.6.0",
-    "leaflet.gridlayer.googlemutant": "^0.8.0",
-    "leaflet.locatecontrol": "^0.70.0",
+    "leaflet.gridlayer.googlemutant": "^0.13.4",
+    "leaflet.locatecontrol": "^0.74.0",
     "leaflet.visualclick": "^1.1.4"
   }
 }
