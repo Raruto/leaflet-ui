@@ -18,7 +18,7 @@ import 'leaflet.visualclick';
 	const currentScript = document.currentScript;
 	const currentVersion = version.split("+")[0].trim();
 
-	var lazyLoader = {
+	let lazyLoader = {
 
 		baseURL: 'https://unpkg.com/',
 
@@ -48,9 +48,7 @@ import 'leaflet.visualclick';
 					script.rel = 'stylesheet';
 				}
 
-				script.addEventListener('load', resolve, {
-					once: true
-				});
+				script.addEventListener('load', resolve, { once: true });
 				script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
 
 				if (prev_tag.parentNode && prev_tag.nextSibling)
@@ -66,7 +64,7 @@ import 'leaflet.visualclick';
 	};
 
 	// You can ovveride them by passing one of the following to leaflet map constructor.
-	var default_options = {
+	let default_options = {
 		mapTypes: {
 			atlas: {
 				name: 'Atlas',
@@ -257,7 +255,7 @@ import 'leaflet.visualclick';
 			return; // prevent infinite loops when loading the minimap control.
 		}
 		if (!this.options.disableDefaultUI) {
-			setDeafultOptions.call(this);
+			setDefaultOptions.call(this);
 			initMap.call(this);
 		}
 	});
@@ -272,86 +270,76 @@ import 'leaflet.visualclick';
 	}
 
 	// Deep merge "default_options" and do some sanity check.
-	function setDeafultOptions() {
+	function setDefaultOptions() {
+		let opts = this.options;
+
 		// Recursive merge leaflet map options.
 		for (let i in default_options) {
-			if (this.options[i] === true || typeof this.options[i] === "undefined") {
-				this.options[i] = default_options[i];
-			} else if (typeof this.options[i] === "object" && this.options[i] instanceof Array === false) {
-				this.options[i] = deepMerge(default_options[i], this.options[i]);
+			if (opts[i] === true || typeof opts[i] === "undefined") {
+				opts[i] = default_options[i];
+			} else if (typeof this.options[i] === "object" && opts[i] instanceof Array === false) {
+				opts[i] = deepMerge(default_options[i], opts[i]);
 			}
 		}
 
 		// Set deafult tile providers Api Keys (if any).
-		if (this.options.apiKeys) {
-			if (this.options.apiKeys.thunderforest) {
-				this.options.mapTypes.atlas.options.apikey = this.options.apiKeys.thunderforest;
-				this.options.mapTypes.terrain.options.apikey = this.options.apiKeys.thunderforest;
-				this.options.mapTypes.cycle.options.apikey = this.options.apiKeys.thunderforest;
+		if (opts.apiKeys) {
+			if (opts.apiKeys.thunderforest) {
+				opts.mapTypes.atlas.options.apikey   = opts.apiKeys.thunderforest;
+				opts.mapTypes.terrain.options.apikey = opts.apiKeys.thunderforest;
+				opts.mapTypes.cycle.options.apikey   = opts.apiKeys.thunderforest;
 			}
-			if (this.options.apiKeys.google) {
-				this.options.pegmanControl.apiKey = this.options.apiKeys.google;
-			}
-		}
-		// Append Thunderforest Api Key.
-		if (this.options.mapTypes.atlas.options.apikey) {
-			var url = this.options.mapTypes.atlas.url;
-			if (url.indexOf('apikey=') === -1) {
-				this.options.mapTypes.atlas.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
+			if (opts.apiKeys.google) {
+				opts.pegmanControl.apiKey = opts.apiKeys.google;
 			}
 		}
-		if (this.options.mapTypes.terrain.options.apikey) {
-			var url = this.options.mapTypes.terrain.url;
-			if (url.indexOf('apikey=') === -1) {
-				this.options.mapTypes.terrain.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
-			}
-		}
-		if (this.options.mapTypes.cycle.options.apikey) {
-			var url = this.options.mapTypes.cycle.url;
-			if (url.indexOf('apikey=') === -1) {
-				this.options.mapTypes.cycle.url += (url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
+		// Append Api Keys (query string).
+		for (let k of ['atlas', 'terrain', 'cycle']) {
+			if (opts.mapTypes[k].options.apikey && opts.mapTypes[k].url.indexOf('apikey=') === -1) {
+				opts.mapTypes[k].url += (opts.mapTypes[k].url.indexOf('?') === -1 ? '?' : '&') + 'apikey={apikey}';
 			}
 		}
 		// Fix default mapTypeId if missing in mapTypeIds array.
-		if (this.options.mapTypeIds.includes(this.options.mapTypeId) === false && this.options.mapTypeIds.length > 0) {
-			this.options.mapTypeId = this.options.mapTypeIds[0];
+		if (opts.mapTypeIds.includes(opts.mapTypeId) === false && opts.mapTypeIds.length > 0) {
+			opts.mapTypeId = opts.mapTypeIds[0];
 		}
 		// Auto detect user "querylang" value when using search control.
-		if (this.options.searchControl && this.options.searchControl.detectUserLang) {
-			this.options.searchControl.querylang = window.navigator.languages ? window.navigator.languages[0] : (window.navigator.userLanguage || window.navigator.language);
+		if (opts.searchControl && opts.searchControl.detectUserLang) {
+			opts.searchControl.querylang = window.navigator.languages ? window.navigator.languages[0] : (window.navigator.userLanguage || window.navigator.language);
 		}
 		// Replace default "querylang" value when using search control.
-		if (this.options.searchControl && this.options.searchControl.querylang) {
-			this.options.searchControl.url = this.options.searchControl.url.replace('{querylang}', this.options.searchControl.querylang);
+		if (opts.searchControl && opts.searchControl.querylang) {
+			opts.searchControl.url = opts.searchControl.url.replace('{querylang}', opts.searchControl.querylang);
 		}
 		// Avoid missing center/zoom values when using minimap control.
-		if (this.options.minimapControl && !this.options.center && !this.options.zoom) {
+		if (opts.minimapControl && !opts.center && !opts.zoom) {
 			this.setView([0, 0], 0);
 		}
 	}
 	// Initialize default leaflet map controls and layers.
 	function initMap() {
-		var controls = {},
-			layers = {},
-			baseMaps = {};
+		let controls = {},
+			layers   = {},
+			baseMaps = {},
+			opts     = this.options;
 
 		// Gesture Handling.
-		if (this.options.gestureHandling) {
+		if (opts.gestureHandling) {
 			this.gestureHandling.enable();
 		}
 
 		// Load all user selected layers.
-		for (let i in this.options.mapTypeIds) {
-			var id = this.options.mapTypeIds[i];
-			if (this.options.mapTypes[id]) {
-				baseMaps[this.options.mapTypes[id].name] = layers[id] = new L.TileLayer(this.options.mapTypes[id].url, this.options.mapTypes[id].options);
+		for (let i in opts.mapTypeIds) {
+			let id = opts.mapTypeIds[i];
+			if (opts.mapTypes[id]) {
+				baseMaps[opts.mapTypes[id].name] = layers[id] = new L.TileLayer(opts.mapTypes[id].url, opts.mapTypes[id].options);
 				layers[id].mapTypeId = id; // save mapTypeId for easy access.
 			}
 		}
 
 		// Keep a reference of previous mapTypeId
-		this._lastMapTypeId = this.options.mapTypeId;
-		this._prevMapTypeId = this.options.mapTypeId;
+		this._lastMapTypeId = opts.mapTypeId;
+		this._prevMapTypeId = opts.mapTypeId;
 		this.on('baselayerchange', function(e) {
 			if (e && e.layer && e.layer.mapTypeId) {
 				this._prevMapTypeId = this._lastMapTypeId;
@@ -365,87 +353,87 @@ import 'leaflet.visualclick';
 		});
 
 		// Layers Control.
-		if (this.options.layersControl) {
-			controls.layers = new L.Control.Layers(baseMaps, null, this.options.layersControl);
+		if (opts.layersControl) {
+			controls.layers = new L.Control.Layers(baseMaps, null, opts.layersControl);
 			this.on('zoomend', autoToggleSatelliteLayer, this);
 		}
 
 		// Attribution Control.
-		if (this.options.attributionControl && this.attributionControl) {
+		if (opts.attributionControl && this.attributionControl) {
 			this.attributionControl.addTo(this);
 			controls.attribution = this.attributionControl;
 			this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
 		}
 
 		// Edit in OSM link.
-		if (this.options.editInOSMControl) {
-			controls.editInOSM = new L.Control.EditInOSM(this.options.editInOSMControl);
+		if (opts.editInOSMControl) {
+			controls.editInOSM = new L.Control.EditInOSM(opts.editInOSMControl);
 		}
 
 		// Scale Control.
-		if (this.options.scaleControl) {
-			controls.scale = new L.Control.Scale(this.options.scaleControl);
+		if (opts.scaleControl) {
+			controls.scale = new L.Control.Scale(opts.scaleControl);
 		}
 
 		// Zoom Control.
-		if (this.options.zoomControl && this.zoomControl) {
-			this.zoomControl.setPosition(this.options.zoomControl.position);
+		if (opts.zoomControl && this.zoomControl) {
+			this.zoomControl.setPosition(opts.zoomControl.position);
 			this.zoomControl.addTo(this);
 			controls.zoom = this.zoomControl;
 		}
 
 		// Rotate Control.
-		if (this.options.rotateControl && this.rotateControl) {
-			this.rotateControl.setPosition(this.options.rotateControl.position);
+		if (opts.rotateControl && this.rotateControl) {
+			this.rotateControl.setPosition(opts.rotateControl.position);
 			this.rotateControl.addTo(this);
 			controls.rotate = this.rotateControl;
 		}
 
 		// Pegman Control.
-		if (this.options.pegmanControl) {
-			controls.pegman = new L.Control.Pegman(this.options.pegmanControl);
+		if (opts.pegmanControl) {
+			controls.pegman = new L.Control.Pegman(opts.pegmanControl);
 		}
 
 		// Locate Control.
-		if (this.options.locateControl) {
-			controls.locate = new L.Control.Locate(this.options.locateControl);
+		if (opts.locateControl) {
+			controls.locate = new L.Control.Locate(opts.locateControl);
 		}
 
 		// Search Control.
-		if (this.options.searchControl) {
-			controls.search = this.searchControl = new L.Control.Search(this.options.searchControl);
+		if (opts.searchControl) {
+			controls.search = this.searchControl = new L.Control.Search(opts.searchControl);
 		}
 
 		// Print Control.
-		if (this.options.printControl) {
-			controls.print = new L.Control.EasyPrint(this.options.printControl);
+		if (opts.printControl) {
+			controls.print = new L.Control.EasyPrint(opts.printControl);
 		}
 
 		// Loading Control.
-		if (this.options.loadingControl) {
-			controls.loading = new L.Control.Loading(this.options.loadingControl);
+		if (opts.loadingControl) {
+			controls.loading = new L.Control.Loading(opts.loadingControl);
 		}
 
 		// Fullscreen Control.
-		if (this.options.fullscreenControl) {
-			controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(this.options.fullscreenControl);
+		if (opts.fullscreenControl) {
+			controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(opts.fullscreenControl);
 		}
 
 		// Minimap Control.
-		if (this.options.minimapControl) {
-			var miniMapTypeId = this.options.minimapControl.mapOptions.mapTypeId;
-			var miniMapLayer = this.options.mapTypes[miniMapTypeId];
+		if (opts.minimapControl) {
+			let miniMapTypeId = opts.minimapControl.mapOptions.mapTypeId;
+			let miniMapLayer  = opts.mapTypes[miniMapTypeId];
 			if (miniMapLayer) {
 				miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
 				miniMapLayer.mapTypeId = miniMapTypeId; // save mapTypeId for easy access.
-				controls.minimap = new L.Control.MiniMap(miniMapLayer, this.options.minimapControl);
+				controls.minimap = new L.Control.MiniMap(miniMapLayer, opts.minimapControl);
 				controls.minimap._mainMapBaseLayers = baseMaps; // save baseMaps for easy access.
 			}
 		}
 
 		// Resizer Control.
-		if (this.options.resizerControl) {
-			controls.resizer = new L.Control.Resizer(this.options.resizerControl);
+		if (opts.resizerControl) {
+			controls.resizer = new L.Control.Resizer(opts.resizerControl);
 		}
 
 		// Load all user selected controls.
@@ -460,10 +448,10 @@ import 'leaflet.visualclick';
 		this.whenReady(function() {
 			this.fire('idle');
 			// Prevent adding multiple default base layers when using multiple maps.
-			if (this.options.mapTypeId) {
-				let baseLayer = this.options.mapTypes[this.options.mapTypeId];
+			if (opts.mapTypeId) {
+				let baseLayer = opts.mapTypes[opts.mapTypeId];
 				if (baseLayer && baseMaps[baseLayer.name]) {
-					this.options.layers = this.options.layers.filter(item => item._leaflet_id !== baseMaps[baseLayer.name]._leaflet_id);
+					opts.layers = opts.layers.filter(item => item._leaflet_id !== baseMaps[baseLayer.name]._leaflet_id);
 					let layer = baseMaps[baseLayer.name];
 					if (layer.setZIndex) layer.setZIndex(0);
 					else if (layer.bringToBack) layer.bringToBack();
@@ -472,24 +460,24 @@ import 'leaflet.visualclick';
 		}, this);
 
 		// Set default base layer.
-		if (this.options.mapTypeId) {
-			let baseLayer = this.options.mapTypes[this.options.mapTypeId];
+		if (opts.mapTypeId) {
+			let baseLayer = opts.mapTypes[opts.mapTypeId];
 			if (baseLayer && baseMaps[baseLayer.name]) {
-				this.options.layers.unshift(baseMaps[baseLayer.name]); // Add to the array of layers that will be automatically loaded within the map initially.
+				opts.layers.unshift(baseMaps[baseLayer.name]); // Add to the array of layers that will be automatically loaded within the map initially.
 			}
 		}
 
 		// Load custom plugins.
-		if (this.options.plugins) {
+		if (opts.plugins) {
 			if (!lazyLoader.loader) {
-				var core_plugins = [];
-				if (this.options.includeLeafletUICSS) {
+				let core_plugins = [];
+				if (opts.includeLeafletUICSS) {
 					core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
 				}
 				if (!window.L) {
 					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
 					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
-				} else if (this.options.includeLeafletCSS && L.version) {
+				} else if (opts.includeLeafletCSS && L.version) {
 					let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
 					let core_css_exists = false;
 					for (let i = 0; i < document.styleSheets.length; i++) {
@@ -502,7 +490,7 @@ import 'leaflet.visualclick';
 						core_plugins.unshift(core_css_url);
 					}
 				}
-				lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, this.options.plugins]);
+				lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, opts.plugins]);
 			}
 
 			// Lazy load initHooks
@@ -510,7 +498,7 @@ import 'leaflet.visualclick';
 				let initHooks = this._initHooks.length;
 				this.once('plugins_loaded', function() {
 					if (initHooks < this._initHooks.length)
-						for (var i = initHooks, len = this._initHooks.length; i < len; i++) {
+						for (let i = initHooks, len = this._initHooks.length; i < len; i++) {
 							this._initHooks[i].call(this);
 						}
 					this.fire('initHooks_called');
@@ -564,13 +552,13 @@ import 'leaflet.visualclick';
 
 	}
 
-	var minimapProto = L.Control.MiniMap.prototype;
-	var onAddMinimapProto = minimapProto.onAdd;
+	let minimapProto = L.Control.MiniMap.prototype;
+	let onAddMinimapProto = minimapProto.onAdd;
 
 	// Customize MiniMap default core behavior.
 	L.Control.MiniMap.include({
 		onAdd: function(map) {
-			var container = onAddMinimapProto.call(this, map);
+			let container = onAddMinimapProto.call(this, map);
 
 			// Disable mouse handlers
 			if (this._miniMap) {
@@ -588,7 +576,7 @@ import 'leaflet.visualclick';
 		_handleMainMapTypeChange: function(e) {
 			if (!this._handligMiniMapTypeToggle) {
 				if (e && e.layer) {
-					var minimap = this,
+					let minimap = this,
 						mainmap = this._mainMap,
 						miniMapTypeId = minimap._layer.mapTypeId,
 						mainMapTypeId = e.layer.mapTypeId;
@@ -599,7 +587,7 @@ import 'leaflet.visualclick';
 							minimap._lastMapTypeId = mainMapTypeId;
 						}
 
-						var mapTypeId,
+						let mapTypeId,
 							miniMapLayer;
 
 						if (mainMapTypeId == "satellite" && miniMapTypeId == "satellite") {
@@ -623,7 +611,7 @@ import 'leaflet.visualclick';
 		_handleMiniMapTypeToggle: function() {
 			this._handligMiniMapTypeToggle = true;
 			if (this._layer && this._mainMapBaseLayers) {
-				var minimap = this,
+				let minimap = this,
 					mainmap = this._mainMap,
 					miniMapTypeId = this._layer.mapTypeId,
 					mainMapTypeId;
@@ -635,7 +623,7 @@ import 'leaflet.visualclick';
 				}
 
 				if (mainmap.options.mapTypeIds.length > 0 && inArray(mainmap.options.mapTypeIds, miniMapTypeId)) {
-					var mapTypeId,
+					let mapTypeId,
 						miniMapLayer;
 
 					mapTypeId = minimap._lastMapTypeId || mainmap.options.mapTypeId;

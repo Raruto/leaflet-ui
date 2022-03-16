@@ -10,12 +10,8 @@
 @import url("../node_modules/leaflet.control.resizer/L.Control.Resizer.css");
 @import url("../node_modules/leaflet.visualclick/dist/L.VisualClick.css");
 
-.leaflet-control-locate a {
-  background-image: url(https://unpkg.com/@raruto/leaflet-elevation@0.3.9/images/elevation-locate.png);
-}
-
-.leaflet-control-locate a .fa-map-marker::before {
-  display: none;
+.leaflet-control-locate a .leaflet-control-locate-location-arrow {
+  mask-image: url(https://unpkg.com/@raruto/leaflet-elevation@0.3.9/images/elevation-locate.png);
 }
 
 .leaflet-control-minimap.leaflet-control {
