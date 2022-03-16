@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import 'leaflet-i18n';
 import 'leaflet-rotate';
 import 'leaflet.locatecontrol';
 import 'leaflet.fullscreen';
@@ -12,6 +13,17 @@ import 'leaflet-search';
 import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
+
+/* Temporary fix for empty values evaluated as false (leaflet-i18n v0.3.1) */
+(function(){
+	let proto = L.i18n.bind({});
+	L.i18n = L._ = (string, data) => {
+		if (L.locale && L.locales[L.locale] && L.locales[L.locale][string] == "") {
+			L.locales[L.locale][string] = "\u200B";
+		}
+		return proto.call(null, string, data);
+	};
+})();
 
 (function() {
 
