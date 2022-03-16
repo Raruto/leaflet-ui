@@ -1115,7 +1115,7 @@
           if (e.shiftKey) {
               e.preventDefault();
               this._map.scrollWheelZoom.disable();
-              this._map.setBearing((this._map._bearing * L.DomUtil.RAD_TO_DEG) + e.deltaY);
+              this._map.setBearing((this._map._bearing * L.DomUtil.RAD_TO_DEG) + Math.sign(e.deltaY) * 5);
           } else {
               this._map.scrollWheelZoom.enable();
           }
@@ -1372,21 +1372,21 @@
           window.L.Control.Locate = factory(L);
       }
   } (function (L) {
-      var LDomUtilApplyClassesMethod = function(method, element, classNames) {
+      const LDomUtilApplyClassesMethod = (method, element, classNames) => {
           classNames = classNames.split(' ');
           classNames.forEach(function(className) {
               L.DomUtil[method].call(this, element, className);
           });
       };
 
-      var addClasses = function(el, names) { LDomUtilApplyClassesMethod('addClass', el, names); };
-      var removeClasses = function(el, names) { LDomUtilApplyClassesMethod('removeClass', el, names); };
+      const addClasses = (el, names) => LDomUtilApplyClassesMethod('addClass', el, names);
+      const removeClasses = (el, names) => LDomUtilApplyClassesMethod('removeClass', el, names);
 
       /**
        * Compatible with L.Circle but a true marker instead of a path
        */
-      var LocationMarker = L.Marker.extend({
-          initialize: function (latlng, options) {
+      const LocationMarker = L.Marker.extend({
+          initialize(latlng, options) {
               L.Util.setOptions(this, options);
               this._latlng = latlng;
               this.createIcon();
@@ -1395,28 +1395,28 @@
           /**
            * Create a styled circle location marker
            */
-          createIcon: function() {
-              var opt = this.options;
+          createIcon() {
+              const opt = this.options;
 
-              var style = '';
+              let style = '';
 
               if (opt.color !== undefined) {
-                  style += 'stroke:'+opt.color+';';
+                  style += `stroke:${opt.color};`;
               }
               if (opt.weight !== undefined) {
-                  style += 'stroke-width:'+opt.weight+';';
+                  style += `stroke-width:${opt.weight};`;
               }
               if (opt.fillColor !== undefined) {
-                  style += 'fill:'+opt.fillColor+';';
+                  style += `fill:${opt.fillColor};`;
               }
               if (opt.fillOpacity !== undefined) {
-                  style += 'fill-opacity:'+opt.fillOpacity+';';
+                  style += `fill-opacity:${opt.fillOpacity};`;
               }
               if (opt.opacity !== undefined) {
-                  style += 'opacity:'+opt.opacity+';';
+                  style += `opacity:${opt.opacity};`;
               }
 
-              var icon = this._getIconSVG(opt, style);
+              const icon = this._getIconSVG(opt, style);
 
               this._locationIcon = L.divIcon({
                   className: icon.className,
@@ -1432,63 +1432,63 @@
            *
            * Split so can be easily overridden
            */
-          _getIconSVG: function(options, style) {
-              var r = options.radius;
-              var w = options.weight;
-              var s = r + w;
-              var s2 = s * 2;
-              var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+s2+'" height="'+s2+'" version="1.1" viewBox="-'+s+' -'+s+' '+s2+' '+s2+'">' +
+          _getIconSVG(options, style) {
+              const r = options.radius;
+              const w = options.weight;
+              const s = r + w;
+              const s2 = s * 2;
+              const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}">` +
               '<circle r="'+r+'" style="'+style+'" />' +
               '</svg>';
               return {
                   className: 'leaflet-control-locate-location',
-                  svg: svg,
+                  svg,
                   w: s2,
                   h: s2
               };
           },
 
-          setStyle: function(style) {
+          setStyle(style) {
               L.Util.setOptions(this, style);
               this.createIcon();
           }
       });
 
-      var CompassMarker = LocationMarker.extend({
-          initialize: function (latlng, heading, options) {
+      const CompassMarker = LocationMarker.extend({
+          initialize(latlng, heading, options) {
               L.Util.setOptions(this, options);
               this._latlng = latlng;
               this._heading = heading;
               this.createIcon();
           },
 
-          setHeading: function(heading) {
+          setHeading(heading) {
               this._heading = heading;
           },
 
           /**
            * Create a styled arrow compass marker
            */
-          _getIconSVG: function(options, style) {
-              var r = options.radius;
-              var w = (options.width + options.weight);
-              var h = (r+options.depth + options.weight)*2;
-              var path = 'M0,0 l'+(options.width/2)+','+options.depth+' l-'+(w)+',0 z';
-              var svgstyle = 'transform: rotate('+this._heading+'deg)';
-              var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+(w)+'" height="'+h+'" version="1.1" viewBox="-'+(w/2)+' 0 '+w+' '+h+'" style="'+svgstyle+'">'+
+          _getIconSVG(options, style) {
+              const r = options.radius;
+              const w = (options.width + options.weight);
+              const h = (r+options.depth + options.weight)*2;
+              const path = `M0,0 l${options.width/2},${options.depth} l-${w},0 z`;
+              const svgstyle = `transform: rotate(${this._heading}deg)`;
+              const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" version="1.1" viewBox="-${w/2} 0 ${w} ${h}" style="${svgstyle}">`+
               '<path d="'+path+'" style="'+style+'" />'+
               '</svg>';
               return {
                   className: 'leaflet-control-locate-heading',
-                  svg: svg,
-                  w: w,
-                  h: h
+                  svg,
+                  w,
+                  h
               };
           },
       });
 
 
-      var LocateControl = L.Control.extend({
+      const LocateControl = L.Control.extend({
           options: {
               /** Position of the control */
               position: 'topleft',
@@ -1514,8 +1514,8 @@
               setView: 'untilPanOrZoom',
               /** Keep the current map zoom level when setting the view and only pan. */
               keepCurrentZoomLevel: false,
-  	    /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
-  	    initialZoomLevel: false,
+       /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
+       initialZoomLevel: false,
               /**
                * This callback can be used to override the viewport tracking
                * This function should return a LatLngBounds object.
@@ -1526,7 +1526,7 @@
                *    return locationEvent.bounds.extend([-33.873085, 151.219273]);
                * },
                */
-              getLocationBounds: function (locationEvent) {
+              getLocationBounds(locationEvent) {
                   return locationEvent.bounds;
               },
               /** Smooth pan and zoom to the location of the marker. Only works in Leaflet 1.0+. */
@@ -1610,8 +1610,8 @@
               },
               followCompassStyle: {},
               /** The CSS class for the icon. For example fa-location-arrow or fa-map-marker */
-              icon: 'fa fa-map-marker',
-              iconLoading: 'fa fa-spinner fa-spin',
+              icon: 'leaflet-control-locate-location-arrow',
+              iconLoading: 'leaflet-control-locate-spinner',
               /** The element to be created for icons. For example span or i */
               iconElementTag: 'span',
               /** The element to be created for the text. For example small or span */
@@ -1625,34 +1625,34 @@
                * This is useful for DOM manipulation frameworks such as angular etc.
                * This function should return an object with HtmlElement for the button (link property) and the icon (icon property).
                */
-              createButtonCallback: function (container, options) {
-                  var link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
+              createButtonCallback(container, options) {
+                  const link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
                   link.title = options.strings.title;
                   link.role = 'button';
                   link.href = '#';
-                  var icon = L.DomUtil.create(options.iconElementTag, options.icon, link);
+                  const icon = L.DomUtil.create(options.iconElementTag, options.icon, link);
 
                   if (options.strings.text !== undefined) {
-                      var text = L.DomUtil.create(options.textElementTag, 'leaflet-locate-text', link);
+                      const text = L.DomUtil.create(options.textElementTag, 'leaflet-locate-text', link);
                       text.textContent = options.strings.text;
-  		            link.classList.add('leaflet-locate-text-active');
+                link.classList.add('leaflet-locate-text-active');
                       link.parentNode.style.display = "flex";
                       if (options.icon.length > 0) {
                           icon.classList.add('leaflet-locate-icon');
                       }
                   }
                   
-                  return { link: link, icon: icon };
+                  return { link, icon };
               },
               /** This event is called in case of any location error that is not a time out error. */
-              onLocationError: function(err, control) {
+              onLocationError(err, control) {
                   alert(err.message);
               },
               /**
                * This event is called when the user's location is outside the bounds set on the map.
                * The event is called repeatedly when the location changes.
                */
-              onLocationOutsideMapBounds: function(control) {
+              onLocationOutsideMapBounds(control) {
                   control.stop();
                   alert(control.options.strings.outsideMapBoundsMsg);
               },
@@ -1674,9 +1674,9 @@
               }
           },
 
-          initialize: function (options) {
+          initialize(options) {
               // set default options if nothing is set (merge one step deep)
-              for (var i in options) {
+              for (const i in options) {
                   if (typeof this.options[i] === 'object') {
                       L.extend(this.options[i], options[i]);
                   } else {
@@ -1693,9 +1693,9 @@
           /**
            * Add control to map. Returns the container for the control.
            */
-          onAdd: function (map) {
-              var container = L.DomUtil.create('div',
-                  'leaflet-control-locate leaflet-bar leaflet-control');
+          onAdd(map) {
+              const container = L.DomUtil.create('div',
+              'leaflet-control-locate leaflet-bar leaflet-control');
               this._container = container;
               this._map = map;
               this._layer = this.options.layer || new L.LayerGroup();
@@ -1704,7 +1704,7 @@
               this._compassHeading = null;
               this._prevBounds = null;
 
-              var linkAndIcon = this.options.createButtonCallback(container, this.options);
+              const linkAndIcon = this.options.createButtonCallback(container, this.options);
               this._link = linkAndIcon.link;
               this._icon = linkAndIcon.icon;
 
@@ -1729,9 +1729,9 @@
           /**
            * This method is called when the user clicks on the control.
            */
-          _onClick: function() {
+          _onClick() {
               this._justClicked = true;
-              var wasFollowing =  this._isFollowing();
+              const wasFollowing =  this._isFollowing();
               this._userPanned = false;
               this._userZoomed = false;
 
@@ -1739,8 +1739,8 @@
                   // click while requesting
                   this.stop();
               } else if (this._active) {
-                  var behaviors = this.options.clickBehavior;
-                  var behavior = behaviors.outOfView;
+                  const behaviors = this.options.clickBehavior;
+                  let behavior = behaviors.outOfView;
                   if (this._map.getBounds().contains(this._event.latlng)) {
                       behavior = wasFollowing ? behaviors.inView : behaviors.inViewNotFollowing;
                   }
@@ -1757,7 +1757,7 @@
                       case 'stop':
                           this.stop();
                           if (this.options.returnToPrevBounds) {
-                              var f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
+                              const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
                               f.bind(this._map)(this._prevBounds);
                           }
                           break;
@@ -1777,7 +1777,7 @@
            * - activates the engine
            * - draws the marker (if coordinates available)
            */
-          start: function() {
+          start() {
               this._activate();
 
               if (this._event) {
@@ -1797,7 +1797,7 @@
            * - reinitializes the button
            * - removes the marker
            */
-          stop: function() {
+          stop() {
               this._deactivate();
 
               this._cleanClasses();
@@ -1809,7 +1809,7 @@
           /**
            * Keep the control active but stop following the location
            */
-          stopFollowing: function() {
+          stopFollowing() {
               this._userPanned = true;
               this._updateContainerStyle();
               this._drawMarker();
@@ -1824,7 +1824,7 @@
            * It should set the this._active to true and do nothing if
            * this._active is true.
            */
-          _activate: function() {
+          _activate() {
               if (!this._active) {
                   this._map.locate(this.options.locateOptions);
                   this._map.fire('locateactivate', this);
@@ -1837,10 +1837,10 @@
                   this._map.on('zoomstart', this._onZoom, this);
                   this._map.on('zoomend', this._onZoomEnd, this);
                   if (this.options.showCompass) {
-                      var oriAbs = 'ondeviceorientationabsolute' in window;
+                      const oriAbs = 'ondeviceorientationabsolute' in window;
                       if (oriAbs || ('ondeviceorientation' in window)) {
-                          var _this = this;
-                          var deviceorientation = function () {
+                          const _this = this;
+                          const deviceorientation = function () {
                               L.DomEvent.on(window, oriAbs ? 'deviceorientationabsolute' : 'deviceorientation', _this._onDeviceOrientation, _this);
                           };
                           if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -1862,7 +1862,7 @@
            *
            * Override it to shutdown any functionalities you added on start.
            */
-          _deactivate: function() {
+          _deactivate() {
               this._map.stopLocate();
               this._map.fire('locatedeactivate', this);
               this._active = false;
@@ -1890,48 +1890,47 @@
           /**
            * Zoom (unless we should keep the zoom level) and an to the current view.
            */
-          setView: function() {
-              this._drawMarker();
-              if (this._isOutsideMapBounds()) {
-                  this._event = undefined;  // clear the current location so we can get back into the bounds
-                  this.options.onLocationOutsideMapBounds(this);
-              } else {
-  		if (this._justClicked && this.options.initialZoomLevel !== false) {
-                      var f = this.options.flyTo ? this._map.flyTo : this._map.setView;
-                      f.bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel);
-  		} else
-                  if (this.options.keepCurrentZoomLevel) {
-                      var f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
-                      f.bind(this._map)([this._event.latitude, this._event.longitude]);
-                  } else {
-                      var f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
-                      // Ignore zoom events while setting the viewport as these would stop following
-                      this._ignoreEvent = true;
-                      f.bind(this._map)(this.options.getLocationBounds(this._event), {
-                          padding: this.options.circlePadding,
-                          maxZoom: this.options.locateOptions.maxZoom
-                      });
-                      L.Util.requestAnimFrame(function(){
-                          // Wait until after the next animFrame because the flyTo can be async
-                          this._ignoreEvent = false;
-                      }, this);
+          setView() {
+                      this._drawMarker();
+                      if (this._isOutsideMapBounds()) {
+                          this._event = undefined;  // clear the current location so we can get back into the bounds
+                          this.options.onLocationOutsideMapBounds(this);
+                      } else {
+                          if (this._justClicked && this.options.initialZoomLevel !== false) {
+                                      var f = this.options.flyTo ? this._map.flyTo : this._map.setView;
+                                      f.bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel);
+                          } else if (this.options.keepCurrentZoomLevel) {
+                                      var f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
+                                      f.bind(this._map)([this._event.latitude, this._event.longitude]);
+                          } else {
+                              var f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
+                              // Ignore zoom events while setting the viewport as these would stop following
+                              this._ignoreEvent = true;
+                              f.bind(this._map)(this.options.getLocationBounds(this._event), {
+                                  padding: this.options.circlePadding,
+                                  maxZoom: this.options.initialZoomLevel || this.options.locateOptions.maxZoom
+                              });
+                              L.Util.requestAnimFrame(function(){
+                                  // Wait until after the next animFrame because the flyTo can be async
+                                  this._ignoreEvent = false;
+                              }, this);
 
-                  }
-              }
-          },
+                          }
+                      }
+                  },
 
           /**
            *
            */
-          _drawCompass: function() {
+          _drawCompass() {
               if (!this._event) {
                   return;
               }
 
-              var latlng = this._event.latlng;
+              const latlng = this._event.latlng;
 
               if (this.options.showCompass && latlng && this._compassHeading !== null) {
-                  var cStyle = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle;
+                  const cStyle = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle;
                   if (!this._compass) {
                       this._compass = new this.options.compassClass(latlng, this._compassHeading, cStyle).addTo(this._layer);
                   } else {
@@ -1955,17 +1954,17 @@
            *
            * Uses the event retrieved from onLocationFound from the map.
            */
-          _drawMarker: function() {
+          _drawMarker() {
               if (this._event.accuracy === undefined) {
                   this._event.accuracy = 0;
               }
 
-              var radius = this._event.accuracy;
-              var latlng = this._event.latlng;
+              const radius = this._event.accuracy;
+              const latlng = this._event.latlng;
 
               // circle with the radius of the location's accuracy
               if (this.options.drawCircle) {
-                  var style = this._isFollowing() ? this.options.followCircleStyle : this.options.circleStyle;
+                  const style = this._isFollowing() ? this.options.followCircleStyle : this.options.circleStyle;
 
                   if (!this._circle) {
                       this._circle = L.circle(latlng, radius, style).addTo(this._layer);
@@ -1974,7 +1973,8 @@
                   }
               }
 
-              var distance, unit;
+              let distance;
+              let unit;
               if (this.options.metric) {
                   distance = radius.toFixed(0);
                   unit =  this.options.strings.metersUnit;
@@ -1985,7 +1985,7 @@
 
               // small inner marker
               if (this.options.drawMarker) {
-                  var mStyle = this._isFollowing() ? this.options.followMarkerStyle : this.options.markerStyle;
+                  const mStyle = this._isFollowing() ? this.options.followMarkerStyle : this.options.markerStyle;
                   if (!this._marker) {
                       this._marker = new this.options.markerClass(latlng, mStyle).addTo(this._layer);
                   } else {
@@ -1999,12 +1999,12 @@
 
               this._drawCompass();
 
-              var t = this.options.strings.popup;
+              const t = this.options.strings.popup;
               function getPopupText() {
                   if (typeof t === 'string') {
-                      return L.Util.template(t, {distance: distance, unit: unit});
+                      return L.Util.template(t, {distance, unit});
                   } else if (typeof t === 'function') {
-                      return t({distance: distance, unit: unit});
+                      return t({distance, unit});
                   } else {
                       return t;
                   }
@@ -2024,7 +2024,7 @@
           /**
            * Remove the marker from map.
            */
-          _removeMarker: function() {
+          _removeMarker() {
               this._layer.clearLayers();
               this._marker = undefined;
               this._circle = undefined;
@@ -2034,7 +2034,7 @@
            * Unload the plugin and all event listeners.
            * Kind of the opposite of onAdd.
            */
-          _unload: function() {
+          _unload() {
               this.stop();
               this._map.off('unload', this._unload, this);
           },
@@ -2042,7 +2042,7 @@
           /**
            * Sets the compass heading
            */
-          _setCompassHeading: function(angle) {
+          _setCompassHeading(angle) {
               if (!isNaN(parseFloat(angle)) && isFinite(angle)) {
                   angle = Math.round(angle);
 
@@ -2056,14 +2056,14 @@
           /**
            * If the compass fails calibration just fail safely and remove the compass
            */
-          _onCompassNeedsCalibration: function() {
+          _onCompassNeedsCalibration() {
               this._setCompassHeading();
           },
 
           /**
            * Process and normalise compass events
            */
-          _onDeviceOrientation: function(e) {
+          _onDeviceOrientation(e) {
               if (!this._active) {
                   return;
               }
@@ -2080,7 +2080,7 @@
           /**
            * Calls deactivate and dispatches an error.
            */
-          _onLocationError: function(err) {
+          _onLocationError(err) {
               // ignore time out error if the location is watched
               if (err.code == 3 && this.options.locateOptions.watch) {
                   return;
@@ -2093,7 +2093,7 @@
           /**
            * Stores the received event and updates the marker.
            */
-          _onLocationFound: function(e) {
+          _onLocationFound(e) {
               // no need to do anything if the location has not changed
               if (this._event &&
                   (this._event.latlng.lat === e.latlng.lat &&
@@ -2139,7 +2139,7 @@
           /**
            * When the user drags. Need a separate event so we can bind and unbind event listeners.
            */
-          _onDrag: function() {
+          _onDrag() {
               // only react to drags once we have a location
               if (this._event && !this._ignoreEvent) {
                   this._userPanned = true;
@@ -2151,7 +2151,7 @@
           /**
            * When the user zooms. Need a separate event so we can bind and unbind event listeners.
            */
-          _onZoom: function() {
+          _onZoom() {
               // only react to drags once we have a location
               if (this._event && !this._ignoreEvent) {
                   this._userZoomed = true;
@@ -2163,7 +2163,7 @@
           /**
            * After a zoom ends update the compass and handle sideways zooms
            */
-          _onZoomEnd: function() {
+          _onZoomEnd() {
               if (this._event) {
                   this._drawCompass();
               }
@@ -2181,7 +2181,7 @@
           /**
            * Compute whether the map is following the user location with pan and zoom.
            */
-          _isFollowing: function() {
+          _isFollowing() {
               if (!this._active) {
                   return false;
               }
@@ -2198,7 +2198,7 @@
           /**
            * Check if location is in map bounds
            */
-          _isOutsideMapBounds: function() {
+          _isOutsideMapBounds() {
               if (this._event === undefined) {
                   return false;
               }
@@ -2209,7 +2209,7 @@
           /**
            * Toggles button class between following and active.
            */
-          _updateContainerStyle: function() {
+          _updateContainerStyle() {
               if (!this._container) {
                   return;
               }
@@ -2229,7 +2229,7 @@
           /**
            * Sets the CSS classes for the state.
            */
-          _setClasses: function(state) {
+          _setClasses(state) {
               if (state == 'requesting') {
                   removeClasses(this._container, "active following");
                   addClasses(this._container, "requesting");
@@ -2254,7 +2254,7 @@
           /**
            * Removes all classes from button.
            */
-          _cleanClasses: function() {
+          _cleanClasses() {
               L.DomUtil.removeClass(this._container, "requesting");
               L.DomUtil.removeClass(this._container, "active");
               L.DomUtil.removeClass(this._container, "following");
@@ -2266,7 +2266,7 @@
           /**
            * Reinitializes state variables.
            */
-          _resetVariables: function() {
+          _resetVariables() {
               // whether locate is active or not
               this._active = false;
 
@@ -2282,241 +2282,354 @@
           }
       });
 
-      L.control.locate = function (options) {
-          return new L.Control.Locate(options);
-      };
+      L.control.locate = (options) => new L.Control.Locate(options);
 
       return LocateControl;
   }, window));
 
-  (function () {
-
-  L.Control.FullScreen = L.Control.extend({
-  	options: {
-  		position: 'topleft',
-  		title: 'Full Screen',
-  		titleCancel: 'Exit Full Screen',
-  		forceSeparateButton: false,
-  		forcePseudoFullscreen: false,
-  		fullscreenElement: false
-  	},
-  	
-  	onAdd: function (map) {
-  		var className = 'leaflet-control-zoom-fullscreen', container, content = '';
-  		
-  		if (map.zoomControl && !this.options.forceSeparateButton) {
-  			container = map.zoomControl._container;
-  		} else {
-  			container = L.DomUtil.create('div', 'leaflet-bar');
-  		}
-  		
-  		if (this.options.content) {
-  			content = this.options.content;
-  		} else {
-  			className += ' fullscreen-icon';
-  		}
-
-  		this._createButton(this.options.title, className, content, container, this.toggleFullScreen, this);
-  		this._map.fullscreenControl = this;
-
-  		this._map.on('enterFullscreen exitFullscreen', this._toggleTitle, this);
-
-  		return container;
-  	},
-  	
-  	onRemove: function (map) {
-  		L.DomEvent
-  			.off(this.link, 'click', L.DomEvent.stopPropagation)
-  			.off(this.link, 'click', L.DomEvent.preventDefault)
-  			.off(this.link, 'click', this.toggleFullScreen, this);
-  		
-  		L.DomEvent
-  			.off(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-  			.off(this._container, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-  			.off(this._container, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
-  		
-  		L.DomEvent
-  			.off(document, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-  			.off(document, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-  			.off(document, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, this);
-  	},
-  	
-  	_createButton: function (title, className, content, container, fn, context) {
-  		this.link = L.DomUtil.create('a', className, container);
-  		this.link.href = '#';
-  		this.link.title = title;
-  		this.link.innerHTML = content;
-
-  		this.link.setAttribute('role', 'button');
-  		this.link.setAttribute('aria-label', title);
-
-  		L.DomEvent
-  			.on(this.link, 'click', L.DomEvent.stopPropagation)
-  			.on(this.link, 'click', L.DomEvent.preventDefault)
-  			.on(this.link, 'click', fn, context);
-  		
-  		L.DomEvent
-  			.on(container, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-  			.on(container, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-  			.on(container, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, context);
-  		
-  		L.DomEvent
-  			.on(document, fullScreenApi.fullScreenEventName, L.DomEvent.stopPropagation)
-  			.on(document, fullScreenApi.fullScreenEventName, L.DomEvent.preventDefault)
-  			.on(document, fullScreenApi.fullScreenEventName, this._handleFullscreenChange, context);
-
-  		return this.link;
-  	},
-  	
-  	toggleFullScreen: function () {
-  		var map = this._map;
-  		map._exitFired = false;
-  		if (map._isFullscreen) {
-  			if (fullScreenApi.supportsFullScreen && !this.options.forcePseudoFullscreen) {
-  				fullScreenApi.cancelFullScreen();
-  			} else {
-  				L.DomUtil.removeClass(this.options.fullscreenElement ? this.options.fullscreenElement : map._container, 'leaflet-pseudo-fullscreen');
-  			}
-  			map.fire('exitFullscreen');
-  			map._exitFired = true;
-  			map._isFullscreen = false;
-  		}
-  		else {
-  			if (fullScreenApi.supportsFullScreen && !this.options.forcePseudoFullscreen) {
-  				fullScreenApi.requestFullScreen(this.options.fullscreenElement ? this.options.fullscreenElement : map._container);
-  			} else {
-  				L.DomUtil.addClass(this.options.fullscreenElement ? this.options.fullscreenElement : map._container, 'leaflet-pseudo-fullscreen');
-  			}
-  			map.fire('enterFullscreen');
-  			map._isFullscreen = true;
-  		}
-  	},
-  	
-  	_toggleTitle: function () {
-  		this.link.title = this._map._isFullscreen ? this.options.title : this.options.titleCancel;
-  	},
-  	
-  	_handleFullscreenChange: function () {
-  		var map = this._map;
-  		map.invalidateSize();
-  		if (!fullScreenApi.isFullScreen() && !map._exitFired) {
-  			map.fire('exitFullscreen');
-  			map._exitFired = true;
-  			map._isFullscreen = false;
-  		}
-  	}
-  });
-
-  L.Map.include({
-  	toggleFullscreen: function () {
-  		this.fullscreenControl.toggleFullScreen();
-  	}
-  });
-
-  L.Map.addInitHook(function () {
-  	if (this.options.fullscreenControl) {
-  		this.addControl(L.control.fullscreen(this.options.fullscreenControlOptions));
-  	}
-  });
-
-  L.control.fullscreen = function (options) {
-  	return new L.Control.FullScreen(options);
-  };
-
-  /* 
-  Native FullScreen JavaScript API
-  -------------
-  Assumes Mozilla naming conventions instead of W3C for now
-
-  source : http://johndyer.name/native-fullscreen-javascript-api-plus-jquery-plugin/
-
+  /*!
+  * Based on package 'screenfull'
+  * v5.1.0 - 2020-12-24
+  * (c) Sindre Sorhus; MIT License
+  * Added definition for using screenfull as an amd module
+  * Must be placed before the definition of leaflet.fullscreen
+  * as it is required by that
   */
-
-  	var 
-  		fullScreenApi = { 
-  			supportsFullScreen: false,
-  			isFullScreen: function () { return false; }, 
-  			requestFullScreen: function () {}, 
-  			cancelFullScreen: function () {},
-  			fullScreenEventName: '',
-  			prefix: ''
-  		},
-  		browserPrefixes = 'webkit moz o ms khtml'.split(' ');
-  	
-  	// check for native support
-  	if (typeof document.exitFullscreen !== 'undefined') {
-  		fullScreenApi.supportsFullScreen = true;
-  	} else {
-  		// check for fullscreen support by vendor prefix
-  		for (var i = 0, il = browserPrefixes.length; i < il; i++) {
-  			fullScreenApi.prefix = browserPrefixes[i];
-  			if (typeof document[fullScreenApi.prefix + 'CancelFullScreen'] !== 'undefined') {
-  				fullScreenApi.supportsFullScreen = true;
-  				break;
-  			}
-  		}
-  		if (typeof document['msExitFullscreen'] !== 'undefined') {
-  			fullScreenApi.prefix = 'ms';
-  			fullScreenApi.supportsFullScreen = true;
-  		}
+  (function (root, factory) {
+  	if (typeof define === 'function' && define.amd) {
+  		define('screenfull', factory);
+    } else if (typeof module === 'object' && module.exports) {
+  		module.exports.screenfull = factory();
+    } else {
+  		// Save 'screenfull' into global window variable
+  		root.screenfull = factory();
   	}
-  	
-  	// update methods to do something useful
-  	if (fullScreenApi.supportsFullScreen) {
-  		if (fullScreenApi.prefix === 'ms') {
-  			fullScreenApi.fullScreenEventName = 'MSFullscreenChange';
-  		} else {
-  			fullScreenApi.fullScreenEventName = fullScreenApi.prefix + 'fullscreenchange';
-  		}
-  		fullScreenApi.isFullScreen = function () {
-  			switch (this.prefix) {
-  				case '':
-  					return document.fullscreen;
-  				case 'webkit':
-  					return document.webkitIsFullScreen;
-  				case 'ms':
-  					return document.msFullscreenElement;
-  				default:
-  					return document[this.prefix + 'FullScreen'];
-  			}
-  		};
-  		fullScreenApi.requestFullScreen = function (el) {
-  			switch (this.prefix) {
-  				case '':
-  					return el.requestFullscreen();
-  				case 'ms':
-  					return el.msRequestFullscreen();
-  				default:
-  					return el[this.prefix + 'RequestFullScreen']();
-  			}
-  		};
-  		fullScreenApi.cancelFullScreen = function () {
-  			switch (this.prefix) {
-  				case '':
-  					return document.exitFullscreen();
-  				case 'ms':
-  					return document.msExitFullscreen();
-  				default:
-  					return document[this.prefix + 'CancelFullScreen']();
-  			}
-  		};
-  	}
+  }(window, function () {
 
-  	// jQuery plugin
-  	if (typeof jQuery !== 'undefined') {
-  		jQuery.fn.requestFullScreen = function () {
-  			return this.each(function () {
-  				var el = jQuery(this);
-  				if (fullScreenApi.supportsFullScreen) {
-  					fullScreenApi.requestFullScreen(el);
+  	var document = typeof window !== 'undefined' && typeof window.document !== 'undefined' ? window.document : {};
+
+  	var fn = (function () {
+  		var val;
+
+  		var fnMap = [
+  			[
+  				'requestFullscreen',
+  				'exitFullscreen',
+  				'fullscreenElement',
+  				'fullscreenEnabled',
+  				'fullscreenchange',
+  				'fullscreenerror'
+  			],
+  			// New WebKit
+  			[
+  				'webkitRequestFullscreen',
+  				'webkitExitFullscreen',
+  				'webkitFullscreenElement',
+  				'webkitFullscreenEnabled',
+  				'webkitfullscreenchange',
+  				'webkitfullscreenerror'
+
+  			],
+  			// Old WebKit
+  			[
+  				'webkitRequestFullScreen',
+  				'webkitCancelFullScreen',
+  				'webkitCurrentFullScreenElement',
+  				'webkitCancelFullScreen',
+  				'webkitfullscreenchange',
+  				'webkitfullscreenerror'
+
+  			],
+  			[
+  				'mozRequestFullScreen',
+  				'mozCancelFullScreen',
+  				'mozFullScreenElement',
+  				'mozFullScreenEnabled',
+  				'mozfullscreenchange',
+  				'mozfullscreenerror'
+  			],
+  			[
+  				'msRequestFullscreen',
+  				'msExitFullscreen',
+  				'msFullscreenElement',
+  				'msFullscreenEnabled',
+  				'MSFullscreenChange',
+  				'MSFullscreenError'
+  			]
+  		];
+
+  		var i = 0;
+  		var l = fnMap.length;
+  		var ret = {};
+
+  		for (; i < l; i++) {
+  			val = fnMap[i];
+  			if (val && val[1] in document) {
+  				for (i = 0; i < val.length; i++) {
+  					ret[fnMap[0][i]] = val[i];
   				}
-  			});
-  		};
-  	}
+  				return ret;
+  			}
+  		}
 
-  	// export api
-  	window.fullScreenApi = fullScreenApi;
-  })();
+  		return false;
+  	})();
+
+  	var eventNameMap = {
+  		change: fn.fullscreenchange,
+  		error: fn.fullscreenerror
+  	};
+
+  	var screenfull = {
+  		request: function (element, options) {
+  			return new Promise(function (resolve, reject) {
+  				var onFullScreenEntered = function () {
+  					this.off('change', onFullScreenEntered);
+  					resolve();
+  				}.bind(this);
+
+  				this.on('change', onFullScreenEntered);
+
+  				element = element || document.documentElement;
+
+  				var returnPromise = element[fn.requestFullscreen](options);
+
+  				if (returnPromise instanceof Promise) {
+  					returnPromise.then(onFullScreenEntered).catch(reject);
+  				}
+  			}.bind(this));
+  		},
+  		exit: function () {
+  			return new Promise(function (resolve, reject) {
+  				if (!this.isFullscreen) {
+  					resolve();
+  					return;
+  				}
+
+  				var onFullScreenExit = function () {
+  					this.off('change', onFullScreenExit);
+  					resolve();
+  				}.bind(this);
+
+  				this.on('change', onFullScreenExit);
+
+  				var returnPromise = document[fn.exitFullscreen]();
+
+  				if (returnPromise instanceof Promise) {
+  					returnPromise.then(onFullScreenExit).catch(reject);
+  				}
+  			}.bind(this));
+  		},
+  		toggle: function (element, options) {
+  			return this.isFullscreen ? this.exit() : this.request(element, options);
+  		},
+  		onchange: function (callback) {
+  			this.on('change', callback);
+  		},
+  		onerror: function (callback) {
+  			this.on('error', callback);
+  		},
+  		on: function (event, callback) {
+  			var eventName = eventNameMap[event];
+  			if (eventName) {
+  				document.addEventListener(eventName, callback, false);
+  			}
+  		},
+  		off: function (event, callback) {
+  			var eventName = eventNameMap[event];
+  			if (eventName) {
+  				document.removeEventListener(eventName, callback, false);
+  			}
+  		},
+  		raw: fn
+  	};
+
+  	if (!fn) {
+  		return {isEnabled: false};
+  	} else {
+  		Object.defineProperties(screenfull, {
+  			isFullscreen: {
+  				get: function () {
+  					return Boolean(document[fn.fullscreenElement]);
+  				}
+  			},
+  			element: {
+  				enumerable: true,
+  				get: function () {
+  					return document[fn.fullscreenElement];
+  				}
+  			},
+  			isEnabled: {
+  				enumerable: true,
+  				get: function () {
+  					// Coerce to boolean in case of old WebKit
+  					return Boolean(document[fn.fullscreenEnabled]);
+  				}
+  			}
+  		});
+  		return screenfull;
+  	}
+  }));
+
+  /*!
+  * leaflet.fullscreen
+  */
+  (function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+  		// define an AMD module that requires 'leaflet' and 'screenfull'
+  		// and resolve to an object containing leaflet and screenfull
+  		define('leafletFullScreen', ['leaflet', 'screenfull'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+  		// define a CommonJS module that requires 'leaflet' and 'screenfull'
+  		module.exports = factory(require('leaflet'), require('screenfull'));
+    } else {
+  		// Assume 'leaflet' and 'screenfull' are loaded into global variable already
+  		factory(root.L, root.screenfull);
+  	}
+  }(window, function (leaflet, screenfull) {
+
+  	leaflet.Control.FullScreen = leaflet.Control.extend({
+  		options: {
+  			position: 'topleft',
+  			title: 'Full Screen',
+  			titleCancel: 'Exit Full Screen',
+  			forceSeparateButton: false,
+  			forcePseudoFullscreen: false,
+  			fullscreenElement: false
+  		},
+
+  		_screenfull: screenfull,
+
+  		onAdd: function (map) {
+  			var className = 'leaflet-control-zoom-fullscreen', container, content = '';
+
+  			if (map.zoomControl && !this.options.forceSeparateButton) {
+  				container = map.zoomControl._container;
+  			} else {
+  				container = leaflet.DomUtil.create('div', 'leaflet-bar');
+  			}
+
+  			if (this.options.content) {
+  				content = this.options.content;
+  			} else {
+  				className += ' fullscreen-icon';
+  			}
+
+  			this._createButton(this.options.title, className, content, container, this.toggleFullScreen, this);
+  			this._map.fullscreenControl = this;
+
+  			this._map.on('enterFullscreen exitFullscreen', this._toggleState, this);
+
+  			return container;
+  		},
+
+  		onRemove: function () {
+  			leaflet.DomEvent
+  				.off(this.link, 'click', leaflet.DomEvent.stopPropagation)
+  				.off(this.link, 'click', leaflet.DomEvent.preventDefault)
+  				.off(this.link, 'click', this.toggleFullScreen, this);
+
+  			leaflet.DomEvent
+  				.off(this._container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
+  				.off(this._container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
+  				.off(this._container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
+
+  			leaflet.DomEvent
+  				.off(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
+  				.off(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
+  				.off(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
+  		},
+
+  		_createButton: function (title, className, content, container, fn, context) {
+  			this.link = leaflet.DomUtil.create('a', className, container);
+  			this.link.href = '#';
+  			this.link.title = title;
+  			this.link.innerHTML = content;
+
+  			this.link.setAttribute('role', 'button');
+  			this.link.setAttribute('aria-label', title);
+
+  			leaflet.DomEvent
+  				.on(this.link, 'click', leaflet.DomEvent.stopPropagation)
+  				.on(this.link, 'click', leaflet.DomEvent.preventDefault)
+  				.on(this.link, 'click', fn, context);
+
+  			leaflet.DomEvent
+  				.on(container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
+  				.on(container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
+  				.on(container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
+
+  			leaflet.DomEvent
+  				.on(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
+  				.on(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
+  				.on(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
+
+  			return this.link;
+  		},
+
+  		toggleFullScreen: function () {
+  			var map = this._map;
+  			map._exitFired = false;
+  			if (map._isFullscreen) {
+  				if (this._screenfull.isEnabled && !this.options.forcePseudoFullscreen) {
+  					this._screenfull.exit();
+  				} else {
+  					leaflet.DomUtil.removeClass(this.options.fullscreenElement ? this.options.fullscreenElement : map._container, 'leaflet-pseudo-fullscreen');
+  					map.invalidateSize();
+  				}
+  				map.fire('exitFullscreen');
+  				map._exitFired = true;
+  				map._isFullscreen = false;
+  			}
+  			else {
+  				if (this._screenfull.isEnabled && !this.options.forcePseudoFullscreen) {
+  					this._screenfull.request(this.options.fullscreenElement ? this.options.fullscreenElement : map._container);
+  				} else {
+  					leaflet.DomUtil.addClass(this.options.fullscreenElement ? this.options.fullscreenElement : map._container, 'leaflet-pseudo-fullscreen');
+  					map.invalidateSize();
+  				}
+  				map.fire('enterFullscreen');
+  				map._isFullscreen = true;
+  			}
+  		},
+
+  		_toggleState: function () {
+  			this.link.title = this._map._isFullscreen ? this.options.title : this.options.titleCancel;
+  			this._map._isFullscreen ? L.DomUtil.removeClass(this.link, 'leaflet-fullscreen-on') : L.DomUtil.addClass(this.link, 'leaflet-fullscreen-on');
+  		},
+
+  		_handleFullscreenChange: function () {
+  			var map = this._map;
+  			map.invalidateSize();
+  			if (!this._screenfull.isFullscreen && !map._exitFired) {
+  				map.fire('exitFullscreen');
+  				map._exitFired = true;
+  				map._isFullscreen = false;
+  			}
+  		}
+  	});
+
+  	leaflet.Map.include({
+  		toggleFullscreen: function () {
+  			this.fullscreenControl.toggleFullScreen();
+  		}
+  	});
+
+  	leaflet.Map.addInitHook(function () {
+  		if (this.options.fullscreenControl) {
+  			this.addControl(leaflet.control.fullscreen(this.options.fullscreenControlOptions));
+  		}
+  	});
+
+  	leaflet.control.fullscreen = function (options) {
+  		return new leaflet.Control.FullScreen(options);
+  	};
+
+  	// must return an object containing also screenfull to make screenfull
+  	// available outside of this package, if used as an amd module,
+  	// as webpack cannot handle amd define with moduleid
+  	return {leaflet: leaflet, screenfull: screenfull};
+  }));
 
   /**
    * leaflet-pegman
@@ -4182,9 +4295,9 @@
   })();
 
   /* 
-   * Leaflet Control Search v2.9.9 - 2020-12-01 
+   * Leaflet Control Search v3.0.0 - 2021-08-18 
    * 
-   * Copyright 2020 Stefano Cudini 
+   * Copyright 2021 Stefano Cudini 
    * stefano.cudini@gmail.com 
    * https://opengeo.tech/ 
    * 
@@ -4937,7 +5050,7 @@
 
   		L.DomUtil.addClass(this._container, 'search-load');	
 
-  		if(this._layer)
+  		if(this.options.layer)
   		{
   			//TODO _recordsFromLayer must return array of objects, formatted from _formatData
   			this._recordsCache = this._recordsFromLayer();
@@ -4994,7 +5107,7 @@
   	
   		var searchTips = this._tooltip.hasChildNodes() ? this._tooltip.childNodes : [];
   			
-  		for (i=0; i<searchTips.length; i++)
+  		for (var i=0; i<searchTips.length; i++)
   			L.DomUtil.removeClass(searchTips[i], 'search-tip-select');
   		
   		if ((velocity == 1 ) && (this._tooltip.currentSelection >= (searchTips.length - 1))) {// If at end of list.
@@ -5448,59 +5561,57 @@
 
   L.Map.addInitHook('addHandler', 'visualClick', L.Map.VisualClick);
 
-  const currentScript = document.currentScript;
-  const currentVersion = version.split("+")[0].trim();
-
-
-  var lazyLoader = {
-
-  	baseURL: 'https://unpkg.com/',
-
-  	// Sequentially download multiple scripts.
-  	loadSyncScripts: function(urls) {
-  		return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
-  	},
-
-  	// Parallel download multiple scripts.
-  	loadAsyncScripts: function(urls) {
-  		return Promise.all(urls.map((url) => lazyLoader.loadScript(url)));
-  	},
-
-  	// Dynamically load a single script.
-  	loadScript: function(url) {
-  		return new Promise((resolve, reject) => {
-
-  			let type = url.split('.').pop().split('?')[0];
-  			let tag = type == 'css' ? 'link' : 'script';
-  			let script = document.createElement(tag);
-  			let head = document.head;
-  			let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
-  			let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
-  			let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
-
-  			if (type == 'css') {
-  				script.rel = 'stylesheet';
-  			}
-
-  			script.addEventListener('load', resolve, {
-  				once: true
-  			});
-  			script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
-
-  			if (prev_tag.parentNode && prev_tag.nextSibling)
-  				prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
-  			else
-  				head.appendChild(script);
-
-  			lazyLoader["prev_" + tag] = script;
-
-  		});
-  	}
-
-  };
-
-
   (function() {
+
+  	const currentScript = document.currentScript;
+  	const currentVersion = version.split("+")[0].trim();
+
+  	var lazyLoader = {
+
+  		baseURL: 'https://unpkg.com/',
+
+  		// Sequentially download multiple scripts.
+  		loadSyncScripts: function(urls) {
+  			return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
+  		},
+
+  		// Parallel download multiple scripts.
+  		loadAsyncScripts: function(urls) {
+  			return Promise.all(urls.map((url) => lazyLoader.loadScript(url)));
+  		},
+
+  		// Dynamically load a single script.
+  		loadScript: function(url) {
+  			return new Promise((resolve, reject) => {
+
+  				let type = url.split('.').pop().split('?')[0];
+  				let tag = type == 'css' ? 'link' : 'script';
+  				let script = document.createElement(tag);
+  				let head = document.head;
+  				let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
+  				let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
+  				let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
+
+  				if (type == 'css') {
+  					script.rel = 'stylesheet';
+  				}
+
+  				script.addEventListener('load', resolve, {
+  					once: true
+  				});
+  				script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
+
+  				if (prev_tag.parentNode && prev_tag.nextSibling)
+  					prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
+  				else
+  					head.appendChild(script);
+
+  				lazyLoader["prev_" + tag] = script;
+
+  			});
+  		}
+
+  	};
 
   	// You can ovveride them by passing one of the following to leaflet map constructor.
   	var default_options = {
@@ -5567,7 +5678,7 @@
   			position: 'bottomright'
   		},
   		rotateControl: {
-  			position: 'bottomright'
+  			position: 'bottomright',
   		},
   		scaleControl: {
   			width: 200,
@@ -5682,6 +5793,7 @@
   		resizerControl: false,
   		disableDefaultUI: false,
   		includeLeafletCSS: true,
+  		includeLeafletUICSS: true,
   		apiKeys: undefined, // eg. { thunderforest: "", google: "", ... }
   		_isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
   	});
@@ -5918,7 +6030,10 @@
   		// Load custom plugins.
   		if (this.options.plugins) {
   			if (!lazyLoader.loader) {
-  				var core_plugins = ["leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css"];
+  				var core_plugins = [];
+  				if (this.options.includeLeafletUICSS) {
+  					core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
+  				}
   				if (!window.L) {
   					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
   					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
@@ -5950,10 +6065,7 @@
   				});
   			}
 
-  			lazyLoader.loader
-  				.then(function() {
-  					this.fire('plugins_loaded');
-  				}.bind(this));
+  			lazyLoader.loader.then(() => this.fire('plugins_loaded'));
   		}
   	}
 

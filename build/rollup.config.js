@@ -31,6 +31,7 @@ export default [
     input: input,
     output: output,
     plugins: plugins,
+    moduleContext: { "node_modules/leaflet.fullscreen/Control.FullScreen.js": "window" },
   },
 
   //** "leaflet-ui.js" **//
@@ -40,6 +41,7 @@ export default [
       file: "dist/" + plugin.name + ".js"
     }),
     plugins: plugins.concat(terser()),
+    moduleContext: { "node_modules/leaflet.fullscreen/Control.FullScreen.js": "window" },
   },
 
   //** "leaflet-ui.css" **//

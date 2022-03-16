@@ -38,7 +38,7 @@
     "rollup-plugin-terser": "^7.0.2"
   },
   "peerDependencies": {
-    "leaflet": "^1.6.0"
+    "leaflet": "^1.7.1"
   },
   "dependencies": {
     "@raruto/leaflet-edit-osm": "0.0.2",
@@ -49,12 +49,12 @@
     "leaflet-minimap": "^3.6.1",
     "leaflet-pegman": "^0.1.6",
     "leaflet-pointable": "^0.0.4",
-    "leaflet-rotate": "^0.1.3",
-    "leaflet-search": "^2.9.8",
+    "leaflet-rotate": "^0.1.4",
+    "leaflet-search": "^3.0.2",
     "leaflet.control.resizer": "^0.0.1",
-    "leaflet.fullscreen": "^1.6.0",
-    "leaflet.gridlayer.googlemutant": "^0.13.4",
-    "leaflet.locatecontrol": "^0.74.0",
+    "leaflet.fullscreen": "^2.2.0",
+    "leaflet.gridlayer.googlemutant": "^0.13.5",
+    "leaflet.locatecontrol": "^0.76.0",
     "leaflet.visualclick": "^1.1.4"
   }
 }

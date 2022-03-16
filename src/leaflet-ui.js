@@ -13,59 +13,57 @@ import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
 
-const currentScript = document.currentScript;
-const currentVersion = version.split("+")[0].trim();
-
-
-var lazyLoader = {
-
-	baseURL: 'https://unpkg.com/',
-
-	// Sequentially download multiple scripts.
-	loadSyncScripts: function(urls) {
-		return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
-	},
-
-	// Parallel download multiple scripts.
-	loadAsyncScripts: function(urls) {
-		return Promise.all(urls.map((url) => lazyLoader.loadScript(url)));
-	},
-
-	// Dynamically load a single script.
-	loadScript: function(url) {
-		return new Promise((resolve, reject) => {
-
-			let type = url.split('.').pop().split('?')[0];
-			let tag = type == 'css' ? 'link' : 'script';
-			let script = document.createElement(tag);
-			let head = document.head;
-			let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
-			let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
-			let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
-
-			if (type == 'css') {
-				script.rel = 'stylesheet';
-			}
-
-			script.addEventListener('load', resolve, {
-				once: true
-			});
-			script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
-
-			if (prev_tag.parentNode && prev_tag.nextSibling)
-				prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
-			else
-				head.appendChild(script);
-
-			lazyLoader["prev_" + tag] = script;
-
-		});
-	}
-
-};
-
-
 (function() {
+
+	const currentScript = document.currentScript;
+	const currentVersion = version.split("+")[0].trim();
+
+	var lazyLoader = {
+
+		baseURL: 'https://unpkg.com/',
+
+		// Sequentially download multiple scripts.
+		loadSyncScripts: function(urls) {
+			return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
+		},
+
+		// Parallel download multiple scripts.
+		loadAsyncScripts: function(urls) {
+			return Promise.all(urls.map((url) => lazyLoader.loadScript(url)));
+		},
+
+		// Dynamically load a single script.
+		loadScript: function(url) {
+			return new Promise((resolve, reject) => {
+
+				let type = url.split('.').pop().split('?')[0];
+				let tag = type == 'css' ? 'link' : 'script';
+				let script = document.createElement(tag);
+				let head = document.head;
+				let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
+				let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
+				let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
+
+				if (type == 'css') {
+					script.rel = 'stylesheet';
+				}
+
+				script.addEventListener('load', resolve, {
+					once: true
+				});
+				script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
+
+				if (prev_tag.parentNode && prev_tag.nextSibling)
+					prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
+				else
+					head.appendChild(script);
+
+				lazyLoader["prev_" + tag] = script;
+
+			});
+		}
+
+	};
 
 	// You can ovveride them by passing one of the following to leaflet map constructor.
 	var default_options = {
@@ -132,7 +130,7 @@ var lazyLoader = {
 			position: 'bottomright'
 		},
 		rotateControl: {
-			position: 'bottomright'
+			position: 'bottomright',
 		},
 		scaleControl: {
 			width: 200,
@@ -247,6 +245,7 @@ var lazyLoader = {
 		resizerControl: false,
 		disableDefaultUI: false,
 		includeLeafletCSS: true,
+		includeLeafletUICSS: true,
 		apiKeys: undefined, // eg. { thunderforest: "", google: "", ... }
 		_isMiniMap: false, // used to prevent infinite loops when loading the minimap control.
 	});
@@ -483,7 +482,10 @@ var lazyLoader = {
 		// Load custom plugins.
 		if (this.options.plugins) {
 			if (!lazyLoader.loader) {
-				var core_plugins = ["leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css"];
+				var core_plugins = [];
+				if (this.options.includeLeafletUICSS) {
+					core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
+				}
 				if (!window.L) {
 					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
 					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
@@ -515,10 +517,7 @@ var lazyLoader = {
 				});
 			}
 
-			lazyLoader.loader
-				.then(function() {
-					this.fire('plugins_loaded');
-				}.bind(this));
+			lazyLoader.loader.then(() => this.fire('plugins_loaded'));
 		}
 	}
 
