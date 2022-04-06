@@ -5,6 +5,7 @@ import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
 import postcssCopy from 'postcss-copy';
 import rollupGitVersion from 'rollup-plugin-git-version';
+import copy from 'rollup-plugin-copy'
 
 let plugin = require('../package.json');
 
@@ -22,7 +23,8 @@ let plugins = [
   commonJS({
     include: '../node_modules/**'
   }),
-  rollupGitVersion()
+  rollupGitVersion(),
+  copy({ targets: [ { src: ['node_modules/@raruto/leaflet-gesture-handling/dist/locales/**/*'], dest: 'dist/locales' }, ] }),
 ];
 
 export default [
