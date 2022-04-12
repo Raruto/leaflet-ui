@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@raruto/leaflet-edit-osm": "0.0.2",
-    "@raruto/leaflet-gesture-handling": "^1.4.0",
+    "@raruto/leaflet-gesture-handling": "^1.4.1",
     "leaflet-control-layers-inline": "0.0.7",
     "leaflet-easyprint": "^2.1.9",
     "leaflet-i18n": "^0.3.1",
