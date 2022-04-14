@@ -6,9 +6,6 @@
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<!-- Leaflet -->
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
 	<!-- Leaflet-UI -->
 	<script src="../dist/leaflet-ui.js"></script>
 	<style>@import url("../dist/leaflet-ui.css");</style>
@@ -32,31 +29,34 @@
 	<div id="map" class="map"></div>
 
 	<script>
-		var map = L.map('map', {
-			center: [41.4583, 12.7059],
-			zoom: 5,
+		L.init().then(() => {
+				var map = L.map('map', {
+				center: [41.4583, 12.7059],
+				zoom: 5,
 
-			// Optional customizations
-			mapTypeId: 'topo',
-			// mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
-			// gestureHandling: true,
-			// visualClick: true,
-			// zoomControl: true,
-			// pegmanControl: true,
-			// locateControl: true,
-			// fullscreenControl: true,
-			// layersControl: true,
-			// minimapControl: true,
-			// editInOSMControl: true,
-			// loadingControl: true,
-			// searchControl: true,
-			// disableDefaultUI: false,
+				// Optional customizations
+				mapTypeId: 'topo',
+				// mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
+				// gestureHandling: true,
+				// visualClick: true,
+				// zoomControl: true,
+				// pegmanControl: true,
+				// locateControl: true,
+				// fullscreenControl: true,
+				// layersControl: true,
+				// minimapControl: true,
+				// editInOSMControl: true,
+				// loadingControl: true,
+				// searchControl: true,
+				// disableDefaultUI: false,
 
-			// Experimental feature
-			rotate: true,
-			includeLeafletUICSS: false
+				// Experimental feature
+				rotate: true,
+				includeLeafletUICSS: false
+			});
+
+			map.once('idle', function() { /* Wait here for map init */ });
 		});
-		map.once('idle', function() { /* Wait here for map init */ });
 	</script>
 
 	<a href="https://github.com/Raruto/leaflet-ui" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;"> <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github"
