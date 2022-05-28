@@ -2346,7 +2346,7 @@
   		// Save 'screenfull' into global window variable
   		root.screenfull = factory();
   	}
-  }(window, function () {
+  }(typeof self !== "undefined" ? self : window, function () {
 
   	var document = typeof window !== 'undefined' && typeof window.document !== 'undefined' ? window.document : {};
 
@@ -2528,7 +2528,7 @@
   		// Assume 'leaflet' and 'screenfull' are loaded into global variable already
   		factory(root.L, root.screenfull);
   	}
-  }(window, function (leaflet, screenfull) {
+  }(typeof self !== "undefined" ? self : window, function (leaflet, screenfull) {
 
   	leaflet.Control.FullScreen = leaflet.Control.extend({
   		options: {
@@ -3459,7 +3459,6 @@
   		(this._isLanguageContent(opts.text) ? Promise.resolve(opts.text) : this._getLanguageContent(opts.locale)).then((content) => {
   			this._map._container.setAttribute("data-gesture-handling-touch-content", content.touch);
   			this._map._container.setAttribute("data-gesture-handling-scroll-content", content.scroll);
-  	
   			this._touchWarning = content.touch;
   			this._scrollWarning = content.scroll;
   		});
@@ -3473,7 +3472,6 @@
   	_getLanguageContent: function(lang) {
   		//Determine user language (eg. fr or en-US)
   		lang = lang || this._getUserLanguage() || "en";
-  		
   		var resolve, promise = new Promise(_resolve => { resolve = _resolve; });
   		var consume = (m) => {
   			var content = m.default || {};
@@ -3493,18 +3491,9 @@
   		return promise;
   	},
 
-  	_hasClass: function(element, classList) {
-  		for (var i = 0; i < classList.length; i++) {
-  			if (L.DomUtil.hasClass(element, classList[i])) {
-  				return true;
-  			}
-  		}
-  		return false;
-  	},
-
   	_handleTouch: function(e) {
-  		//Disregard touch events on the minimap if present
-  		var ignore = this._hasClass(e.target, ["leaflet-control-minimap", "leaflet-interactive", "leaflet-popup-content", "leaflet-popup-content-wrapper", "leaflet-popup-close-button", "leaflet-control-zoom-in", "leaflet-control-zoom-out"]);
+  		//Disregard touch events on the controls and popups if present
+  		var ignore = L.DomUtil.hasClass(e.target, "leaflet-interactive") || e.target.closest('.leaflet-control-container') || e.target.closest('.leaflet-popup-pane');
 
   		if (ignore) {
   			if (L.DomUtil.hasClass(e.target, "leaflet-interactive") && e.type === "touchmove" && e.touches.length === 1) {
