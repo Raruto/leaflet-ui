@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.5.7+master.f634be9e";
+  var version = "0.5.8+master.f634be9e";
 
   // Following https://github.com/Leaflet/Leaflet/blob/master/PLUGIN-GUIDE.md
   (function (factory, window) {
@@ -3405,16 +3405,30 @@
   		}
   	},
 
+  	_disableInteraction: function(name) {
+  		// disable the handler only if related option is true
+  		if (this._map.options[name] && this._map[name]) {
+  			this._map[name].disable();
+  		}
+  	},
+
+  	_enableInteraction: function(name) {
+  		// enable the handler only if related option is true
+  		if (this._map.options[name] && this._map[name]) {
+  			this._map[name].enable();
+  		}
+  	},
+
   	_disableInteractions: function() {
-  		this._map.dragging.disable();
-  		this._map.scrollWheelZoom.disable();
-  		if (this._map.tap) this._map.tap.disable();
+  		this._disableInteraction('dragging');
+  		this._disableInteraction('scrollWheelZoom');
+  		this._disableInteraction('tap');
   	},
 
   	_enableInteractions: function() {
-  		this._map.dragging.enable();
-  		this._map.scrollWheelZoom.enable();
-  		if (this._map.tap) this._map.tap.enable();
+  		this._enableInteraction('dragging');
+  		this._enableInteraction('scrollWheelZoom');
+  		this._enableInteraction('tap');
   	},
 
   	_enableWarning: function(gesture) {
@@ -3532,7 +3546,7 @@
 
   	_enableScrollWarning: function() {
   		this._enableWarning('scroll');
-  		this._map.scrollWheelZoom.disable();
+  		this._disableInteraction('scrollWheelZoom');
   	},
 
   	_disableScrollWarning: function(delay) {
@@ -3542,19 +3556,21 @@
   			L.bind(
   				function() {
   					this._disableWarning('scroll');
-  					this._map.scrollWheelZoom.enable();
+  					this._enableInteraction('scrollWheelZoom');
   				}, this),
   			delay || 0
   		);
   	},
 
   	_handleScroll: function(e) {
-  		if (e.metaKey || e.ctrlKey || (e.shiftKey && this._map._rotate)) {
-  			e.preventDefault();
-  			this._disableScrollWarning();
-  		} else {
-  			this._enableScrollWarning();
-  			this._disableScrollWarning(this._map.options.gestureHandlingOptions.duration);
+  		if (this._map.scrollWheelZoom && this._map.scrollWheelZoom.enabled()) {
+  			if (e.metaKey || e.ctrlKey || (e.shiftKey && this._map._rotate)) {
+  				e.preventDefault();
+  				this._disableScrollWarning();
+  			} else {
+  				this._enableScrollWarning();
+  				this._disableScrollWarning(this._map.options.gestureHandlingOptions.duration);
+  			}
   		}
   	},
 
