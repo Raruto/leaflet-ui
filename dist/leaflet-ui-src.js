@@ -1670,20 +1670,20 @@
               createButtonCallback(container, options) {
                   const link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
                   link.title = options.strings.title;
-                  link.role = 'button';
                   link.href = '#';
+                  link.setAttribute('role', 'button');
                   const icon = L.DomUtil.create(options.iconElementTag, options.icon, link);
 
                   if (options.strings.text !== undefined) {
                       const text = L.DomUtil.create(options.textElementTag, 'leaflet-locate-text', link);
                       text.textContent = options.strings.text;
-                link.classList.add('leaflet-locate-text-active');
+                      link.classList.add('leaflet-locate-text-active');
                       link.parentNode.style.display = "flex";
                       if (options.icon.length > 0) {
                           icon.classList.add('leaflet-locate-icon');
                       }
                   }
-                  
+
                   return { link, icon };
               },
               /** This event is called in case of any location error that is not a time out error. */
@@ -1983,7 +1983,7 @@
                           this._compass.setStyle(cStyle);
                       }
                   }
-                  // 
+                  //
               }
               if (this._compass && (!this.options.showCompass || this._compassHeading === null)) {
                   this._compass.removeFrom(this._layer);
@@ -2331,7 +2331,7 @@
 
   /*!
   * Based on package 'screenfull'
-  * v5.1.0 - 2020-12-24
+  * v5.2.0 - 2021-11-03
   * (c) Sindre Sorhus; MIT License
   * Added definition for using screenfull as an amd module
   * Must be placed before the definition of leaflet.fullscreen
@@ -2346,7 +2346,7 @@
   		// Save 'screenfull' into global window variable
   		root.screenfull = factory();
   	}
-  }(typeof self !== "undefined" ? self : window, function () {
+  }(typeof self !== 'undefined' ? self : window, function () {
 
   	var document = typeof window !== 'undefined' && typeof window.document !== 'undefined' ? window.document : {};
 
@@ -2528,7 +2528,7 @@
   		// Assume 'leaflet' and 'screenfull' are loaded into global variable already
   		factory(root.L, root.screenfull);
   	}
-  }(typeof self !== "undefined" ? self : window, function (leaflet, screenfull) {
+  }(typeof self !== 'undefined' ? self : window, function (leaflet, screenfull) {
 
   	leaflet.Control.FullScreen = leaflet.Control.extend({
   		options: {
@@ -2567,19 +2567,18 @@
 
   		onRemove: function () {
   			leaflet.DomEvent
-  				.off(this.link, 'click', leaflet.DomEvent.stopPropagation)
-  				.off(this.link, 'click', leaflet.DomEvent.preventDefault)
+  				.off(this.link, 'click', leaflet.DomEvent.stop)
   				.off(this.link, 'click', this.toggleFullScreen, this);
 
-  			leaflet.DomEvent
-  				.off(this._container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
-  				.off(this._container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
-  				.off(this._container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
+  			if (this._screenfull.isEnabled) {
+  				leaflet.DomEvent
+  					.off(this._container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stop)
+  					.off(this._container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
 
-  			leaflet.DomEvent
-  				.off(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
-  				.off(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
-  				.off(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
+  				leaflet.DomEvent
+  					.off(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stop)
+  					.off(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, this);
+  			}
   		},
 
   		_createButton: function (title, className, content, container, fn, context) {
@@ -2591,20 +2590,21 @@
   			this.link.setAttribute('role', 'button');
   			this.link.setAttribute('aria-label', title);
 
+  			L.DomEvent.disableClickPropagation(container);
+
   			leaflet.DomEvent
-  				.on(this.link, 'click', leaflet.DomEvent.stopPropagation)
-  				.on(this.link, 'click', leaflet.DomEvent.preventDefault)
+  				.on(this.link, 'click', leaflet.DomEvent.stop)
   				.on(this.link, 'click', fn, context);
 
-  			leaflet.DomEvent
-  				.on(container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
-  				.on(container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
-  				.on(container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
+  			if (this._screenfull.isEnabled) {
+  				leaflet.DomEvent
+  					.on(container, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stop)
+  					.on(container, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
 
-  			leaflet.DomEvent
-  				.on(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stopPropagation)
-  				.on(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.preventDefault)
-  				.on(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
+  				leaflet.DomEvent
+  					.on(document, this._screenfull.raw.fullscreenchange, leaflet.DomEvent.stop)
+  					.on(document, this._screenfull.raw.fullscreenchange, this._handleFullscreenChange, context);
+  			}
 
   			return this.link;
   		},
