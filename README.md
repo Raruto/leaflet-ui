@@ -1,5 +1,8 @@
 # leaflet-ui
 
+[![NPM version](https://img.shields.io/npm/v/leaflet-ui.svg?color=red)](https://www.npmjs.com/package/leaflet-ui)
+[![License](https://img.shields.io/badge/license-GPL%203-blue.svg?style=flat)](LICENSE)
+
 Leaflet presets for common user interface customizations
 
 _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/leaflet-ui.html)_
