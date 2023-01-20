@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.5.9+master.a8975e8e";
+  var version = "0.6.0+master.a8975e8e";
 
   // Following https://github.com/Leaflet/Leaflet/blob/master/PLUGIN-GUIDE.md
   (function (factory, window) {
