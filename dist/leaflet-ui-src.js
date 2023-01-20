@@ -3,7 +3,7 @@
   factory();
 }((function () { 'use strict';
 
-  var version = "0.5.9+master.f634be9e";
+  var version = "0.5.9+master.a8975e8e";
 
   // Following https://github.com/Leaflet/Leaflet/blob/master/PLUGIN-GUIDE.md
   (function (factory, window) {
@@ -5321,6 +5321,9 @@
 
   		baseURL: 'https://unpkg.com/',
 
+  		// Save a reference to any lazy loaded scripts to prevent multiple loading (multiple-maps)
+  		scripts: {},
+
   		// Sequentially download multiple scripts.
   		loadSyncScripts: function(urls) {
   			return urls.reduce((prev, curr) => prev.then(() => lazyLoader.loadAsyncScripts(curr)), Promise.resolve());
@@ -5333,32 +5336,36 @@
 
   		// Dynamically load a single script.
   		loadScript: function(url) {
-  			return new Promise((resolve, reject) => {
+  			lazyLoader.scripts[url] =
+  				lazyLoader.scripts[url]
+  				? lazyLoader.scripts[url]
+  				: new Promise((resolve, reject) => {
 
-  				let type = url.split('.').pop().split('?')[0];
-  				let tag = type == 'css' ? 'link' : 'script';
-  				let script = document.createElement(tag);
-  				let head = document.head;
-  				let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
-  				let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
-  				let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
+  					let type = url.split('.').pop().split('?')[0];
+  					let tag = type == 'css' ? 'link' : 'script';
+  					let script = document.createElement(tag);
+  					let head = document.head;
+  					let root_script = (head.contains(currentScript) ? currentScript : head.lastChild) || head;
+  					let prev_tag = lazyLoader["prev_" + tag] || (tag == 'script' && lazyLoader.prev_link ? lazyLoader.prev_link : root_script);
+  					let base_url = (url.indexOf(".") === 0 || url.indexOf("/") === 0 || url.indexOf('http://') === 0 || url.indexOf('https://') === 0) ? '' : lazyLoader.baseURL;
 
-  				if (type == 'css') {
-  					script.rel = 'stylesheet';
-  				}
+  					if (type == 'css') {
+  						script.rel = 'stylesheet';
+  					}
 
-  				script.addEventListener('load', resolve, { once: true });
-  				script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
+  					script.addEventListener('load', resolve, { once: true });
+  					script.setAttribute(type == 'css' ? 'href' : 'src', base_url + url);
 
-  				if (prev_tag.parentNode && prev_tag.nextSibling)
-  					prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
-  				else
-  					head.appendChild(script);
+  					if (prev_tag.parentNode && prev_tag.nextSibling)
+  						prev_tag.parentNode.insertBefore(script, prev_tag.nextSibling);
+  					else
+  						head.appendChild(script);
 
-  				lazyLoader["prev_" + tag] = script;
+  					lazyLoader["prev_" + tag] = script;
 
-  			});
-  		}
+  				});
+  			return lazyLoader.scripts[url];
+  		},
 
   	};
 
@@ -5768,28 +5775,26 @@
 
   		// Load custom plugins.
   		if (opts.plugins) {
-  			if (!lazyLoader.loader) {
-  				let core_plugins = [];
-  				if (opts.includeLeafletUICSS) {
-  					core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
-  				}
-  				if (!window.L) {
-  					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
-  					core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
-  				} else if (opts.includeLeafletCSS && L.version) {
-  					let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
-  					let core_css_exists = false;
-  					for (let i = 0; i < document.styleSheets.length; i++) {
-  						if (document.styleSheets[i].href && document.styleSheets[i].href.indexOf(core_css_url) > 0) {
-  							core_css_exists = true;
-  							break;
-  						}
-  					}
-  					if (!core_css_exists) {
-  						core_plugins.unshift(core_css_url);
+  			let core_plugins = [];
+
+  			if (opts.includeLeafletUICSS) {
+  				core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
+  			}
+  			if (!window.L) {
+  				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
+  				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
+  			} else if (opts.includeLeafletCSS && L.version) {
+  				let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
+  				let core_css_exists = false;
+  				for (let i = 0; i < document.styleSheets.length; i++) {
+  					if (document.styleSheets[i].href && document.styleSheets[i].href.indexOf(core_css_url) > 0) {
+  						core_css_exists = true;
+  						break;
   					}
   				}
-  				lazyLoader.loader = lazyLoader.loadSyncScripts([core_plugins, opts.plugins]);
+  				if (!core_css_exists) {
+  					core_plugins.unshift(core_css_url);
+  				}
   			}
 
   			// Lazy load initHooks
@@ -5804,7 +5809,7 @@
   				});
   			}
 
-  			lazyLoader.loader.then(() => this.fire('plugins_loaded'));
+  			lazyLoader.loadSyncScripts([core_plugins, opts.plugins]).then(() => this.fire('plugins_loaded'));
   		}
   	}
 
