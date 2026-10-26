@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Leaflet -->
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 	<!-- Leaflet-UI -->
 	<script src="../dist/leaflet-ui.js"></script>
@@ -41,10 +41,10 @@
 			// mapTypeIds: ['streets', 'terrain', 'satellite', 'topo'],
 			// gestureHandling: true,
 			// visualClick: true,
-			// zoomControl: true,
+			zoomControl: false,
 			// pegmanControl: true,
 			// locateControl: true,
-			// fullscreenControl: true,
+			fullscreenControl: false,
 			// layersControl: true,
 			// minimapControl: true,
 			// editInOSMControl: true,
@@ -57,6 +57,13 @@
 			includeLeafletUICSS: false
 		});
 		map.once('idle', function() { /* Wait here for map init */ });
+
+		L.control.fullscreen({
+			position: 'topright',
+			title: 'Enter Fullscreen',
+			titleCancel: 'Exit Fullscreen',
+			forceSeparateButton: true,
+		}).addTo(map);
 	</script>
 
 	<a href="https://github.com/Raruto/leaflet-ui" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;"> <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github"

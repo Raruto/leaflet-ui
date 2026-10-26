@@ -1,8 +1,8 @@
 import { version } from '../package.json';
 import 'leaflet-i18n';
 import 'leaflet-rotate';
-import 'leaflet.locatecontrol';
-import 'leaflet.fullscreen';
+import { LocateControl, locate } from 'leaflet.locatecontrol';
+import FullScreen from 'leaflet.fullscreen';
 import 'leaflet-pegman';
 import '@raruto/leaflet-gesture-handling';
 import '@raruto/leaflet-edit-osm';
@@ -14,16 +14,10 @@ import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
 
-/* Temporary fix for empty values evaluated as false (leaflet-i18n v0.3.1) */
-(function(){
-	let proto = L.i18n.bind({});
-	L.i18n = L._ = (string, data) => {
-		if (L.locale && L.locales[L.locale] && L.locales[L.locale][string] == "") {
-			L.locales[L.locale][string] = "\u200B";
-		}
-		return proto.call(null, string, data);
-	};
-})();
+L.Control.Locate = LocateControl;
+L.control.locate = locate;
+L.Control.FullScreen = FullScreen;
+L.control.fullscreen = options => new FullScreen(options);
 
 (function() {
 
@@ -87,12 +81,13 @@ import 'leaflet.visualclick';
 		mapTypes: {
 			atlas: {
 				name: 'Atlas',
-				url: 'https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			streets: {
@@ -106,22 +101,24 @@ import 'leaflet.visualclick';
 			},
 			cycle: {
 				name: 'Cycle',
-				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			terrain: {
 				name: 'Terrain',
-				url: 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			satellite: {
@@ -494,8 +491,8 @@ import 'leaflet.visualclick';
 				core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
 			}
 			if (!window.L) {
-				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
-				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
+				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.css");
+				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.js");
 			} else if (opts.includeLeafletCSS && L.version) {
 				let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
 				let core_css_exists = false;
