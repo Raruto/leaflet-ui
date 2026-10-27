@@ -1,8 +1,9 @@
 import { version } from '../package.json';
+import L from './leaflet-compat.js';
 import 'leaflet-i18n';
 import 'leaflet-rotate';
-import 'leaflet.locatecontrol';
-import 'leaflet.fullscreen';
+import 'leaflet.locatecontrol/dist/L.Control.Locate.umd.js';
+import 'leaflet.fullscreen/dist/Control.FullScreen.umd.js';
 import 'leaflet-pegman';
 import '@raruto/leaflet-gesture-handling';
 import '@raruto/leaflet-edit-osm';
@@ -14,16 +15,8 @@ import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
 
-/* Temporary fix for empty values evaluated as false (leaflet-i18n v0.3.1) */
-(function(){
-	let proto = L.i18n.bind({});
-	L.i18n = L._ = (string, data) => {
-		if (L.locale && L.locales[L.locale] && L.locales[L.locale][string] == "") {
-			L.locales[L.locale][string] = "\u200B";
-		}
-		return proto.call(null, string, data);
-	};
-})();
+L.Control.Locate = L.Control.Locate.LocateControl;
+L.control.fullscreen = options => new L.Control.FullScreen(options);
 
 (function() {
 
@@ -87,12 +80,13 @@ import 'leaflet.visualclick';
 		mapTypes: {
 			atlas: {
 				name: 'Atlas',
-				url: 'https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			streets: {
@@ -106,22 +100,24 @@ import 'leaflet.visualclick';
 			},
 			cycle: {
 				name: 'Cycle',
-				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			terrain: {
 				name: 'Terrain',
-				url: 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png',
+				url: 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}{r}.png',
 				options: {
 					maxZoom: 24,
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
+					r: L.Browser.retina ? '@2x' : '',
 				},
 			},
 			satellite: {
@@ -283,7 +279,7 @@ import 'leaflet.visualclick';
 	function disableDefaultUI() {
 		if (this.zoomControl) this.zoomControl.remove();
 		if (this.rotateControl) this.rotateControl.remove();
-		if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+		if (this.fullscreenControl) this.fullscreenControl.remove();
 		if (this.searchControl && this.options.searchControl) this.searchControl.remove();
 		if (this.attributionControl) this.attributionControl.remove();
 	}
@@ -295,9 +291,9 @@ import 'leaflet.visualclick';
 		// Recursive merge leaflet map options.
 		for (let i in default_options) {
 			if (opts[i] === true || typeof opts[i] === "undefined") {
-				opts[i] = default_options[i];
+				opts[i] = isObject(default_options[i]) ? deepMerge({}, default_options[i]) : default_options[i];
 			} else if (typeof this.options[i] === "object" && opts[i] instanceof Array === false) {
-				opts[i] = deepMerge(default_options[i], opts[i]);
+				opts[i] = deepMerge({}, default_options[i], opts[i]);
 			}
 		}
 
@@ -381,7 +377,7 @@ import 'leaflet.visualclick';
 		if (opts.attributionControl && this.attributionControl) {
 			this.attributionControl.addTo(this);
 			controls.attribution = this.attributionControl;
-			this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
+			this.on('baselayerchange', updateLeafletAttribution.bind(this, this.attributionControl.options.prefix));
 		}
 
 		// Edit in OSM link.
@@ -435,7 +431,8 @@ import 'leaflet.visualclick';
 
 		// Fullscreen Control.
 		if (opts.fullscreenControl) {
-			controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(opts.fullscreenControl);
+			controls.fullscreen = this.fullscreenControl;
+			L.Util.setOptions(controls.fullscreen, opts.fullscreenControl);
 		}
 
 		// Minimap Control.
@@ -493,9 +490,9 @@ import 'leaflet.visualclick';
 			if (opts.includeLeafletUICSS) {
 				core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
 			}
-			if (!window.L) {
-				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.css");
-				core_plugins.unshift("leaflet@1.3.4/dist/leaflet.js");
+			if (!window.L && !window.leaflet) {
+				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.css");
+				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.js");
 			} else if (opts.includeLeafletCSS && L.version) {
 				let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
 				let core_css_exists = false;
@@ -585,7 +582,7 @@ import 'leaflet.visualclick';
 			}
 			// Automatically switch between "satellite" and "roads" layers.
 			if (this.options.toggleMapTypes) {
-				L.DomEvent.on(map, 'baselayerchange', this._handleMainMapTypeChange, this);
+				map.on('baselayerchange', this._handleMainMapTypeChange, this);
 				L.DomEvent.on(this._container, 'click', this._handleMiniMapTypeToggle, this);
 			}
 			return container;

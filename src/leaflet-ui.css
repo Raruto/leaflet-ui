@@ -1,6 +1,6 @@
 @import url("../node_modules/leaflet-pegman/leaflet-pegman.css");
 @import url("../node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css");
-@import url("../node_modules/leaflet.fullscreen/Control.FullScreen.css");
+@import url("../node_modules/leaflet.fullscreen/dist/Control.FullScreen.css");
 @import url("../node_modules/@raruto/leaflet-gesture-handling/dist/leaflet-gesture-handling.css");
 @import url("../node_modules/@raruto/leaflet-edit-osm/leaflet-edit-osm.css");
 @import url("../node_modules/leaflet-control-layers-inline/leaflet-control-layers-inline.css");
@@ -20,6 +20,24 @@
 
 .leaflet-control-layers-inline .leaflet-control-layers-base span {
   line-height: 1;
+}
+
+.leaflet-control-layers-inline .leaflet-control-layers-base label {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Leaflet 1.9 wraps the input and its name in an extra span. */
+.leaflet-container .leaflet-control-layers-inline .leaflet-control-layers-base label > span:first-child {
+  display: inline;
+  padding: 0;
+  font: inherit;
+}
+
+.leaflet-container .leaflet-control-attribution,
+.leaflet-container .leaflet-control-scale {
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .leaflet-control-zoom~.leaflet-control-scale.leaflet-control {

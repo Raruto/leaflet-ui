@@ -7,7 +7,35 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Leaflet -->
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+	<script>
+		const leafletVersions = {
+			'1.9.4': 'leaflet.js',
+			'2.0.0-alpha.1': 'leaflet-global-src.js',
+		};
+		const leafletVersion = new URL(location.href).searchParams.get('leaflet') || '1.9.4';
+		const leafletConfig = leafletVersions[leafletVersion];
+		if (!leafletConfig) throw new Error(`Unsupported Leaflet version: ${leafletVersion}`);
+		const leafletAssets = `https://unpkg.com/leaflet@${leafletVersion}/dist/`;
+		document.write(`<link rel="stylesheet" href="${leafletAssets}leaflet.css">`);
+		document.write(`<script src="${leafletAssets}${leafletConfig}"><\/script>`);
+		document.addEventListener('DOMContentLoaded', () => {
+			const label = document.createElement('label');
+			label.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;background:white;color:black;padding:4px 8px;font:13px sans-serif;';
+			label.append('Leaflet ');
+			const select = document.createElement('select');
+			select.setAttribute('aria-label', 'Leaflet version');
+			for (const version of Object.keys(leafletVersions)) {
+				select.add(new Option(version, version, false, version === leafletVersion));
+			}
+			select.addEventListener('change', () => {
+				const url = new URL(location.href);
+				url.searchParams.set('leaflet', select.value);
+				location.assign(url);
+			});
+			label.append(select);
+			document.body.append(label);
+		});
+	</script>
 
 	<!-- Leaflet-UI -->
 	<script src="../dist/leaflet-ui.js"></script>
@@ -32,7 +60,8 @@
 	<div id="map" class="map"></div>
 
 	<script>
-		var map = L.map('map', {
+		window.L = window.L || window.leaflet;
+		var map = new L.Map('map', {
 			center: [41.4583, 12.7059],
 			zoom: 5,
 
@@ -57,6 +86,7 @@
 			includeLeafletUICSS: false
 		});
 		map.once('idle', function() { /* Wait here for map init */ });
+
 	</script>
 
 	<a href="https://github.com/Raruto/leaflet-ui" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;"> <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github"

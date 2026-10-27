@@ -5,10 +5,9 @@
   "main": "dist/leaflet-ui.js",
   "module": "src/leaflet-ui.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c build/rollup.config.js",
-    "watch": "rollup -c build/rollup.config.js --watch",
-    "dev": "npm run watch",
+    "test": "node build/test.js",
+    "build": "node build/build.js",
+    "dev": "node build/dev.js",
     "version": "npm run build && git add -A dist"
   },
   "repository": {
@@ -29,35 +28,29 @@
   },
   "homepage": "https://github.com/Raruto/leaflet-ui#readme",
   "devDependencies": {
-    "postcss-copy": "^7.1.0",
-    "postcss-import": "^12.0.1",
-    "rollup": "^2.0.6",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-git-version": "^0.3.1",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-postcss": "^2.4.1",
-    "rollup-plugin-terser": "^7.0.2"
+    "@cucumber/cucumber": "^13.3.0",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.64.1"
   },
   "peerDependencies": {
-    "leaflet": "^1.7.1"
+    "leaflet": "^1.9.3 || ^2.0.0-alpha.1"
   },
   "dependencies": {
-    "@raruto/leaflet-edit-osm": "0.0.2",
-    "@raruto/leaflet-gesture-handling": "^1.4.3",
-    "leaflet-control-layers-inline": "0.0.7",
+    "@raruto/leaflet-edit-osm": "0.1.0",
+    "@raruto/leaflet-gesture-handling": "^1.5.2",
+    "leaflet-control-layers-inline": "0.1.0",
     "leaflet-easyprint": "^2.1.9",
-    "leaflet-i18n": "^0.3.1",
+    "leaflet-i18n": "^0.3.5",
     "leaflet-loading": "^0.1.24",
     "leaflet-minimap": "^3.6.1",
-    "leaflet-pegman": "^0.1.6",
-    "leaflet-pointable": "^0.0.4",
-    "leaflet-rotate": "^0.1.4",
-    "leaflet-search": "^3.0.2",
+    "leaflet-pegman": "^0.2.0",
+    "leaflet-pointable": "^0.1.0",
+    "leaflet-rotate": "^0.5.0",
+    "leaflet-search": "^4.0.0",
     "leaflet.control.resizer": "^0.0.1",
-    "leaflet.fullscreen": "^2.4.0",
-    "leaflet.gridlayer.googlemutant": "^0.13.5",
-    "leaflet.locatecontrol": "^0.76.1",
+    "leaflet.fullscreen": "^5.3.3",
+    "leaflet.gridlayer.googlemutant": "^0.16.0",
+    "leaflet.locatecontrol": "^0.90.1",
     "leaflet.visualclick": "^1.1.4"
   }
 }

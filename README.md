@@ -22,7 +22,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
     ...
     <style> html, body, #map { height: 100%; width: 100%; padding: 0; margin: 0; } </style>
     <!-- Leaflet -->
-    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Leaflet-UI -->
     <script src="https://unpkg.com/leaflet-ui@latest/dist/leaflet-ui.js"></script>
     ...
@@ -67,7 +67,9 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
 
 * * *
 
-**Compatibile with:** leaflet@1.6.0
+**Compatible with:** Leaflet@1.9.4+ and Leaflet@2.0.0-alpha.1.
+
+Legacy plugin compatibility helpers live in [src/leaflet-adapter.js](src/leaflet-adapter.js), shared by the entry point and bundled plugins.
 
 * * *
 
