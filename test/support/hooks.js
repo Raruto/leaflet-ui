@@ -12,11 +12,11 @@ let baseUrl;
 BeforeAll(async () => {
   server = await startServer(0);
   baseUrl = `http://127.0.0.1:${server.address().port}`;
+  browser = await chromium.launch();
 });
 
-Before({ tags: '@browser' }, async function () {
+Before(async function () {
   this.baseUrl = baseUrl;
-  browser ??= await chromium.launch();
   this.context = await browser.newContext({ locale: 'en-US' });
   await this.context.route('**/*', route => {
     const url = route.request().url();
@@ -28,7 +28,8 @@ Before({ tags: '@browser' }, async function () {
   this.page.on('pageerror', error => this.errors.push(error.message));
 });
 
-After({ tags: '@browser' }, async function () {
+After(async function () {
+  if (!this.context) return;
   try {
     assert.deepEqual(this.errors, [], 'Unexpected browser errors');
   } finally {
