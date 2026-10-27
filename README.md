@@ -69,8 +69,6 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
 
 **Compatible with:** Leaflet@1.9.4+ and Leaflet@2.0.0-alpha.1.
 
-Legacy plugin compatibility helpers live in [src/leaflet-adapter.js](src/leaflet-adapter.js), shared by the entry point and bundled plugins.
-
 * * *
 
 **Contributors:** [Raruto](https://github.com/Raruto/leaflet-ui)
