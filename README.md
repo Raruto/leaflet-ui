@@ -67,7 +67,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-ui/examples/l
 
 * * *
 
-**Compatible with:** Leaflet@1.9.4+ and Leaflet@2.0.0-alpha.1.
+**Compatible with:** Leaflet@1.9.4 and Leaflet@2.0.0-alpha.1.
 
 * * *
 
