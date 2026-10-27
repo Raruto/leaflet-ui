@@ -5,7 +5,7 @@ const stopBuild = await build({ watch: true });
 let server;
 try {
   server = await startServer(Number(process.env.PORT || 8080));
-  console.log(`Serving on http://127.0.0.1:${server.address().port}/test/`);
+  console.log(`Serving on http://127.0.0.1:${server.address().port}`);
 } catch (error) {
   await stopBuild();
   throw error;

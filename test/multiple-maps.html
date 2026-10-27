@@ -7,7 +7,35 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Leaflet -->
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script>
+		const leafletVersions = {
+			'1.9.4': 'leaflet.js',
+			'2.0.0-alpha.1': 'leaflet-global-src.js',
+		};
+		const leafletVersion = new URL(location.href).searchParams.get('leaflet') || '1.9.4';
+		const leafletConfig = leafletVersions[leafletVersion];
+		if (!leafletConfig) throw new Error(`Unsupported Leaflet version: ${leafletVersion}`);
+		const leafletAssets = `https://unpkg.com/leaflet@${leafletVersion}/dist/`;
+		document.write(`<link rel="stylesheet" href="${leafletAssets}leaflet.css">`);
+		document.write(`<script src="${leafletAssets}${leafletConfig}"><\/script>`);
+		document.addEventListener('DOMContentLoaded', () => {
+			const label = document.createElement('label');
+			label.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;background:white;color:black;padding:4px 8px;font:13px sans-serif;';
+			label.append('Leaflet ');
+			const select = document.createElement('select');
+			select.setAttribute('aria-label', 'Leaflet version');
+			for (const version of Object.keys(leafletVersions)) {
+				select.add(new Option(version, version, false, version === leafletVersion));
+			}
+			select.addEventListener('change', () => {
+				const url = new URL(location.href);
+				url.searchParams.set('leaflet', select.value);
+				location.assign(url);
+			});
+			label.append(select);
+			document.body.append(label);
+		});
+	</script>
 
 	<!-- Leaflet-UI -->
 	<script src="../dist/leaflet-ui.js"></script>
@@ -36,6 +64,7 @@
 	<div id="map-3" class="leaflet-map" style="flex: 100%; height: 50%;"></div>
 
 	<script>
+		window.L = window.L || window.leaflet;
 		let opts = {
 			map: {
 				center: [41.4583, 12.7059],
@@ -97,20 +126,19 @@
 				if (['map-2'].includes(id)) {
 					opts.map.plugins = [
 						"leaflet-rotate",
-						"d3@6.5.0/dist/d3.min.js",
-						"@tmcw/togeojson@4.5.0/dist/togeojson.umd.js",
-						"leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.js",
+						"@tmcw/togeojson@5.6.2/dist/togeojson.umd.js",
+						"leaflet-geometryutil@0.11.0/src/leaflet.geometryutil.js",
 						"leaflet-almostover@1.0.1/src/leaflet.almostover.js",
-						"@raruto/leaflet-elevation@2.2.8/libs/leaflet-distance-marker.css",
-						"@raruto/leaflet-elevation@2.2.8/libs/leaflet-distance-marker.js",
-						"@raruto/leaflet-elevation@2.2.8/dist/leaflet-elevation.min.css",
-						"@raruto/leaflet-elevation@2.2.8/dist/leaflet-elevation.min.js",
-						"@raruto/leaflet-elevation@2.2.8/libs/leaflet-gpxgroup.js",
+						"@raruto/leaflet-elevation@2.8.0/libs/leaflet-distance-marker.css",
+						"@raruto/leaflet-elevation@2.8.0/libs/leaflet-distance-marker.js",
+						"@raruto/leaflet-elevation@2.8.0/dist/leaflet-elevation.min.css",
+						"@raruto/leaflet-elevation@2.8.0/dist/leaflet-elevation.min.js",
+						"@raruto/leaflet-elevation@2.8.0/libs/leaflet-gpxgroup.js",
 						]
 				} else if(['map-3'].includes(id)) {
 					opts.map.plugins = [
-						"@raruto/leaflet-elevation@2.2.8/libs/leaflet-ruler.css",
-						"@raruto/leaflet-elevation@2.2.8/libs/leaflet-ruler.js"
+						"@raruto/leaflet-elevation@2.8.0/libs/leaflet-ruler.css",
+						"@raruto/leaflet-elevation@2.8.0/libs/leaflet-ruler.js"
 						]
 				} else {
 					opts.map.plugins = [];
@@ -122,7 +150,7 @@
 
 				opts.map._id = id
 
-				let map = L.map(id, opts.map);
+				let map = new L.Map(id, opts.map);
 				
 
 				map.on('plugins_loaded', () => {
@@ -130,7 +158,7 @@
 
 					if (['map-2'].includes(id)) {
 						let controlElevation = L.control.elevation(opts.elevationControl.options).addTo(map);
-						let controlLayer = L.control.layers(null, null, opts.layersControl.options);
+						let controlLayer = new L.Control.Layers(null, null, opts.layersControl.options);
 						controlElevation.on('eledata_loaded', ({layer, name}) => controlLayer.addTo(map) && layer.eachLayer((trkseg) => trkseg.feature.geometry.type != "Point" && controlLayer.addOverlay(trkseg, trkseg.feature && trkseg.feature.properties && trkseg.feature.properties.name || name)));
 						controlElevation.load(opts.elevationControl.urls[id]);
 						charts.push(controlElevation);
@@ -174,7 +202,7 @@
 		// L.setLocale('en:18');
 
 		// You can also override a previously defined object
-		L.locales['en'] = L.extend({
+		L.locales['en'] = Object.assign({
 			"y: "               : "",
 			"x: "               : "",
 			"t: "               : "",

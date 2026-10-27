@@ -22,6 +22,24 @@
   line-height: 1;
 }
 
+.leaflet-control-layers-inline .leaflet-control-layers-base label {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Leaflet 1.9 wraps the input and its name in an extra span. */
+.leaflet-container .leaflet-control-layers-inline .leaflet-control-layers-base label > span:first-child {
+  display: inline;
+  padding: 0;
+  font: inherit;
+}
+
+.leaflet-container .leaflet-control-attribution,
+.leaflet-container .leaflet-control-scale {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .leaflet-control-zoom~.leaflet-control-scale.leaflet-control {
   clear: both;
   margin: 0;

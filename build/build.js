@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+
 const javascript = {
   absWorkingDir: root,
   entryPoints: ['src/leaflet-ui.js'],
@@ -15,19 +16,53 @@ const javascript = {
   plugins: [{
     name: 'leaflet-browser-umd',
     setup(build) {
-      // Share the page's Leaflet with ESM plugins instead of bundling another copy.
-      build.onResolve({ filter: /^leaflet$/ }, () => ({ path: 'leaflet', namespace: 'global-leaflet' }));
-      build.onLoad({ filter: /.*/, namespace: 'global-leaflet' }, () => ({
-        contents: 'export const { Marker, Util, DivIcon, Control, Circle, DomEvent, LayerGroup, Map } = window.L;',
-        loader: 'js',
+      build.onResolve({ filter: /^leaflet\.fullscreen\/dist\/Control\.FullScreen\.umd\.js$/ }, () => ({
+        path: resolve(root, 'node_modules/leaflet.fullscreen/dist/Control.FullScreen.umd.js'),
       }));
       // Older plugins still need their browser UMD branch.
-      build.onLoad({
-        filter: /[\\/]node_modules[\\/](?:leaflet-i18n|leaflet-minimap|leaflet-search)[\\/].*\.js$/,
-      }, async ({ path }) => ({
-        contents: (await readFile(path, 'utf8')).replace(/\btypeof (module|exports|define)\b/g, '"undefined"'),
-        loader: 'js',
-      }));
+      build.onLoad({ filter: /[\\/]node_modules[\\/](?:@raruto[\\/])?(?:leaflet-i18n|leaflet-minimap|leaflet-search|leaflet-easyprint|leaflet-loading|leaflet\.control\.resizer|leaflet\.visualclick|leaflet-pegman|leaflet-edit-osm|leaflet-control-layers-inline|leaflet-gesture-handling|leaflet\.locatecontrol|leaflet\.fullscreen)[\\/].*\.js$/ }, async ({ path }) => {
+        let source = (await readFile(path, 'utf8'))
+          .replace(/\btypeof (module|exports|define)\b/g, '"undefined"')
+          .replace(/\bfactory\(window\.L\)/g, 'factory(L)')
+          .replace(/\bL\.Evented\.prototype\b/g, 'L.Mixin.Events');
+        // Translations register on the public Leaflet object; other plugins share the adapter.
+        if (path.includes('leaflet-i18n')) source = source.replace(/\bL\.Util\.extend\b/g, 'Object.assign');
+
+        // Add the pointer event that Leaflet 2 uses without removing legacy mouse support.
+        if (path.includes('leaflet.control.resizer')) {
+          source = source.replace(/mousedown mouseup click touchstart drag/g, 'pointerdown mousedown mouseup click touchstart drag');
+        }
+        if (path.includes('leaflet-pegman')) {
+          const createLayer = 'this._googleStreetViewLayer = new L.GridLayer.GoogleMutant(this.options.mutant);';
+          if (!source.includes(createLayer)) throw new Error('Unsupported leaflet-pegman GoogleMutant initialization');
+          // The remote GoogleMutant uses public Leaflet and needs idempotent cleanup on Leaflet 2.
+          source = source.replace(createLayer, `
+            const leaflet = window.L || window.leaflet;
+            if (!leaflet.Util.requestAnimFrame) {
+              leaflet.Util = { ...leaflet.Util, requestAnimFrame: L.Util.requestAnimFrame };
+            }
+            ${createLayer}
+            this._googleStreetViewLayer.onRemove = function(map) {
+              L.GridLayer.prototype.onRemove.call(this, map);
+              this._observer.disconnect();
+              this._mutantContainer.remove();
+              this._logoContainer?.remove();
+              this._attributionContainer?.remove();
+              if (this._mutant) google.maps.event.clearListeners(this._mutant, "idle");
+            };`);
+        }
+        if (path.includes('leaflet-easyprint')) {
+          // Escape percent signs before EasyPrint serializes SVG into a data URL.
+          const serialize = '.then(h.escapeXhtml)';
+          if (!source.includes(serialize)) throw new Error('Unsupported leaflet-easyprint SVG serializer');
+          source = source.replace(serialize, '.then(svg => svg.replace(/%/g, "%25"))' + serialize);
+        }
+        return {
+          contents: `import ${path.includes('leaflet-i18n') ? '{ Leaflet as L }' : 'L'} from ${JSON.stringify(resolve(root, 'src/leaflet-compat.js'))};\n${source}`,
+          loader: 'js',
+          resolveDir: dirname(path),
+        };
+      });
     },
   }],
 };
@@ -44,7 +79,7 @@ const builds = [
     loader: { '.png': 'file', '.svg': 'file', '.gif': 'file' },
     assetNames: 'images/[dir]/[name]',
     plugins: [{
-      name: 'legacy-image-paths',
+      name: 'image-paths',
       setup(build) {
         build.onResolve({ filter: /\.(png|svg|gif)$/ }, ({ path, resolveDir }) => {
           if (/^(?:[a-z]+:|\/\/)/i.test(path)) return { path, external: true };

@@ -17,9 +17,11 @@ BeforeAll(async () => {
 Before({ tags: '@browser' }, async function () {
   this.baseUrl = baseUrl;
   browser ??= await chromium.launch();
-  this.context = await browser.newContext();
+  this.context = await browser.newContext({ locale: 'en-US' });
   await this.context.route('**/*', route => {
-    return route.request().url().startsWith(`${baseUrl}/`) ? route.continue() : route.abort();
+    const url = route.request().url();
+    const leafletAsset = /^https:\/\/unpkg\.com\/leaflet@(1\.9\.4|2\.0\.0-alpha\.1)\/dist\//.test(url);
+    return url.startsWith(`${baseUrl}/`) || leafletAsset ? route.continue() : route.abort();
   });
   this.page = await this.context.newPage();
   this.errors = [];

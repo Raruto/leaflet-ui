@@ -5,6 +5,14 @@
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __esm = (fn, res, err) => function __init() {
+    if (err) throw err[0];
+    try {
+      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+    } catch (e) {
+      throw err = [e], e;
+    }
+  };
   var __commonJS = (cb, mod) => function __require() {
     try {
       return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -29,608 +37,283 @@
     mod
   ));
 
-  // node_modules/leaflet-easyprint/dist/bundle.js
-  var require_bundle = __commonJS({
-    "node_modules/leaflet-easyprint/dist/bundle.js"(exports, module) {
-      !(function(t, e) {
-        "object" == typeof exports && "undefined" != typeof module ? e() : "function" == typeof define && define.amd ? define(e) : e();
-      })(0, function() {
+  // src/leaflet-compat.js
+  var Leaflet, L2, leaflet_compat_default;
+  var init_leaflet_compat = __esm({
+    "src/leaflet-compat.js"() {
+      Leaflet = window.L || window.leaflet;
+      if (!Leaflet) throw new Error("Leaflet must be loaded before leaflet-ui");
+      Leaflet.control ||= {};
+      Leaflet.gridLayer ||= {};
+      L2 = Object.assign(Object.create(Leaflet), Leaflet.Util);
+      L2.Util = {
+        ...Leaflet.Util,
+        extend: Object.assign,
+        bind: (fn, context, ...args) => fn.bind(context, ...args),
+        isArray: Array.isArray,
+        requestAnimFrame: (fn, context) => requestAnimationFrame(context ? fn.bind(context) : fn)
+      };
+      L2.Mixin = { Events: Object.fromEntries(
+        Object.getOwnPropertyNames(L2.Evented.prototype).filter((name) => name !== "constructor").map((name) => [name, L2.Evented.prototype[name]])
+      ) };
+      for (const [factory, Constructor] of Object.entries({
+        marker: L2.Marker,
+        icon: L2.Icon,
+        divIcon: L2.DivIcon,
+        latLng: L2.LatLng,
+        rectangle: L2.Rectangle
+      })) {
+        if (!L2[factory]) L2[factory] = (...args) => new Constructor(...args);
+      }
+      L2.Browser = { any3d: true, ...Leaflet.Browser };
+      L2.DomEvent = {
+        ...Leaflet.DomEvent,
+        addListener: Leaflet.DomEvent.on
+      };
+      L2.DomUtil = {
+        ...Leaflet.DomUtil,
+        addClass: (element, names) => element.classList.add(...names.trim().split(/\s+/)),
+        removeClass: (element, names) => element.classList.remove(...names.trim().split(/\s+/))
+      };
+      leaflet_compat_default = L2;
+    }
+  });
+
+  // node_modules/leaflet.fullscreen/dist/Control.FullScreen.umd.js
+  var require_Control_FullScreen_umd = __commonJS({
+    "node_modules/leaflet.fullscreen/dist/Control.FullScreen.umd.js"(exports2) {
+      init_leaflet_compat();
+      (function(global2, factory) {
+        false ? module.exports = factory(null) : false ? define(["leaflet"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, global2.L = global2.L || {}, global2.L.Control = global2.L.Control || {}, global2.L.Control.FullScreen = factory(global2.L));
+      })(exports2, (function(leaflet) {
         "use strict";
-        function t(t2, e2) {
-          return e2 = { exports: {} }, t2(e2, e2.exports), e2.exports;
+        if (typeof document === "undefined") {
+          console.warn('"window.document" is undefined; leaflet.fullscreen requires this object to access the DOM');
         }
-        var e = "undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self ? self : {}, n = t(function(t2) {
-          !(function(e2) {
-            function n2(t3, e3) {
-              function n3(t4) {
-                return e3.bgcolor && (t4.style.backgroundColor = e3.bgcolor), e3.width && (t4.style.width = e3.width + "px"), e3.height && (t4.style.height = e3.height + "px"), e3.style && Object.keys(e3.style).forEach(function(n4) {
-                  t4.style[n4] = e3.style[n4];
-                }), t4;
+        const nativeAPI = (() => {
+          const methodMap = [
+            // Standard
+            [
+              "requestFullscreen",
+              "exitFullscreen",
+              "fullscreenElement",
+              "fullscreenEnabled",
+              "fullscreenchange",
+              "fullscreenerror"
+            ],
+            // New WebKit
+            [
+              "webkitRequestFullscreen",
+              "webkitExitFullscreen",
+              "webkitFullscreenElement",
+              "webkitFullscreenEnabled",
+              "webkitfullscreenchange",
+              "webkitfullscreenerror"
+            ]
+          ];
+          const baseList = methodMap[0];
+          const ret = {};
+          for (const methodList of methodMap) {
+            if (methodList[1] in document) {
+              for (let i = 0; i < methodList.length; i++) {
+                ret[baseList[i]] = methodList[i];
               }
-              return e3 = e3 || {}, s(e3), Promise.resolve(t3).then(function(t4) {
-                return u(t4, e3.filter, true);
-              }).then(c).then(d).then(n3).then(function(n4) {
-                return g(n4, e3.width || h.width(t3), e3.height || h.height(t3));
-              });
+              return ret;
             }
-            function i2(t3, e3) {
-              return l(t3, e3 || {}).then(function(e4) {
-                return e4.getContext("2d").getImageData(0, 0, h.width(t3), h.height(t3)).data;
-              });
-            }
-            function o(t3, e3) {
-              return l(t3, e3 || {}).then(function(t4) {
-                return t4.toDataURL();
-              });
-            }
-            function r(t3, e3) {
-              return e3 = e3 || {}, l(t3, e3).then(function(t4) {
-                return t4.toDataURL("image/jpeg", e3.quality || 1);
-              });
-            }
-            function a(t3, e3) {
-              return l(t3, e3 || {}).then(h.canvasToBlob);
-            }
-            function s(t3) {
-              void 0 === t3.imagePlaceholder ? w.impl.options.imagePlaceholder = M.imagePlaceholder : w.impl.options.imagePlaceholder = t3.imagePlaceholder, void 0 === t3.cacheBust ? w.impl.options.cacheBust = M.cacheBust : w.impl.options.cacheBust = t3.cacheBust;
-            }
-            function l(t3, e3) {
-              function i3(t4) {
-                var n3 = document.createElement("canvas");
-                if (n3.width = e3.width || h.width(t4), n3.height = e3.height || h.height(t4), e3.bgcolor) {
-                  var i4 = n3.getContext("2d");
-                  i4.fillStyle = e3.bgcolor, i4.fillRect(0, 0, n3.width, n3.height);
-                }
-                return n3;
-              }
-              return n2(t3, e3).then(h.makeImage).then(h.delay(100)).then(function(e4) {
-                var n3 = i3(t3);
-                return n3.getContext("2d").drawImage(e4, 0, 0), n3;
-              });
-            }
-            function u(t3, e3, n3) {
-              function i3(t4) {
-                return t4 instanceof HTMLCanvasElement ? h.makeImage(t4.toDataURL()) : t4.cloneNode(false);
-              }
-              function o2(t4, e4, n4) {
-                var i4 = t4.childNodes;
-                return 0 === i4.length ? Promise.resolve(e4) : (function(t5, e5, n5) {
-                  var i5 = Promise.resolve();
-                  return e5.forEach(function(e6) {
-                    i5 = i5.then(function() {
-                      return u(e6, n5);
-                    }).then(function(e7) {
-                      e7 && t5.appendChild(e7);
-                    });
-                  }), i5;
-                })(e4, h.asArray(i4), n4).then(function() {
-                  return e4;
-                });
-              }
-              function r2(t4, e4) {
-                function n4() {
-                  !(function(t5, e5) {
-                    t5.cssText ? e5.cssText = t5.cssText : (function(t6, e6) {
-                      h.asArray(t6).forEach(function(n5) {
-                        e6.setProperty(n5, t6.getPropertyValue(n5), t6.getPropertyPriority(n5));
-                      });
-                    })(t5, e5);
-                  })(window.getComputedStyle(t4), e4.style);
-                }
-                function i4() {
-                  function n5(n6) {
-                    var i5 = window.getComputedStyle(t4, n6), o4 = i5.getPropertyValue("content");
-                    if ("" !== o4 && "none" !== o4) {
-                      var r4 = h.uid();
-                      e4.className = e4.className + " " + r4;
-                      var a2 = document.createElement("style");
-                      a2.appendChild((function(t5, e5, n7) {
-                        var i6 = "." + t5 + ":" + e5, o5 = n7.cssText ? (function(t6) {
-                          var e6 = t6.getPropertyValue("content");
-                          return t6.cssText + " content: " + e6 + ";";
-                        })(n7) : (function(t6) {
-                          function e6(e7) {
-                            return e7 + ": " + t6.getPropertyValue(e7) + (t6.getPropertyPriority(e7) ? " !important" : "");
-                          }
-                          return h.asArray(t6).map(e6).join("; ") + ";";
-                        })(n7);
-                        return document.createTextNode(i6 + "{" + o5 + "}");
-                      })(r4, n6, i5)), e4.appendChild(a2);
-                    }
-                  }
-                  [":before", ":after"].forEach(function(t5) {
-                    n5(t5);
-                  });
-                }
-                function o3() {
-                  t4 instanceof HTMLTextAreaElement && (e4.innerHTML = t4.value), t4 instanceof HTMLInputElement && e4.setAttribute("value", t4.value);
-                }
-                function r3() {
-                  e4 instanceof SVGElement && (e4.setAttribute("xmlns", "http://www.w3.org/2000/svg"), e4 instanceof SVGRectElement && ["width", "height"].forEach(function(t5) {
-                    var n5 = e4.getAttribute(t5);
-                    n5 && e4.style.setProperty(t5, n5);
-                  }));
-                }
-                return e4 instanceof Element ? Promise.resolve().then(n4).then(i4).then(o3).then(r3).then(function() {
-                  return e4;
-                }) : e4;
-              }
-              return n3 || !e3 || e3(t3) ? Promise.resolve(t3).then(i3).then(function(n4) {
-                return o2(t3, n4, e3);
-              }).then(function(e4) {
-                return r2(t3, e4);
-              }) : Promise.resolve();
-            }
-            function c(t3) {
-              return p.resolveAll().then(function(e3) {
-                var n3 = document.createElement("style");
-                return t3.appendChild(n3), n3.appendChild(document.createTextNode(e3)), t3;
-              });
-            }
-            function d(t3) {
-              return f.inlineAll(t3).then(function() {
-                return t3;
-              });
-            }
-            function g(t3, e3, n3) {
-              return Promise.resolve(t3).then(function(t4) {
-                return t4.setAttribute("xmlns", "http://www.w3.org/1999/xhtml"), new XMLSerializer().serializeToString(t4);
-              }).then(h.escapeXhtml).then(function(t4) {
-                return '<foreignObject x="0" y="0" width="100%" height="100%">' + t4 + "</foreignObject>";
-              }).then(function(t4) {
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + e3 + '" height="' + n3 + '">' + t4 + "</svg>";
-              }).then(function(t4) {
-                return "data:image/svg+xml;charset=utf-8," + t4;
-              });
-            }
-            var h = /* @__PURE__ */ (function() {
-              function t3() {
-                var t4 = "application/font-woff", e4 = "image/jpeg";
-                return { woff: t4, woff2: t4, ttf: "application/font-truetype", eot: "application/vnd.ms-fontobject", png: "image/png", jpg: e4, jpeg: e4, gif: "image/gif", tiff: "image/tiff", svg: "image/svg+xml" };
-              }
-              function e3(t4) {
-                var e4 = /\.([^\.\/]*?)$/g.exec(t4);
-                return e4 ? e4[1] : "";
-              }
-              function n3(n4) {
-                var i4 = e3(n4).toLowerCase();
-                return t3()[i4] || "";
-              }
-              function i3(t4) {
-                return -1 !== t4.search(/^(data:)/);
-              }
-              function o2(t4) {
-                return new Promise(function(e4) {
-                  for (var n4 = window.atob(t4.toDataURL().split(",")[1]), i4 = n4.length, o3 = new Uint8Array(i4), r3 = 0; r3 < i4; r3++) o3[r3] = n4.charCodeAt(r3);
-                  e4(new Blob([o3], { type: "image/png" }));
-                });
-              }
-              function r2(t4) {
-                return t4.toBlob ? new Promise(function(e4) {
-                  t4.toBlob(e4);
-                }) : o2(t4);
-              }
-              function a2(t4, e4) {
-                var n4 = document.implementation.createHTMLDocument(), i4 = n4.createElement("base");
-                n4.head.appendChild(i4);
-                var o3 = n4.createElement("a");
-                return n4.body.appendChild(o3), i4.href = e4, o3.href = t4, o3.href;
-              }
-              function s2(t4) {
-                return new Promise(function(e4, n4) {
-                  var i4 = new Image();
-                  i4.onload = function() {
-                    e4(i4);
-                  }, i4.onerror = n4, i4.src = t4;
-                });
-              }
-              function l2(t4) {
-                var e4 = 3e4;
-                return w.impl.options.cacheBust && (t4 += (/\?/.test(t4) ? "&" : "?") + (/* @__PURE__ */ new Date()).getTime()), new Promise(function(n4) {
-                  function i4() {
-                    if (4 === a3.readyState) {
-                      if (200 !== a3.status) return void (s3 ? n4(s3) : r3("cannot fetch resource: " + t4 + ", status: " + a3.status));
-                      var e5 = new FileReader();
-                      e5.onloadend = function() {
-                        var t5 = e5.result.split(/,/)[1];
-                        n4(t5);
-                      }, e5.readAsDataURL(a3.response);
-                    }
-                  }
-                  function o3() {
-                    s3 ? n4(s3) : r3("timeout of " + e4 + "ms occured while fetching resource: " + t4);
-                  }
-                  function r3(t5) {
-                    console.error(t5), n4("");
-                  }
-                  var a3 = new XMLHttpRequest();
-                  a3.onreadystatechange = i4, a3.ontimeout = o3, a3.responseType = "blob", a3.timeout = e4, a3.open("GET", t4, true), a3.send();
-                  var s3;
-                  if (w.impl.options.imagePlaceholder) {
-                    var l3 = w.impl.options.imagePlaceholder.split(/,/);
-                    l3 && l3[1] && (s3 = l3[1]);
-                  }
-                });
-              }
-              function u2(t4, e4) {
-                return "data:" + e4 + ";base64," + t4;
-              }
-              function c2(t4) {
-                return t4.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
-              }
-              function d2(t4) {
-                return function(e4) {
-                  return new Promise(function(n4) {
-                    setTimeout(function() {
-                      n4(e4);
-                    }, t4);
-                  });
-                };
-              }
-              function g2(t4) {
-                for (var e4 = [], n4 = t4.length, i4 = 0; i4 < n4; i4++) e4.push(t4[i4]);
-                return e4;
-              }
-              function h2(t4) {
-                return t4.replace(/#/g, "%23").replace(/\n/g, "%0A");
-              }
-              function m2(t4) {
-                var e4 = f2(t4, "border-left-width"), n4 = f2(t4, "border-right-width");
-                return t4.scrollWidth + e4 + n4;
-              }
-              function p2(t4) {
-                var e4 = f2(t4, "border-top-width"), n4 = f2(t4, "border-bottom-width");
-                return t4.scrollHeight + e4 + n4;
-              }
-              function f2(t4, e4) {
-                var n4 = window.getComputedStyle(t4).getPropertyValue(e4);
-                return parseFloat(n4.replace("px", ""));
-              }
-              return { escape: c2, parseExtension: e3, mimeType: n3, dataAsUrl: u2, isDataUrl: i3, canvasToBlob: r2, resolveUrl: a2, getAndEncode: l2, uid: /* @__PURE__ */ (function() {
-                var t4 = 0;
-                return function() {
-                  return "u" + (function() {
-                    return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
-                  })() + t4++;
-                };
-              })(), delay: d2, asArray: g2, escapeXhtml: h2, makeImage: s2, width: m2, height: p2 };
-            })(), m = /* @__PURE__ */ (function() {
-              function t3(t4) {
-                return -1 !== t4.search(o2);
-              }
-              function e3(t4) {
-                for (var e4, n4 = []; null !== (e4 = o2.exec(t4)); ) n4.push(e4[1]);
-                return n4.filter(function(t5) {
-                  return !h.isDataUrl(t5);
-                });
-              }
-              function n3(t4, e4, n4, i4) {
-                function o3(t5) {
-                  return new RegExp(`(url\\(['"]?)(` + h.escape(t5) + `)(['"]?\\))`, "g");
-                }
-                return Promise.resolve(e4).then(function(t5) {
-                  return n4 ? h.resolveUrl(t5, n4) : t5;
-                }).then(i4 || h.getAndEncode).then(function(t5) {
-                  return h.dataAsUrl(t5, h.mimeType(e4));
-                }).then(function(n5) {
-                  return t4.replace(o3(e4), "$1" + n5 + "$3");
-                });
-              }
-              function i3(i4, o3, r2) {
-                return (function() {
-                  return !t3(i4);
-                })() ? Promise.resolve(i4) : Promise.resolve(i4).then(e3).then(function(t4) {
-                  var e4 = Promise.resolve(i4);
-                  return t4.forEach(function(t5) {
-                    e4 = e4.then(function(e5) {
-                      return n3(e5, t5, o3, r2);
-                    });
-                  }), e4;
-                });
-              }
-              var o2 = /url\(['"]?([^'"]+?)['"]?\)/g;
-              return { inlineAll: i3, shouldProcess: t3, impl: { readUrls: e3, inline: n3 } };
-            })(), p = /* @__PURE__ */ (function() {
-              function t3() {
-                return e3(document).then(function(t4) {
-                  return Promise.all(t4.map(function(t5) {
-                    return t5.resolve();
-                  }));
-                }).then(function(t4) {
-                  return t4.join("\n");
-                });
-              }
-              function e3() {
-                function t4(t5) {
-                  return t5.filter(function(t6) {
-                    return t6.type === CSSRule.FONT_FACE_RULE;
-                  }).filter(function(t6) {
-                    return m.shouldProcess(t6.style.getPropertyValue("src"));
-                  });
-                }
-                function e4(t5) {
-                  var e5 = [];
-                  return t5.forEach(function(t6) {
-                    try {
-                      h.asArray(t6.cssRules || []).forEach(e5.push.bind(e5));
-                    } catch (e6) {
-                      console.log("Error while reading CSS rules from " + t6.href, e6.toString());
-                    }
-                  }), e5;
-                }
-                function n3(t5) {
-                  return { resolve: function() {
-                    var e5 = (t5.parentStyleSheet || {}).href;
-                    return m.inlineAll(t5.cssText, e5);
-                  }, src: function() {
-                    return t5.style.getPropertyValue("src");
-                  } };
-                }
-                return Promise.resolve(h.asArray(document.styleSheets)).then(e4).then(t4).then(function(t5) {
-                  return t5.map(n3);
-                });
-              }
-              return { resolveAll: t3, impl: { readAll: e3 } };
-            })(), f = /* @__PURE__ */ (function() {
-              function t3(t4) {
-                function e4(e5) {
-                  return h.isDataUrl(t4.src) ? Promise.resolve() : Promise.resolve(t4.src).then(e5 || h.getAndEncode).then(function(e6) {
-                    return h.dataAsUrl(e6, h.mimeType(t4.src));
-                  }).then(function(e6) {
-                    return new Promise(function(n3, i3) {
-                      t4.onload = n3, t4.onerror = i3, t4.src = e6;
-                    });
-                  });
-                }
-                return { inline: e4 };
-              }
-              function e3(n3) {
-                return n3 instanceof Element ? (function(t4) {
-                  var e4 = t4.style.getPropertyValue("background");
-                  return e4 ? m.inlineAll(e4).then(function(e5) {
-                    t4.style.setProperty("background", e5, t4.style.getPropertyPriority("background"));
-                  }).then(function() {
-                    return t4;
-                  }) : Promise.resolve(t4);
-                })(n3).then(function() {
-                  return n3 instanceof HTMLImageElement ? t3(n3).inline() : Promise.all(h.asArray(n3.childNodes).map(function(t4) {
-                    return e3(t4);
-                  }));
-                }) : Promise.resolve(n3);
-              }
-              return { inlineAll: e3, impl: { newImage: t3 } };
-            })(), M = { imagePlaceholder: void 0, cacheBust: false }, w = { toSvg: n2, toPng: o, toJpeg: r, toBlob: a, toPixelData: i2, impl: { fontFaces: p, images: f, util: h, inliner: m, options: {} } };
-            t2.exports = w;
-          })();
-        }), i = t(function(t2) {
-          var n2 = n2 || (function(t3) {
-            if (!(void 0 === t3 || "undefined" != typeof navigator && /MSIE [1-9]\./.test(navigator.userAgent))) {
-              var e2 = t3.document, n3 = function() {
-                return t3.URL || t3.webkitURL || t3;
-              }, i2 = e2.createElementNS("http://www.w3.org/1999/xhtml", "a"), o = "download" in i2, r = function(t4) {
-                var e3 = new MouseEvent("click");
-                t4.dispatchEvent(e3);
-              }, a = /constructor/i.test(t3.HTMLElement) || t3.safari, s = /CriOS\/[\d]+/.test(navigator.userAgent), l = function(e3) {
-                (t3.setImmediate || t3.setTimeout)(function() {
-                  throw e3;
-                }, 0);
-              }, u = function(t4) {
-                var e3 = function() {
-                  "string" == typeof t4 ? n3().revokeObjectURL(t4) : t4.remove();
-                };
-                setTimeout(e3, 4e4);
-              }, c = function(t4, e3, n4) {
-                e3 = [].concat(e3);
-                for (var i3 = e3.length; i3--; ) {
-                  var o2 = t4["on" + e3[i3]];
-                  if ("function" == typeof o2) try {
-                    o2.call(t4, n4 || t4);
-                  } catch (t5) {
-                    l(t5);
-                  }
-                }
-              }, d = function(t4) {
-                return /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(t4.type) ? new Blob([String.fromCharCode(65279), t4], { type: t4.type }) : t4;
-              }, g = function(e3, l2, g2) {
-                g2 || (e3 = d(e3));
-                var h2, m2 = this, p = e3.type, f = "application/octet-stream" === p, M = function() {
-                  c(m2, "writestart progress write writeend".split(" "));
-                };
-                if (m2.readyState = m2.INIT, o) return h2 = n3().createObjectURL(e3), void setTimeout(function() {
-                  i2.href = h2, i2.download = l2, r(i2), M(), u(h2), m2.readyState = m2.DONE;
-                });
-                !(function() {
-                  if ((s || f && a) && t3.FileReader) {
-                    var i3 = new FileReader();
-                    return i3.onloadend = function() {
-                      var e4 = s ? i3.result : i3.result.replace(/^data:[^;]*;/, "data:attachment/file;");
-                      t3.open(e4, "_blank") || (t3.location.href = e4), e4 = void 0, m2.readyState = m2.DONE, M();
-                    }, i3.readAsDataURL(e3), void (m2.readyState = m2.INIT);
-                  }
-                  if (h2 || (h2 = n3().createObjectURL(e3)), f) t3.location.href = h2;
-                  else {
-                    t3.open(h2, "_blank") || (t3.location.href = h2);
-                  }
-                  m2.readyState = m2.DONE, M(), u(h2);
-                })();
-              }, h = g.prototype, m = function(t4, e3, n4) {
-                return new g(t4, e3 || t4.name || "download", n4);
-              };
-              return "undefined" != typeof navigator && navigator.msSaveOrOpenBlob ? function(t4, e3, n4) {
-                return e3 = e3 || t4.name || "download", n4 || (t4 = d(t4)), navigator.msSaveOrOpenBlob(t4, e3);
-              } : (h.abort = function() {
-              }, h.readyState = h.INIT = 0, h.WRITING = 1, h.DONE = 2, h.error = h.onwritestart = h.onprogress = h.onwrite = h.onabort = h.onerror = h.onwriteend = null, m);
-            }
-          })("undefined" != typeof self && self || "undefined" != typeof window && window || e.content);
-          t2.exports && (t2.exports.saveAs = n2);
-        });
-        L.Control.EasyPrint = L.Control.extend({ options: { title: "Print map", position: "topleft", sizeModes: ["Current"], filename: "map", exportOnly: false, hidden: false, tileWait: 500, hideControlContainer: true, hideClasses: [], customWindowTitle: window.document.title, spinnerBgCOlor: "#0DC5C1", customSpinnerClass: "epLoader", defaultSizeTitles: { Current: "Current Size", A4Landscape: "A4 Landscape", A4Portrait: "A4 Portrait" } }, onAdd: function() {
-          this.mapContainer = this._map.getContainer(), this.options.sizeModes = this.options.sizeModes.map(function(t3) {
-            return "Current" === t3 ? { name: this.options.defaultSizeTitles.Current, className: "CurrentSize" } : "A4Landscape" === t3 ? { height: this._a4PageSize.height, width: this._a4PageSize.width, name: this.options.defaultSizeTitles.A4Landscape, className: "A4Landscape page" } : "A4Portrait" === t3 ? { height: this._a4PageSize.width, width: this._a4PageSize.height, name: this.options.defaultSizeTitles.A4Portrait, className: "A4Portrait page" } : t3;
-          }, this);
-          var t2 = L.DomUtil.create("div", "leaflet-control-easyPrint leaflet-bar leaflet-control");
-          if (!this.options.hidden) {
-            this._addCss(), L.DomEvent.addListener(t2, "mouseover", this._togglePageSizeButtons, this), L.DomEvent.addListener(t2, "mouseout", this._togglePageSizeButtons, this);
-            var e2 = "leaflet-control-easyPrint-button";
-            this.options.exportOnly && (e2 += "-export"), this.link = L.DomUtil.create("a", e2, t2), this.link.id = "leafletEasyPrint", this.link.title = this.options.title, this.holder = L.DomUtil.create("ul", "easyPrintHolder", t2), this.options.sizeModes.forEach(function(t3) {
-              var e3 = L.DomUtil.create("li", "easyPrintSizeMode", this.holder);
-              e3.title = t3.name;
-              L.DomUtil.create("a", t3.className, e3);
-              L.DomEvent.addListener(e3, "click", this.printMap, this);
-            }, this), L.DomEvent.disableClickPropagation(t2);
           }
-          return t2;
-        }, printMap: function(t2, e2) {
-          e2 && (this.options.filename = e2), this.options.exportOnly || (this._page = window.open("", "_blank", "toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=10, top=10, width=200, height=250, visible=none"), this._page.document.write(this._createSpinner(this.options.customWindowTitle, this.options.customSpinnerClass, this.options.spinnerBgCOlor))), this.originalState = { mapWidth: this.mapContainer.style.width, widthWasAuto: false, widthWasPercentage: false, mapHeight: this.mapContainer.style.height, zoom: this._map.getZoom(), center: this._map.getCenter() }, "auto" === this.originalState.mapWidth ? (this.originalState.mapWidth = this._map.getSize().x + "px", this.originalState.widthWasAuto = true) : this.originalState.mapWidth.includes("%") && (this.originalState.percentageWidth = this.originalState.mapWidth, this.originalState.widthWasPercentage = true, this.originalState.mapWidth = this._map.getSize().x + "px"), this._map.fire("easyPrint-start", { event: t2 }), this.options.hidden || this._togglePageSizeButtons({ type: null }), this.options.hideControlContainer && this._toggleControls(), this.options.hideClasses.length > 0 && this._toggleClasses(this.options.hideClasses);
-          var n2 = "string" != typeof t2 ? t2.target.className : t2;
-          if ("CurrentSize" === n2) return this._printOpertion(n2);
-          this.outerContainer = this._createOuterContainer(this.mapContainer), this.originalState.widthWasAuto && (this.outerContainer.style.width = this.originalState.mapWidth), this._createImagePlaceholder(n2);
-        }, _createImagePlaceholder: function(t2) {
-          var e2 = this;
-          n.toPng(this.mapContainer, { width: parseInt(this.originalState.mapWidth.replace("px")), height: parseInt(this.originalState.mapHeight.replace("px")) }).then(function(n2) {
-            e2.blankDiv = document.createElement("div");
-            var i2 = e2.blankDiv;
-            e2.outerContainer.parentElement.insertBefore(i2, e2.outerContainer), i2.className = "epHolder", i2.style.backgroundImage = 'url("' + n2 + '")', i2.style.position = "absolute", i2.style.zIndex = 1011, i2.style.display = "initial", i2.style.width = e2.originalState.mapWidth, i2.style.height = e2.originalState.mapHeight, e2._resizeAndPrintMap(t2);
-          }).catch(function(t3) {
-            console.error("oops, something went wrong!", t3);
-          });
-        }, _resizeAndPrintMap: function(t2) {
-          this.outerContainer.style.opacity = 0;
-          var e2 = this.options.sizeModes.filter(function(e3) {
-            return e3.className === t2;
-          });
-          e2 = e2[0], this.mapContainer.style.width = e2.width + "px", this.mapContainer.style.height = e2.height + "px", this.mapContainer.style.width > this.mapContainer.style.height ? this.orientation = "portrait" : this.orientation = "landscape", this._map.setView(this.originalState.center), this._map.setZoom(this.originalState.zoom), this._map.invalidateSize(), this.options.tileLayer ? this._pausePrint(t2) : this._printOpertion(t2);
-        }, _pausePrint: function(t2) {
-          var e2 = this, n2 = setInterval(function() {
-            e2.options.tileLayer.isLoading() || (clearInterval(n2), e2._printOpertion(t2));
-          }, e2.options.tileWait);
-        }, _printOpertion: function(t2) {
-          var e2 = this, o = this.mapContainer.style.width;
-          (this.originalState.widthWasAuto && "CurrentSize" === t2 || this.originalState.widthWasPercentage && "CurrentSize" === t2) && (o = this.originalState.mapWidth), n.toPng(e2.mapContainer, { width: parseInt(o), height: parseInt(e2.mapContainer.style.height.replace("px")) }).then(function(t3) {
-            var n2 = e2._dataURItoBlob(t3);
-            e2.options.exportOnly ? i.saveAs(n2, e2.options.filename + ".png") : e2._sendToBrowserPrint(t3, e2.orientation), e2._toggleControls(true), e2._toggleClasses(e2.options.hideClasses, true), e2.outerContainer && (e2.originalState.widthWasAuto ? e2.mapContainer.style.width = "auto" : e2.originalState.widthWasPercentage ? e2.mapContainer.style.width = e2.originalState.percentageWidth : e2.mapContainer.style.width = e2.originalState.mapWidth, e2.mapContainer.style.height = e2.originalState.mapHeight, e2._removeOuterContainer(e2.mapContainer, e2.outerContainer, e2.blankDiv), e2._map.invalidateSize(), e2._map.setView(e2.originalState.center), e2._map.setZoom(e2.originalState.zoom)), e2._map.fire("easyPrint-finished");
-          }).catch(function(t3) {
-            console.error("Print operation failed", t3);
-          });
-        }, _sendToBrowserPrint: function(t2, e2) {
-          this._page.resizeTo(600, 800);
-          var n2 = this._createNewWindow(t2, e2, this);
-          this._page.document.body.innerHTML = "", this._page.document.write(n2), this._page.document.close();
-        }, _createSpinner: function(t2, e2, n2) {
-          return "<html><head><title>" + t2 + "</title></head><body><style>\n      body{\n        background: " + n2 + `;
-      }
-      .epLoader,
-      .epLoader:before,
-      .epLoader:after {
-        border-radius: 50%;
-      }
-      .epLoader {
-        color: #ffffff;
-        font-size: 11px;
-        text-indent: -99999em;
-        margin: 55px auto;
-        position: relative;
-        width: 10em;
-        height: 10em;
-        box-shadow: inset 0 0 0 1em;
-        -webkit-transform: translateZ(0);
-        -ms-transform: translateZ(0);
-        transform: translateZ(0);
-      }
-      .epLoader:before,
-      .epLoader:after {
-        position: absolute;
-        content: '';
-      }
-      .epLoader:before {
-        width: 5.2em;
-        height: 10.2em;
-        background: #0dc5c1;
-        border-radius: 10.2em 0 0 10.2em;
-        top: -0.1em;
-        left: -0.1em;
-        -webkit-transform-origin: 5.2em 5.1em;
-        transform-origin: 5.2em 5.1em;
-        -webkit-animation: load2 2s infinite ease 1.5s;
-        animation: load2 2s infinite ease 1.5s;
-      }
-      .epLoader:after {
-        width: 5.2em;
-        height: 10.2em;
-        background: #0dc5c1;
-        border-radius: 0 10.2em 10.2em 0;
-        top: -0.1em;
-        left: 5.1em;
-        -webkit-transform-origin: 0px 5.1em;
-        transform-origin: 0px 5.1em;
-        -webkit-animation: load2 2s infinite ease;
-        animation: load2 2s infinite ease;
-      }
-      @-webkit-keyframes load2 {
-        0% {
-          -webkit-transform: rotate(0deg);
-          transform: rotate(0deg);
-        }
-        100% {
-          -webkit-transform: rotate(360deg);
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes load2 {
-        0% {
-          -webkit-transform: rotate(0deg);
-          transform: rotate(0deg);
-        }
-        100% {
-          -webkit-transform: rotate(360deg);
-          transform: rotate(360deg);
-        }
-      }
-      </style>
-    <div class="` + e2 + '">Loading...</div></body></html>';
-        }, _createNewWindow: function(t2, e2, n2) {
-          return "<html><head>\n        <style>@media print {\n          img { max-width: 98%!important; max-height: 98%!important; }\n          @page { size: " + e2 + `;}}
-        </style>
-        <script>function step1(){
-        setTimeout('step2()', 10);}
-        function step2(){window.print();window.close()}
-        <\/script></head><body onload='step1()'>
-        <img src="` + t2 + '" style="display:block; margin:auto;"></body></html>';
-        }, _createOuterContainer: function(t2) {
-          var e2 = document.createElement("div");
-          return t2.parentNode.insertBefore(e2, t2), t2.parentNode.removeChild(t2), e2.appendChild(t2), e2.style.width = t2.style.width, e2.style.height = t2.style.height, e2.style.display = "inline-block", e2.style.overflow = "hidden", e2;
-        }, _removeOuterContainer: function(t2, e2, n2) {
-          e2.parentNode && (e2.parentNode.insertBefore(t2, e2), e2.parentNode.removeChild(n2), e2.parentNode.removeChild(e2));
-        }, _addCss: function() {
-          var t2 = document.createElement("style");
-          t2.type = "text/css", t2.innerHTML = ".leaflet-control-easyPrint-button { \n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDUxMiA1MTI7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8cGF0aCBkPSJNMTI4LDMyaDI1NnY2NEgxMjhWMzJ6IE00ODAsMTI4SDMyYy0xNy42LDAtMzIsMTQuNC0zMiwzMnYxNjBjMCwxNy42LDE0LjM5OCwzMiwzMiwzMmg5NnYxMjhoMjU2VjM1Mmg5NiAgIGMxNy42LDAsMzItMTQuNCwzMi0zMlYxNjBDNTEyLDE0Mi40LDQ5Ny42LDEyOCw0ODAsMTI4eiBNMzUyLDQ0OEgxNjBWMjg4aDE5MlY0NDh6IE00ODcuMTk5LDE3NmMwLDEyLjgxMy0xMC4zODcsMjMuMi0yMy4xOTcsMjMuMiAgIGMtMTIuODEyLDAtMjMuMjAxLTEwLjM4Ny0yMy4yMDEtMjMuMnMxMC4zODktMjMuMiwyMy4xOTktMjMuMkM0NzYuODE0LDE1Mi44LDQ4Ny4xOTksMTYzLjE4Nyw0ODcuMTk5LDE3NnoiIGZpbGw9IiMwMDAwMDAiLz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);\n      background-size: 16px 16px; \n      cursor: pointer; \n    }\n    .leaflet-control-easyPrint-button-export { \n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDQzMy41IDQzMy41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzMuNSA0MzMuNTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxnIGlkPSJmaWxlLWRvd25sb2FkIj4KCQk8cGF0aCBkPSJNMzk1LjI1LDE1M2gtMTAyVjBoLTE1M3YxNTNoLTEwMmwxNzguNSwxNzguNUwzOTUuMjUsMTUzeiBNMzguMjUsMzgyLjV2NTFoMzU3di01MUgzOC4yNXoiIGZpbGw9IiMwMDAwMDAiLz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);\n      background-size: 16px 16px; \n      cursor: pointer; \n    }\n    .easyPrintHolder a {\n      background-size: 16px 16px;\n      cursor: pointer;\n    }\n    .easyPrintHolder .CurrentSize{\n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTZweCIgdmVyc2lvbj0iMS4xIiBoZWlnaHQ9IjE2cHgiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgNjQgNjQiPgogIDxnPgogICAgPGcgZmlsbD0iIzFEMUQxQiI+CiAgICAgIDxwYXRoIGQ9Ik0yNS4yNTUsMzUuOTA1TDQuMDE2LDU3LjE0NVY0Ni41OWMwLTEuMTA4LTAuODk3LTIuMDA4LTIuMDA4LTIuMDA4QzAuODk4LDQ0LjU4MiwwLDQ1LjQ4MSwwLDQ2LjU5djE1LjQwMiAgICBjMCwwLjI2MSwwLjA1MywwLjUyMSwwLjE1NSwwLjc2N2MwLjIwMywwLjQ5MiwwLjU5NCwwLjg4MiwxLjA4NiwxLjA4N0MxLjQ4Niw2My45NDcsMS43NDcsNjQsMi4wMDgsNjRoMTUuNDAzICAgIGMxLjEwOSwwLDIuMDA4LTAuODk4LDIuMDA4LTIuMDA4cy0wLjg5OC0yLjAwOC0yLjAwOC0yLjAwOEg2Ljg1NWwyMS4yMzgtMjEuMjRjMC43ODQtMC43ODQsMC43ODQtMi4wNTUsMC0yLjgzOSAgICBTMjYuMDM5LDM1LjEyMSwyNS4yNTUsMzUuOTA1eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgICA8cGF0aCBkPSJtNjMuODQ1LDEuMjQxYy0wLjIwMy0wLjQ5MS0wLjU5NC0wLjg4Mi0xLjA4Ni0xLjA4Ny0wLjI0NS0wLjEwMS0wLjUwNi0wLjE1NC0wLjc2Ny0wLjE1NGgtMTUuNDAzYy0xLjEwOSwwLTIuMDA4LDAuODk4LTIuMDA4LDIuMDA4czAuODk4LDIuMDA4IDIuMDA4LDIuMDA4aDEwLjU1NmwtMjEuMjM4LDIxLjI0Yy0wLjc4NCwwLjc4NC0wLjc4NCwyLjA1NSAwLDIuODM5IDAuMzkyLDAuMzkyIDAuOTA2LDAuNTg5IDEuNDIsMC41ODlzMS4wMjctMC4xOTcgMS40MTktMC41ODlsMjEuMjM4LTIxLjI0djEwLjU1NWMwLDEuMTA4IDAuODk3LDIuMDA4IDIuMDA4LDIuMDA4IDEuMTA5LDAgMi4wMDgtMC44OTkgMi4wMDgtMi4wMDh2LTE1LjQwMmMwLTAuMjYxLTAuMDUzLTAuNTIyLTAuMTU1LTAuNzY3eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+Cg==)\n    }\n    .easyPrintHolder .page {\n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQ0NC44MzMgNDQ0LjgzMyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDQ0LjgzMyA0NDQuODMzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4Ij4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNNTUuMjUsNDQ0LjgzM2gzMzQuMzMzYzkuMzUsMCwxNy03LjY1LDE3LTE3VjEzOS4xMTdjMC00LjgxNy0xLjk4My05LjM1LTUuMzgzLTEyLjQ2N0wyNjkuNzMzLDQuNTMzICAgIEMyNjYuNjE3LDEuNywyNjIuMzY3LDAsMjU4LjExNywwSDU1LjI1Yy05LjM1LDAtMTcsNy42NS0xNywxN3Y0MTAuODMzQzM4LjI1LDQzNy4xODMsNDUuOSw0NDQuODMzLDU1LjI1LDQ0NC44MzN6ICAgICBNMzcyLjU4MywxNDYuNDgzdjAuODVIMjU2LjQxN3YtMTA4LjhMMzcyLjU4MywxNDYuNDgzeiBNNzIuMjUsMzRoMTUwLjE2N3YxMzAuMzMzYzAsOS4zNSw3LjY1LDE3LDE3LDE3aDEzMy4xNjd2MjI5LjVINzIuMjVWMzR6ICAgICIgZmlsbD0iIzAwMDAwMCIvPgoJPC9nPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPgo=);\n    }\n    .easyPrintHolder .A4Landscape { \n      transform: rotate(-90deg);\n    }\n\n    .leaflet-control-easyPrint-button{\n      display: inline-block;\n    }\n    .easyPrintHolder{\n      margin-top:-31px;\n      margin-bottom: -5px;\n      margin-left: 30px;\n      padding-left: 0px;\n      display: none;\n    }\n\n    .easyPrintSizeMode {\n      display: inline-block;\n    }\n    .easyPrintHolder .easyPrintSizeMode a {\n      border-radius: 0px;\n    }\n\n    .easyPrintHolder .easyPrintSizeMode:last-child a{\n      border-top-right-radius: 2px;\n      border-bottom-right-radius: 2px;\n      margin-left: -1px;\n    }\n\n    .easyPrintPortrait:hover, .easyPrintLandscape:hover{\n      background-color: #757570;\n      cursor: pointer;\n    }", document.body.appendChild(t2);
-        }, _dataURItoBlob: function(t2) {
-          for (var e2 = atob(t2.split(",")[1]), n2 = t2.split(",")[0].split(":")[1].split(";")[0], i2 = new ArrayBuffer(e2.length), o = new DataView(i2), r = 0; r < e2.length; r++) o.setUint8(r, e2.charCodeAt(r));
-          return new Blob([i2], { type: n2 });
-        }, _togglePageSizeButtons: function(t2) {
-          var e2 = this.holder.style, n2 = this.link.style;
-          "mouseover" === t2.type ? (e2.display = "block", n2.borderTopRightRadius = "0", n2.borderBottomRightRadius = "0") : (e2.display = "none", n2.borderTopRightRadius = "2px", n2.borderBottomRightRadius = "2px");
-        }, _toggleControls: function(t2) {
-          var e2 = document.getElementsByClassName("leaflet-control-container")[0];
-          if (t2) return e2.style.display = "block";
-          e2.style.display = "none";
-        }, _toggleClasses: function(t2, e2) {
-          t2.forEach(function(t3) {
-            var n2 = document.getElementsByClassName(t3)[0];
-            if (e2) return n2.style.display = "block";
-            n2.style.display = "none";
-          });
-        }, _a4PageSize: { height: 715, width: 1045 } }), L.easyPrint = function(t2) {
-          return new L.Control.EasyPrint(t2);
+          return false;
+        })();
+        const eventNameMap = {
+          change: nativeAPI.fullscreenchange,
+          error: nativeAPI.fullscreenerror
         };
-      });
+        const fullscreenAPI = {
+          // Request fullscreen for a specific element
+          async request(element, options) {
+            element = element || document.documentElement;
+            const requestMethod = nativeAPI.requestFullscreen;
+            await this._callNative(() => {
+              return element[requestMethod](options);
+            });
+          },
+          // Exit fullscreen mode
+          async exit() {
+            if (!this.isFullscreen) {
+              return;
+            }
+            const exitMethod = nativeAPI.exitFullscreen;
+            await this._callNative(() => {
+              return document[exitMethod]();
+            });
+          },
+          // Helper to handle browser differences (Promise vs Event)
+          async _callNative(action) {
+            const result = action();
+            if (result instanceof Promise) {
+              await result;
+              return;
+            }
+            await new Promise((resolve) => {
+              const listener = () => {
+                this.off("change", listener);
+                resolve();
+              };
+              this.on("change", listener);
+            });
+          },
+          // Add event listener for fullscreen changes
+          on(event, callback) {
+            const eventName = eventNameMap[event];
+            if (eventName) {
+              document.addEventListener(eventName, callback);
+            }
+          },
+          // Remove event listener
+          off(event, callback) {
+            const eventName = eventNameMap[event];
+            if (eventName) {
+              document.removeEventListener(eventName, callback);
+            }
+          },
+          nativeAPI
+        };
+        Object.defineProperties(fullscreenAPI, {
+          isFullscreen: {
+            get() {
+              return Boolean(document[nativeAPI.fullscreenElement]);
+            }
+          },
+          isEnabled: {
+            enumerable: true,
+            get() {
+              return Boolean(document[nativeAPI.fullscreenEnabled]);
+            }
+          }
+        });
+        const FullScreen = leaflet.Control.extend({
+          options: {
+            position: "topleft",
+            title: "Full Screen",
+            titleCancel: "Exit Full Screen",
+            forceSeparateButton: false,
+            forcePseudoFullscreen: false,
+            fullscreenElement: false
+          },
+          _screenfull: fullscreenAPI,
+          onAdd(map) {
+            let className = "leaflet-control-zoom-fullscreen";
+            let container;
+            let content = "";
+            if (map.zoomControl && !this.options.forceSeparateButton) {
+              container = map.zoomControl._container;
+            } else {
+              container = document.createElement("div");
+              container.className = "leaflet-bar";
+            }
+            if (this.options.content) {
+              content = this.options.content;
+            } else {
+              className += " leaflet-fullscreen-icon";
+            }
+            this._createButton(this.options.title, className, content, container, this.toggleFullScreen, this);
+            this._map.fullscreenControl = this;
+            this._map.on("enterFullscreen exitFullscreen", this._toggleState, this);
+            return container;
+          },
+          onRemove() {
+            leaflet.DomEvent.off(this.link, "click", leaflet.DomEvent.stop).off(this.link, "click", this.toggleFullScreen, this);
+            if (this._screenfull.isEnabled) {
+              leaflet.DomEvent.off(document, this._screenfull.nativeAPI.fullscreenchange, leaflet.DomEvent.stop).off(document, this._screenfull.nativeAPI.fullscreenchange, this._handleFullscreenChange, this);
+            }
+          },
+          _createButton(title, className, content, container, fn, context) {
+            this.link = document.createElement("a");
+            this.link.className = className;
+            container.appendChild(this.link);
+            this.link.href = "#";
+            this.link.title = title;
+            this.link.innerHTML = content;
+            this.link.setAttribute("role", "button");
+            this.link.setAttribute("aria-label", title);
+            leaflet.DomEvent.disableClickPropagation(container);
+            leaflet.DomEvent.on(this.link, "click", leaflet.DomEvent.stop).on(this.link, "click", fn, context);
+            if (this._screenfull.isEnabled) {
+              leaflet.DomEvent.on(document, this._screenfull.nativeAPI.fullscreenchange, leaflet.DomEvent.stop).on(document, this._screenfull.nativeAPI.fullscreenchange, this._handleFullscreenChange, context);
+            }
+            return this.link;
+          },
+          async toggleFullScreen() {
+            const map = this._map;
+            const { fullscreenElement, forcePseudoFullscreen } = this.options;
+            const container = fullscreenElement || map.getContainer();
+            const useNative = this._screenfull.isEnabled && !forcePseudoFullscreen;
+            if (map._isFullscreen) {
+              map._exitFired = true;
+              if (useNative) {
+                await this._screenfull.exit();
+              } else {
+                container.classList.remove("leaflet-pseudo-fullscreen");
+              }
+              map.invalidateSize();
+              map._isFullscreen = false;
+              map.fire("exitFullscreen");
+            } else {
+              map._exitFired = false;
+              if (useNative) {
+                await this._screenfull.request(container);
+              } else {
+                container.classList.add("leaflet-pseudo-fullscreen");
+              }
+              map.invalidateSize();
+              map._isFullscreen = true;
+              map.fire("enterFullscreen");
+            }
+          },
+          _toggleState() {
+            const { title, titleCancel } = this.options;
+            const isFullscreen = this._map._isFullscreen;
+            this.link.title = isFullscreen ? titleCancel : title;
+            this.link.setAttribute("aria-label", this.link.title);
+            this.link.setAttribute("aria-pressed", isFullscreen.toString());
+            this.link.classList.toggle("leaflet-fullscreen-on", isFullscreen);
+          },
+          _handleFullscreenChange() {
+            const map = this._map;
+            const wasExitedExternally = !this._screenfull.isFullscreen && map._isFullscreen && !map._exitFired;
+            if (wasExitedExternally) {
+              map._exitFired = true;
+              map._isFullscreen = false;
+              map.fire("exitFullscreen");
+              map.invalidateSize();
+            }
+          }
+        });
+        leaflet.Map.include({
+          toggleFullscreen() {
+            this.fullscreenControl.toggleFullScreen();
+          }
+        });
+        leaflet.Map.mergeOptions({
+          fullscreenControl: false
+        });
+        leaflet.Map.addInitHook(function() {
+          if (this.options.fullscreenControl) {
+            this.addControl(new FullScreen(this.options.fullscreenControlOptions));
+          }
+        });
+        return FullScreen;
+      }));
     }
   });
 
   // package.json
   var version = "0.6.0";
 
+  // src/leaflet-ui.js
+  init_leaflet_compat();
+
   // node_modules/leaflet-i18n/Leaflet.i18n.js
+  init_leaflet_compat();
   (function(factory, window2) {
     if (false) {
       define(["leaflet"], factory);
@@ -638,23 +321,23 @@
       Leaflet_i18n_module.exports = factory(null);
     }
     if (typeof window2 !== "undefined" && window2.L) {
-      factory(window2.L);
+      factory(Leaflet);
     }
-  })(function(L2) {
-    L2.locales = {};
-    L2.locale = null;
-    L2.registerLocale = function registerLocale(code, locale) {
-      L2.locales[code] = L2.Util.extend({}, L2.locales[code], locale);
+  })(function(L3) {
+    L3.locales = {};
+    L3.locale = null;
+    L3.registerLocale = function registerLocale(code, locale) {
+      L3.locales[code] = Object.assign({}, L3.locales[code], locale);
     };
-    L2.setLocale = function setLocale(code) {
-      L2.locale = code;
+    L3.setLocale = function setLocale(code) {
+      L3.locale = code;
     };
-    return L2.i18n = L2._ = function translate(string, data) {
-      if (L2.locale && L2.locales[L2.locale] && typeof L2.locales[L2.locale][string] !== "undefined") {
-        string = L2.locales[L2.locale][string];
+    return L3.i18n = L3._ = function translate(string, data) {
+      if (L3.locale && L3.locales[L3.locale] && typeof L3.locales[L3.locale][string] !== "undefined") {
+        string = L3.locales[L3.locale][string];
       }
       try {
-        string = L2.Util.template(string, data);
+        string = L3.Util.template(string, data);
       } catch (err) {
       }
       return string;
@@ -2875,1201 +2558,1004 @@
     }
   });
 
-  // global-leaflet:leaflet
-  var { Marker, Util, DivIcon, Control, Circle, DomEvent, LayerGroup, Map } = window.L;
-
-  // node_modules/leaflet.locatecontrol/dist/L.Control.Locate.esm.js
-  var METERS_TO_FEET = 3.2808399;
-  function addClasses(el, names) {
-    names.split(" ").forEach((className) => {
-      el.classList.add(className);
-    });
-  }
-  function removeClasses(el, names) {
-    names.split(" ").forEach((className) => {
-      el.classList.remove(className);
-    });
-  }
-  function createElement(tag, className, parent) {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    parent?.append(el);
-    return el;
-  }
-  function cloneOptions(options) {
-    const cloned = {};
-    for (const key in options) {
-      const val = options[key];
-      if (Array.isArray(val)) {
-        cloned[key] = [...val];
-      } else if (val?.constructor === Object) {
-        cloned[key] = { ...val };
-      } else {
-        cloned[key] = val;
-      }
-    }
-    return cloned;
-  }
-  var LocationMarker = Marker.extend({
-    initialize(latlng, options) {
-      Util.setOptions(this, options);
-      this._latlng = latlng;
-      this.createIcon();
-    },
-    /**
-     * Create a styled circle location marker
-     */
-    createIcon() {
-      const opt = this.options;
-      const style = [
-        ["stroke", opt.color],
-        ["stroke-width", opt.weight],
-        ["fill", opt.fillColor],
-        ["fill-opacity", opt.fillOpacity],
-        ["opacity", opt.opacity]
-      ].filter(([, v]) => v !== void 0).map(([k, v]) => `${k}="${v}"`).join(" ");
-      const icon = this._getIconSVG(opt, style);
-      this._locationIcon = new DivIcon({
-        className: icon.className,
-        html: icon.svg,
-        iconSize: [icon.w, icon.h]
+  // node_modules/leaflet.locatecontrol/dist/L.Control.Locate.umd.js
+  init_leaflet_compat();
+  (function(global2, factory) {
+    false ? factory(exports, null) : false ? define(["exports", "leaflet"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory((global2.L = global2.L || {}, global2.L.Control = global2.L.Control || {}, global2.L.Control.Locate = {}), global2.L));
+  })(void 0, (function(exports2, leaflet) {
+    "use strict";
+    const METERS_TO_FEET = 3.2808399;
+    function addClasses(el, names) {
+      names.split(" ").forEach((className) => {
+        el.classList.add(className);
       });
-      this.setIcon(this._locationIcon);
-    },
-    /**
-     * Return the raw svg for the shape
-     *
-     * Split so can be easily overridden
-     */
-    _getIconSVG(options, style) {
-      const r = options.radius;
-      const w = options.weight;
-      const s = r + w;
-      const s2 = s * 2;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}"><circle r="${r}" ${style} /></svg>`;
-      return {
-        className: "leaflet-control-locate-location",
-        svg,
-        w: s2,
-        h: s2
-      };
-    },
-    setStyle(style) {
-      Util.setOptions(this, style);
-      this.createIcon();
     }
-  });
-  var CompassMarker = LocationMarker.extend({
-    initialize(latlng, heading, options) {
-      Util.setOptions(this, options);
-      this._latlng = latlng;
-      this._heading = heading;
-      this.createIcon();
-    },
-    setHeading(heading) {
-      this._heading = heading;
-    },
-    /**
-     * Create a styled arrow compass marker
-     */
-    _getIconSVG(options, style) {
-      const r = options.radius;
-      const s = r + options.weight + options.depth;
-      const s2 = s * 2;
-      const path = this._arrowPoints(r, options.width, options.depth, this._heading);
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}"><path d="${path}" ${style} /></svg>`;
-      return {
-        className: "leaflet-control-locate-heading",
-        svg,
-        w: s2,
-        h: s2
-      };
-    },
-    _arrowPoints(radius, width, depth, heading) {
-      const \u03C6 = (heading - 90) * Math.PI / 180;
-      const ux = Math.cos(\u03C6);
-      const uy = Math.sin(\u03C6);
-      const vx = -Math.sin(\u03C6);
-      const vy = Math.cos(\u03C6);
-      const h = width / 2;
-      const Cx = radius * ux;
-      const Cy = radius * uy;
-      const B1x = Cx + h * vx;
-      const B1y = Cy + h * vy;
-      const B2x = Cx - h * vx;
-      const B2y = Cy - h * vy;
-      const Tx = Cx + depth * ux;
-      const Ty = Cy + depth * uy;
-      return `M ${B1x},${B1y} L ${B2x},${B2y} L ${Tx},${Ty} Z`;
+    function removeClasses(el, names) {
+      names.split(" ").forEach((className) => {
+        el.classList.remove(className);
+      });
     }
-  });
-  var LocateControl = Control.extend({
-    options: {
-      /** Position of the control */
-      position: "topleft",
-      /** The layer that the user's location should be drawn on. By default creates a new layer. */
-      layer: void 0,
-      /**
-       * Automatically sets the map view (zoom and pan) to the user's location as it updates.
-       * While the map is following the user's location, the control is in the `following` state,
-       * which changes the style of the control and the circle marker.
-       *
-       * Possible values:
-       *  - false: never updates the map view when location changes.
-       *  - 'once': set the view when the location is first determined
-       *  - 'always': always updates the map view when location changes.
-       *              The map view follows the user's location.
-       *  - 'untilPan': like 'always', except stops updating the
-       *                view if the user has manually panned the map.
-       *                The map view follows the user's location until she pans.
-       *  - 'untilPanOrZoom': (default) like 'always', except stops updating the
-       *                view if the user has manually panned the map.
-       *                The map view follows the user's location until she pans.
-       */
-      setView: "untilPanOrZoom",
-      /**
-       * Keep the current map zoom level when setting the view and only pan.
-       * Can be set to:
-       * - `true`: Always keep current zoom level
-       * - `false`: Allow zooming (default)
-       * - `[minZoom, maxZoom]`: Keep zoom only when current zoom is within the specified range
-       */
-      keepCurrentZoomLevel: false,
-      /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
-      initialZoomLevel: false,
-      /**
-       * This callback can be used to override the viewport tracking
-       * This function should return a LatLngBounds object.
-       *
-       * For example to extend the viewport to ensure that a particular LatLng is visible:
-       *
-       * getLocationBounds: function(locationEvent) {
-       *    return locationEvent.bounds.extend([-33.873085, 151.219273]);
-       * },
-       */
-      getLocationBounds(locationEvent) {
-        return locationEvent.bounds;
-      },
-      /** Smooth pan and zoom to the location of the marker. Only works in Leaflet 1.0+. */
-      flyTo: false,
-      /**
-       * The user location can be inside and outside the current view when the user clicks on the
-       * control that is already active. Both cases can be configures separately.
-       * Possible values are:
-       *  - 'setView': zoom and pan to the current location
-       *  - 'stop': stop locating and remove the location marker
-       */
-      clickBehavior: {
-        /** What should happen if the user clicks on the control while the location is within the current view. */
-        inView: "stop",
-        /** What should happen if the user clicks on the control while the location is outside the current view. */
-        outOfView: "setView",
-        /**
-         * What should happen if the user clicks on the control while the location is within the current view
-         * and we could be following but are not. Defaults to a special value which inherits from 'inView';
-         */
-        inViewNotFollowing: "inView"
-      },
-      /**
-       * If set, save the map bounds just before centering to the user's
-       * location. When control is disabled, set the view back to the
-       * bounds that were saved.
-       */
-      returnToPrevBounds: false,
-      /**
-       * Keep a cache of the location after the user deactivates the control. If set to false, the user has to wait
-       * until the locate API returns a new location before they see where they are again.
-       */
-      cacheLocation: true,
-      /** If set, a circle that shows the location accuracy is drawn. */
-      drawCircle: true,
-      /** If set, the marker at the users' location is drawn. */
-      drawMarker: true,
-      /** If set and supported then show the compass heading */
-      showCompass: true,
-      /**
-       * iOS-only compass accuracy threshold (degrees).
-       * Show compass only when `webkitCompassAccuracy <= value`.
-       * `-1` (uncalibrated) is always rejected.
-       * Set to `false` to disable filtering. No effect on Android.
-       */
-      compassAccuracyThreshold: 45,
-      /** The class to be used to create the marker. For example L.CircleMarker or L.Marker */
-      markerClass: LocationMarker,
-      /** The class us be used to create the compass bearing arrow */
-      compassClass: CompassMarker,
-      /** Accuracy circle style properties. NOTE these styles should match the css animations styles */
-      circleStyle: {
-        className: "leaflet-control-locate-circle",
-        color: "#136AEC",
-        fillColor: "#136AEC",
-        fillOpacity: 0.15,
-        weight: 0
-      },
-      /** Inner marker style properties. Only works if your marker class supports `setStyle`. */
-      markerStyle: {
-        className: "leaflet-control-locate-marker",
-        color: "#fff",
-        fillColor: "#2A93EE",
-        fillOpacity: 1,
-        weight: 3,
-        opacity: 1,
-        radius: 9
-      },
-      /** Compass */
-      compassStyle: {
-        fillColor: "#2A93EE",
-        fillOpacity: 1,
-        weight: 0,
-        color: "#fff",
-        opacity: 1,
-        radius: 9,
-        // How far is the arrow from the center of the marker
-        width: 9,
-        // Width of the arrow
-        depth: 6
-        // Length of the arrow
-      },
-      /**
-       * Changes to accuracy circle and inner marker while following.
-       * It is only necessary to provide the properties that should change.
-       */
-      followCircleStyle: {},
-      followMarkerStyle: {
-        // color: '#FFA500',
-        // fillColor: '#FFB000'
-      },
-      followCompassStyle: {},
-      /** The CSS class for the icon. For example fa-location-arrow or fa-map-marker */
-      icon: "leaflet-control-locate-location-arrow",
-      iconLoading: "leaflet-control-locate-spinner",
-      /** The element to be created for icons. For example span or i */
-      iconElementTag: "span",
-      /** The element to be created for the text. For example small or span */
-      textElementTag: "small",
-      /** Padding around the accuracy circle. */
-      circlePadding: [0, 0],
-      /** Use metric units. */
-      metric: true,
-      /**
-       * This callback can be used in case you would like to override button creation behavior.
-       * This is useful for DOM manipulation frameworks such as angular etc.
-       * This function should return an object with HtmlElement for the button (link property) and the icon (icon property).
-       */
-      createButtonCallback(container, options) {
-        const link = createElement("a", "leaflet-bar-part leaflet-bar-part-single", container);
-        link.title = options.strings.title;
-        link.href = "#";
-        link.setAttribute("role", "button");
-        link.setAttribute("aria-label", options.strings.title);
-        const icon = createElement(options.iconElementTag, options.icon, link);
-        icon.classList.add("leaflet-locate-icon");
-        if (options.strings.text !== void 0) {
-          const text = createElement(options.textElementTag, "leaflet-locate-text", link);
-          text.textContent = options.strings.text;
-          link.classList.add("leaflet-locate-text-active");
-          link.parentNode.style.display = "flex";
-        }
-        return { link, icon };
-      },
-      /** This event is called in case of any location error that is not a time out error. */
-      onLocationError(err) {
-        alert(err.message);
-      },
-      /**
-       * This event is called when the user's location is outside the bounds set on the map.
-       * The event is called repeatedly when the location changes.
-       */
-      onLocationOutsideMapBounds(control) {
-        control.stop();
-        alert(control.options.strings.outsideMapBoundsMsg);
-      },
-      /** Display a pop-up when the user click on the inner marker. */
-      showPopup: true,
-      strings: {
-        title: "Show me where I am",
-        metersUnit: "meters",
-        feetUnit: "feet",
-        popup: "You are within {distance} {unit} from this point",
-        outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
-      },
-      /** The default options passed to leaflets locate method. */
-      locateOptions: {
-        maxZoom: Infinity,
-        watch: true,
-        // if you overwrite this, visualization cannot be updated
-        setView: false
-        // have to set this to false because we have to
-        // do setView manually
-      }
-    },
-    initialize(options = {}) {
-      this.options = cloneOptions(this.options);
+    function createElement(tag, className, parent) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      parent?.append(el);
+      return el;
+    }
+    function cloneOptions(options) {
+      const cloned = {};
       for (const key in options) {
-        const userVal = options[key];
-        const defaultVal = this.options[key];
-        if (userVal?.constructor === Object && defaultVal?.constructor === Object) {
-          Object.assign(defaultVal, userVal);
+        const val = options[key];
+        if (Array.isArray(val)) {
+          cloned[key] = [...val];
+        } else if (val?.constructor === Object) {
+          cloned[key] = { ...val };
         } else {
-          this.options[key] = userVal;
+          cloned[key] = val;
         }
       }
-      this.options.followMarkerStyle = { ...this.options.markerStyle, ...this.options.followMarkerStyle };
-      this.options.followCircleStyle = { ...this.options.circleStyle, ...this.options.followCircleStyle };
-      this.options.followCompassStyle = { ...this.options.compassStyle, ...this.options.followCompassStyle };
-    },
-    /**
-     * Add control to map. Returns the container for the control.
-     */
-    onAdd(map) {
-      const container = createElement("div", "leaflet-control-locate leaflet-bar leaflet-control");
-      this._container = container;
-      this._map = map;
-      this._layer = this.options.layer || new LayerGroup();
-      this._layer.addTo(map);
-      this._event = void 0;
-      this._compassHeading = null;
-      this._prevBounds = null;
-      const linkAndIcon = this.options.createButtonCallback(container, this.options);
-      this._link = linkAndIcon.link;
-      this._icon = linkAndIcon.icon;
-      this._linkClickHandler = (ev) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-        this._onClick();
-      };
-      this._linkDblClickHandler = (ev) => ev.stopPropagation();
-      this._link.addEventListener("click", this._linkClickHandler);
-      this._link.addEventListener("dblclick", this._linkDblClickHandler);
-      this._resetVariables();
-      this._map.on("unload", this._unload, this);
-      return container;
-    },
-    /**
-     * Called when control is removed from the map.
-     */
-    onRemove() {
-      if (this._link && this._linkClickHandler) {
-        this._link.removeEventListener("click", this._linkClickHandler);
-      }
-      if (this._link && this._linkDblClickHandler) {
-        this._link.removeEventListener("dblclick", this._linkDblClickHandler);
-      }
-      if (this._map) {
-        this._map.off("unload", this._unload, this);
-      }
-      this._linkClickHandler = null;
-      this._linkDblClickHandler = null;
-      this.stop();
-    },
-    /**
-     * This method is called when the user clicks on the control.
-     */
-    _onClick() {
-      this._justClicked = true;
-      const wasFollowing = this._isFollowing();
-      this._userPanned = false;
-      this._userZoomed = false;
-      if (this._active && !this._event) {
-        this.stop();
-      } else if (this._active) {
-        const behaviors = this.options.clickBehavior;
-        let behavior = behaviors.outOfView;
-        if (this._map.getBounds().contains(this._event.latlng)) {
-          behavior = wasFollowing ? behaviors.inView : behaviors.inViewNotFollowing;
-        }
-        if (behaviors[behavior]) {
-          behavior = behaviors[behavior];
-        }
-        switch (behavior) {
-          case "setView":
-            this.setView();
-            break;
-          case "stop":
-            this.stop();
-            if (this.options.returnToPrevBounds) {
-              const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
-              f.bind(this._map)(this._prevBounds);
-            }
-            break;
-        }
-      } else {
-        if (this.options.returnToPrevBounds) {
-          this._prevBounds = this._map.getBounds();
-        }
-        this.start();
-      }
-      this._updateContainerStyle();
-    },
-    /**
-     * Starts the plugin:
-     * - activates the engine
-     * - draws the marker (if coordinates available)
-     */
-    start() {
-      this._activate();
-      if (this._event) {
-        this._drawMarker(this._map);
-        if (this.options.setView) {
-          this.setView();
-        }
-      }
-      this._updateContainerStyle();
-    },
-    /**
-     * Stops the plugin:
-     * - deactivates the engine
-     * - reinitializes the button
-     * - removes the marker
-     */
-    stop() {
-      this._deactivate();
-      this._cleanClasses();
-      this._resetVariables();
-      this._removeMarker();
-    },
-    /**
-     * Keep the control active but stop following the location
-     */
-    stopFollowing() {
-      this._userPanned = true;
-      this._updateContainerStyle();
-      this._drawMarker();
-    },
-    /**
-     * This method launches the location engine.
-     * It is called before the marker is updated,
-     * event if it does not mean that the event will be ready.
-     *
-     * Override it if you want to add more functionalities.
-     * It should set the this._active to true and do nothing if
-     * this._active is true.
-     */
-    _activate() {
-      if (this._active || !this._map) {
-        return;
-      }
-      this._map.locate(this.options.locateOptions);
-      this._map.fire("locateactivate", this);
-      this._active = true;
-      this._map.on("locationfound", this._onLocationFound, this);
-      this._map.on("locationerror", this._onLocationError, this);
-      this._map.on("dragstart", this._onDrag, this);
-      this._map.on("zoomstart", this._onZoom, this);
-      this._map.on("zoomend", this._onZoomEnd, this);
-      this._activateCompass();
-    },
-    /**
-     * Request DeviceOrientation permission (if needed) and bind compass events.
-     * Fails gracefully — geolocation continues without compass.
-     */
-    async _activateCompass() {
-      if (!this.options.showCompass) {
-        return;
-      }
-      const oriAbs = "ondeviceorientationabsolute" in window;
-      if (!oriAbs && !("ondeviceorientation" in window)) {
-        return;
-      }
-      const eventName = oriAbs ? "deviceorientationabsolute" : "deviceorientation";
-      const deviceOrientationEvent = window.DeviceOrientationEvent;
-      if (typeof deviceOrientationEvent !== "undefined" && typeof deviceOrientationEvent.requestPermission === "function") {
-        try {
-          const permissionState = await deviceOrientationEvent.requestPermission();
-          if (permissionState !== "granted") {
-            return;
-          }
-        } catch (err) {
-          console.warn("DeviceOrientation permission denied or unavailable:", err);
-          return;
-        }
-      }
-      if (!this._active) {
-        return;
-      }
-      this._compassEventName = eventName;
-      DomEvent.on(window, eventName, this._onDeviceOrientation, this);
-    },
-    /**
-     * Called to stop the location engine.
-     *
-     * Override it to shutdown any functionalities you added on start.
-     */
-    _deactivate() {
-      if (!this._active || !this._map) {
-        return;
-      }
-      this._map.stopLocate();
-      this._map.fire("locatedeactivate", this);
-      this._active = false;
-      if (!this.options.cacheLocation) {
-        this._event = void 0;
-      }
-      this._map.off("locationfound", this._onLocationFound, this);
-      this._map.off("locationerror", this._onLocationError, this);
-      this._map.off("dragstart", this._onDrag, this);
-      this._map.off("zoomstart", this._onZoom, this);
-      this._map.off("zoomend", this._onZoomEnd, this);
-      this._deactivateCompass();
-    },
-    /**
-     * Remove compass event listener and reset compass heading state.
-     * Symmetric counterpart to _activateCompass().
-     */
-    _deactivateCompass() {
-      if (!this._compassEventName) {
-        return;
-      }
-      this._compassHeading = null;
-      DomEvent.off(window, this._compassEventName, this._onDeviceOrientation, this);
-      this._compassEventName = null;
-    },
-    /**
-     * Check if the current zoom level should be kept based on keepCurrentZoomLevel option.
-     * @returns {boolean} true if zoom should be kept, false otherwise
-     */
-    _shouldKeepCurrentZoom() {
-      const option = this.options.keepCurrentZoomLevel;
-      if (Array.isArray(option) && option.length === 2) {
-        const currentZoom = this._map.getZoom();
-        const [minZoom, maxZoom] = option;
-        return currentZoom >= minZoom && currentZoom <= maxZoom;
-      }
-      return option === true;
-    },
-    /**
-     * Pan and/or zoom the map to the current location.
-     * Respects keepCurrentZoomLevel and initialZoomLevel options.
-     */
-    setView() {
-      this._drawMarker();
-      if (this._isOutsideMapBounds()) {
-        this._event = void 0;
-        this.options.onLocationOutsideMapBounds(this);
-        return;
-      }
-      const { latlng } = this._event;
-      const fly = this.options.flyTo;
-      let method, args;
-      if (this._justClicked && this.options.initialZoomLevel !== false) {
-        method = fly ? "flyTo" : "setView";
-        args = [latlng, this.options.initialZoomLevel];
-      } else if (this._shouldKeepCurrentZoom()) {
-        method = fly ? "flyTo" : "panTo";
-        args = [latlng];
-      } else {
-        method = fly ? "flyToBounds" : "fitBounds";
-        args = [
-          this.options.getLocationBounds(this._event),
-          {
-            padding: this.options.circlePadding,
-            maxZoom: this.options.locateOptions.maxZoom
-          }
-        ];
-      }
-      this._setViewIgnoringEvents(method, args);
-    },
-    /**
-     * Execute a map view method while ignoring zoom/pan events to prevent breaking following mode.
-     * @param {string} method - The map method name to call ('flyTo', 'setView', 'panTo', 'fitBounds', 'flyToBounds')
-     * @param {Array} args - Arguments to pass to the method
-     */
-    _setViewIgnoringEvents(method, args) {
-      this._ignoreEvent = true;
-      this._map[method](...args);
-      requestAnimationFrame(() => {
-        this._ignoreEvent = false;
-      });
-    },
-    /**
-     *
-     */
-    _drawCompass() {
-      if (!this._event) {
-        return;
-      }
-      const latlng = this._event.latlng;
-      if (this.options.showCompass && latlng && this._compassHeading !== null) {
-        const cStyle = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle;
-        if (!this._compass) {
-          this._compass = new this.options.compassClass(latlng, this._compassHeading, cStyle).addTo(this._layer);
-        } else {
-          this._compass.setLatLng(latlng);
-          this._compass.setHeading(this._compassHeading);
-          if (this._compass.setStyle) {
-            this._compass.setStyle(cStyle);
-          }
-        }
-      }
-      if (this._compass && (!this.options.showCompass || this._compassHeading === null)) {
-        this._compass.removeFrom(this._layer);
-        this._compass = null;
-      }
-    },
-    /**
-     * Draw the marker and accuracy circle on the map.
-     *
-     * Uses the event retrieved from onLocationFound from the map.
-     */
-    _drawMarker() {
-      if (!this._event) {
-        return;
-      }
-      const latlng = this._event.latlng;
-      const accuracy = this._event.accuracy ?? 0;
-      const isFollowing = this._isFollowing();
-      if (this.options.drawCircle) {
-        const style = isFollowing ? this.options.followCircleStyle : this.options.circleStyle;
-        if (this._circle) {
-          this._circle.setLatLng(latlng).setRadius(accuracy).setStyle(style);
-        } else {
-          const options = { ...style, radius: accuracy };
-          this._circle = new Circle(latlng, options).addTo(this._layer);
-        }
-      }
-      if (this.options.drawMarker) {
-        const style = isFollowing ? this.options.followMarkerStyle : this.options.markerStyle;
-        if (this._marker) {
-          this._marker.setLatLng(latlng);
-          if (this._marker.setStyle) {
-            this._marker.setStyle(style);
-          }
-        } else {
-          this._marker = new this.options.markerClass(latlng, style).addTo(this._layer);
-        }
-      }
-      this._drawCompass();
-      this._bindPopup(latlng, accuracy);
-    },
-    /**
-     * Bind popup with location information to marker and compass.
-     * @param {L.LatLng} latlng - The location to bind the popup to.
-     * @param {number} accuracy - The accuracy radius in meters.
-     */
-    _bindPopup(latlng, accuracy) {
-      const t = this.options.strings.popup;
-      if (!this.options.showPopup || !t) {
-        return;
-      }
-      let distance;
-      let unit;
-      let altitude;
-      if (this.options.metric) {
-        distance = accuracy.toFixed(0);
-        unit = this.options.strings.metersUnit;
-        altitude = this._event?.altitude != null ? this._event.altitude.toFixed(1) : "N/A";
-      } else {
-        distance = (accuracy * METERS_TO_FEET).toFixed(0);
-        unit = this.options.strings.feetUnit;
-        altitude = this._event?.altitude != null ? (this._event.altitude * METERS_TO_FEET).toFixed(1) : "N/A";
-      }
-      const speed = this._event?.speed != null ? this._event.speed.toFixed(2) : "N/A";
-      const heading = this._event?.heading != null ? this._event.heading.toFixed(0) : "N/A";
-      const data = {
-        distance,
-        unit,
-        lat: latlng.lat.toFixed(6),
-        lng: latlng.lng.toFixed(6),
-        altitude,
-        speed,
-        heading
-      };
-      let popupText;
-      if (typeof t === "string") {
-        popupText = Util.template(t, data);
-      } else if (typeof t === "function") {
-        popupText = t(data);
-      } else {
-        popupText = t;
-      }
-      if (this._marker) {
-        this._marker.bindPopup(popupText)._popup.setLatLng(latlng);
-      }
-      if (this._compass) {
-        this._compass.bindPopup(popupText)._popup.setLatLng(latlng);
-      }
-    },
-    /**
-     * Remove the marker from map.
-     */
-    _removeMarker() {
-      this._layer.clearLayers();
-      this._marker = void 0;
-      this._circle = void 0;
-      this._compass = void 0;
-    },
-    /**
-     * Unload the plugin and all event listeners.
-     * Kind of the opposite of onAdd.
-     */
-    _unload() {
-      this.stop();
-      if (this._map) {
-        this._map.off("unload", this._unload, this);
-      }
-    },
-    /**
-     * Sets the compass heading
-     */
-    _setCompassHeading(angle) {
-      if (Number.isFinite(angle)) {
-        this._compassHeading = Math.round(angle);
-        requestAnimationFrame(() => this._drawCompass());
-      } else {
-        this._compassHeading = null;
-        this._drawCompass();
-      }
-    },
-    /**
-     * If the compass fails calibration just fail safely and remove the compass
-     */
-    _onCompassNeedsCalibration() {
-      this._setCompassHeading();
-    },
-    /**
-     * Process and normalise compass events.
-     *
-     * On iOS, optionally filters out inaccurate readings based on `compassAccuracyThreshold`.
-     * Android has no equivalent accuracy field and is therefore not filtered.
-     */
-    _onDeviceOrientation(e) {
-      if (!this._active) {
-        return;
-      }
-      if (e.webkitCompassHeading != null) {
-        const threshold = this.options.compassAccuracyThreshold;
-        const filterEnabled = typeof threshold === "number" && e.webkitCompassAccuracy != null;
-        const tooInaccurate = filterEnabled && (e.webkitCompassAccuracy < 0 || e.webkitCompassAccuracy > threshold);
-        if (tooInaccurate) {
-          this._setCompassHeading();
-          return;
-        }
-        const screenAngle = window.screen?.orientation?.angle ?? 0;
-        this._setCompassHeading((e.webkitCompassHeading + screenAngle) % 360);
-      } else if (e.alpha !== null) {
-        this._setCompassHeading(360 - e.alpha);
-      }
-    },
-    /**
-     * Calls deactivate and dispatches an error.
-     */
-    _onLocationError(err) {
-      if (err.code === 3 && this.options.locateOptions.watch) {
-        this._timeoutCount = (this._timeoutCount || 0) + 1;
-        this._map.fire("locationtimeout", {
-          error: err,
-          control: this,
-          count: this._timeoutCount
+      return cloned;
+    }
+    const LocationMarker = leaflet.Marker.extend({
+      initialize(latlng, options) {
+        leaflet.Util.setOptions(this, options);
+        this._latlng = latlng;
+        this.createIcon();
+      },
+      /**
+       * Create a styled circle location marker
+       */
+      createIcon() {
+        const opt = this.options;
+        const style = [
+          ["stroke", opt.color],
+          ["stroke-width", opt.weight],
+          ["fill", opt.fillColor],
+          ["fill-opacity", opt.fillOpacity],
+          ["opacity", opt.opacity]
+        ].filter(([, v]) => v !== void 0).map(([k, v]) => `${k}="${v}"`).join(" ");
+        const icon = this._getIconSVG(opt, style);
+        this._locationIcon = new leaflet.DivIcon({
+          className: icon.className,
+          html: icon.svg,
+          iconSize: [icon.w, icon.h]
         });
-        if (this._timeoutCount >= 3 && this._container) {
-          addClasses(this._container, "locate-timeout");
+        this.setIcon(this._locationIcon);
+      },
+      /**
+       * Return the raw svg for the shape
+       *
+       * Split so can be easily overridden
+       */
+      _getIconSVG(options, style) {
+        const r = options.radius;
+        const w = options.weight;
+        const s = r + w;
+        const s2 = s * 2;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}"><circle r="${r}" ${style} /></svg>`;
+        return {
+          className: "leaflet-control-locate-location",
+          svg,
+          w: s2,
+          h: s2
+        };
+      },
+      setStyle(style) {
+        leaflet.Util.setOptions(this, style);
+        this.createIcon();
+      }
+    });
+    const CompassMarker = LocationMarker.extend({
+      initialize(latlng, heading, options) {
+        leaflet.Util.setOptions(this, options);
+        this._latlng = latlng;
+        this._heading = heading;
+        this.createIcon();
+      },
+      setHeading(heading) {
+        this._heading = heading;
+      },
+      /**
+       * Create a styled arrow compass marker
+       */
+      _getIconSVG(options, style) {
+        const r = options.radius;
+        const s = r + options.weight + options.depth;
+        const s2 = s * 2;
+        const path = this._arrowPoints(r, options.width, options.depth, this._heading);
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}"><path d="${path}" ${style} /></svg>`;
+        return {
+          className: "leaflet-control-locate-heading",
+          svg,
+          w: s2,
+          h: s2
+        };
+      },
+      _arrowPoints(radius, width, depth, heading) {
+        const \u03C6 = (heading - 90) * Math.PI / 180;
+        const ux = Math.cos(\u03C6);
+        const uy = Math.sin(\u03C6);
+        const vx = -Math.sin(\u03C6);
+        const vy = Math.cos(\u03C6);
+        const h = width / 2;
+        const Cx = radius * ux;
+        const Cy = radius * uy;
+        const B1x = Cx + h * vx;
+        const B1y = Cy + h * vy;
+        const B2x = Cx - h * vx;
+        const B2y = Cy - h * vy;
+        const Tx = Cx + depth * ux;
+        const Ty = Cy + depth * uy;
+        return `M ${B1x},${B1y} L ${B2x},${B2y} L ${Tx},${Ty} Z`;
+      }
+    });
+    const LocateControl = leaflet.Control.extend({
+      options: {
+        /** Position of the control */
+        position: "topleft",
+        /** The layer that the user's location should be drawn on. By default creates a new layer. */
+        layer: void 0,
+        /**
+         * Automatically sets the map view (zoom and pan) to the user's location as it updates.
+         * While the map is following the user's location, the control is in the `following` state,
+         * which changes the style of the control and the circle marker.
+         *
+         * Possible values:
+         *  - false: never updates the map view when location changes.
+         *  - 'once': set the view when the location is first determined
+         *  - 'always': always updates the map view when location changes.
+         *              The map view follows the user's location.
+         *  - 'untilPan': like 'always', except stops updating the
+         *                view if the user has manually panned the map.
+         *                The map view follows the user's location until she pans.
+         *  - 'untilPanOrZoom': (default) like 'always', except stops updating the
+         *                view if the user has manually panned the map.
+         *                The map view follows the user's location until she pans.
+         */
+        setView: "untilPanOrZoom",
+        /**
+         * Keep the current map zoom level when setting the view and only pan.
+         * Can be set to:
+         * - `true`: Always keep current zoom level
+         * - `false`: Allow zooming (default)
+         * - `[minZoom, maxZoom]`: Keep zoom only when current zoom is within the specified range
+         */
+        keepCurrentZoomLevel: false,
+        /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
+        initialZoomLevel: false,
+        /**
+         * This callback can be used to override the viewport tracking
+         * This function should return a LatLngBounds object.
+         *
+         * For example to extend the viewport to ensure that a particular LatLng is visible:
+         *
+         * getLocationBounds: function(locationEvent) {
+         *    return locationEvent.bounds.extend([-33.873085, 151.219273]);
+         * },
+         */
+        getLocationBounds(locationEvent) {
+          return locationEvent.bounds;
+        },
+        /** Smooth pan and zoom to the location of the marker. Only works in Leaflet 1.0+. */
+        flyTo: false,
+        /**
+         * The user location can be inside and outside the current view when the user clicks on the
+         * control that is already active. Both cases can be configures separately.
+         * Possible values are:
+         *  - 'setView': zoom and pan to the current location
+         *  - 'stop': stop locating and remove the location marker
+         */
+        clickBehavior: {
+          /** What should happen if the user clicks on the control while the location is within the current view. */
+          inView: "stop",
+          /** What should happen if the user clicks on the control while the location is outside the current view. */
+          outOfView: "setView",
+          /**
+           * What should happen if the user clicks on the control while the location is within the current view
+           * and we could be following but are not. Defaults to a special value which inherits from 'inView';
+           */
+          inViewNotFollowing: "inView"
+        },
+        /**
+         * If set, save the map bounds just before centering to the user's
+         * location. When control is disabled, set the view back to the
+         * bounds that were saved.
+         */
+        returnToPrevBounds: false,
+        /**
+         * Keep a cache of the location after the user deactivates the control. If set to false, the user has to wait
+         * until the locate API returns a new location before they see where they are again.
+         */
+        cacheLocation: true,
+        /** If set, a circle that shows the location accuracy is drawn. */
+        drawCircle: true,
+        /** If set, the marker at the users' location is drawn. */
+        drawMarker: true,
+        /** If set and supported then show the compass heading */
+        showCompass: true,
+        /**
+         * iOS-only compass accuracy threshold (degrees).
+         * Show compass only when `webkitCompassAccuracy <= value`.
+         * `-1` (uncalibrated) is always rejected.
+         * Set to `false` to disable filtering. No effect on Android.
+         */
+        compassAccuracyThreshold: 45,
+        /** The class to be used to create the marker. For example L.CircleMarker or L.Marker */
+        markerClass: LocationMarker,
+        /** The class us be used to create the compass bearing arrow */
+        compassClass: CompassMarker,
+        /** Accuracy circle style properties. NOTE these styles should match the css animations styles */
+        circleStyle: {
+          className: "leaflet-control-locate-circle",
+          color: "#136AEC",
+          fillColor: "#136AEC",
+          fillOpacity: 0.15,
+          weight: 0
+        },
+        /** Inner marker style properties. Only works if your marker class supports `setStyle`. */
+        markerStyle: {
+          className: "leaflet-control-locate-marker",
+          color: "#fff",
+          fillColor: "#2A93EE",
+          fillOpacity: 1,
+          weight: 3,
+          opacity: 1,
+          radius: 9
+        },
+        /** Compass */
+        compassStyle: {
+          fillColor: "#2A93EE",
+          fillOpacity: 1,
+          weight: 0,
+          color: "#fff",
+          opacity: 1,
+          radius: 9,
+          // How far is the arrow from the center of the marker
+          width: 9,
+          // Width of the arrow
+          depth: 6
+          // Length of the arrow
+        },
+        /**
+         * Changes to accuracy circle and inner marker while following.
+         * It is only necessary to provide the properties that should change.
+         */
+        followCircleStyle: {},
+        followMarkerStyle: {
+          // color: '#FFA500',
+          // fillColor: '#FFB000'
+        },
+        followCompassStyle: {},
+        /** The CSS class for the icon. For example fa-location-arrow or fa-map-marker */
+        icon: "leaflet-control-locate-location-arrow",
+        iconLoading: "leaflet-control-locate-spinner",
+        /** The element to be created for icons. For example span or i */
+        iconElementTag: "span",
+        /** The element to be created for the text. For example small or span */
+        textElementTag: "small",
+        /** Padding around the accuracy circle. */
+        circlePadding: [0, 0],
+        /** Use metric units. */
+        metric: true,
+        /**
+         * This callback can be used in case you would like to override button creation behavior.
+         * This is useful for DOM manipulation frameworks such as angular etc.
+         * This function should return an object with HtmlElement for the button (link property) and the icon (icon property).
+         */
+        createButtonCallback(container, options) {
+          const link = createElement("a", "leaflet-bar-part leaflet-bar-part-single", container);
+          link.title = options.strings.title;
+          link.href = "#";
+          link.setAttribute("role", "button");
+          link.setAttribute("aria-label", options.strings.title);
+          const icon = createElement(options.iconElementTag, options.icon, link);
+          icon.classList.add("leaflet-locate-icon");
+          if (options.strings.text !== void 0) {
+            const text = createElement(options.textElementTag, "leaflet-locate-text", link);
+            text.textContent = options.strings.text;
+            link.classList.add("leaflet-locate-text-active");
+            link.parentNode.style.display = "flex";
+          }
+          return { link, icon };
+        },
+        /** This event is called in case of any location error that is not a time out error. */
+        onLocationError(err) {
+          alert(err.message);
+        },
+        /**
+         * This event is called when the user's location is outside the bounds set on the map.
+         * The event is called repeatedly when the location changes.
+         */
+        onLocationOutsideMapBounds(control) {
+          control.stop();
+          alert(control.options.strings.outsideMapBoundsMsg);
+        },
+        /** Display a pop-up when the user click on the inner marker. */
+        showPopup: true,
+        strings: {
+          title: "Show me where I am",
+          metersUnit: "meters",
+          feetUnit: "feet",
+          popup: "You are within {distance} {unit} from this point",
+          outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
+        },
+        /** The default options passed to leaflets locate method. */
+        locateOptions: {
+          maxZoom: Infinity,
+          watch: true,
+          // if you overwrite this, visualization cannot be updated
+          setView: false
+          // have to set this to false because we have to
+          // do setView manually
         }
-        return;
-      }
-      this._timeoutCount = 0;
-      this.stop();
-      this.options.onLocationError(err, this);
-    },
-    /**
-     * Stores the received event and updates the marker.
-     */
-    _onLocationFound(e) {
-      if (this._event?.latlng?.lat === e.latlng.lat && this._event?.latlng?.lng === e.latlng.lng && this._event?.accuracy === e.accuracy) {
-        return;
-      }
-      if (!this._active) {
-        return;
-      }
-      this._timeoutCount = 0;
-      if (this._container) {
-        removeClasses(this._container, "locate-timeout");
-      }
-      this._event = e;
-      this._drawMarker();
-      this._updateContainerStyle();
-      this._map.fire("locatelocationfound", {
-        ...e,
-        control: this
-      });
-      switch (this.options.setView) {
-        case "once":
-          if (this._justClicked) {
+      },
+      initialize(options = {}) {
+        this.options = cloneOptions(this.options);
+        for (const key in options) {
+          const userVal = options[key];
+          const defaultVal = this.options[key];
+          if (userVal?.constructor === Object && defaultVal?.constructor === Object) {
+            Object.assign(defaultVal, userVal);
+          } else {
+            this.options[key] = userVal;
+          }
+        }
+        this.options.followMarkerStyle = { ...this.options.markerStyle, ...this.options.followMarkerStyle };
+        this.options.followCircleStyle = { ...this.options.circleStyle, ...this.options.followCircleStyle };
+        this.options.followCompassStyle = { ...this.options.compassStyle, ...this.options.followCompassStyle };
+      },
+      /**
+       * Add control to map. Returns the container for the control.
+       */
+      onAdd(map) {
+        const container = createElement("div", "leaflet-control-locate leaflet-bar leaflet-control");
+        this._container = container;
+        this._map = map;
+        this._layer = this.options.layer || new leaflet.LayerGroup();
+        this._layer.addTo(map);
+        this._event = void 0;
+        this._compassHeading = null;
+        this._prevBounds = null;
+        const linkAndIcon = this.options.createButtonCallback(container, this.options);
+        this._link = linkAndIcon.link;
+        this._icon = linkAndIcon.icon;
+        this._linkClickHandler = (ev) => {
+          ev.stopPropagation();
+          ev.preventDefault();
+          this._onClick();
+        };
+        this._linkDblClickHandler = (ev) => ev.stopPropagation();
+        this._link.addEventListener("click", this._linkClickHandler);
+        this._link.addEventListener("dblclick", this._linkDblClickHandler);
+        this._resetVariables();
+        this._map.on("unload", this._unload, this);
+        return container;
+      },
+      /**
+       * Called when control is removed from the map.
+       */
+      onRemove() {
+        if (this._link && this._linkClickHandler) {
+          this._link.removeEventListener("click", this._linkClickHandler);
+        }
+        if (this._link && this._linkDblClickHandler) {
+          this._link.removeEventListener("dblclick", this._linkDblClickHandler);
+        }
+        if (this._map) {
+          this._map.off("unload", this._unload, this);
+        }
+        this._linkClickHandler = null;
+        this._linkDblClickHandler = null;
+        this.stop();
+      },
+      /**
+       * This method is called when the user clicks on the control.
+       */
+      _onClick() {
+        this._justClicked = true;
+        const wasFollowing = this._isFollowing();
+        this._userPanned = false;
+        this._userZoomed = false;
+        if (this._active && !this._event) {
+          this.stop();
+        } else if (this._active) {
+          const behaviors = this.options.clickBehavior;
+          let behavior = behaviors.outOfView;
+          if (this._map.getBounds().contains(this._event.latlng)) {
+            behavior = wasFollowing ? behaviors.inView : behaviors.inViewNotFollowing;
+          }
+          if (behaviors[behavior]) {
+            behavior = behaviors[behavior];
+          }
+          switch (behavior) {
+            case "setView":
+              this.setView();
+              break;
+            case "stop":
+              this.stop();
+              if (this.options.returnToPrevBounds) {
+                const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
+                f.bind(this._map)(this._prevBounds);
+              }
+              break;
+          }
+        } else {
+          if (this.options.returnToPrevBounds) {
+            this._prevBounds = this._map.getBounds();
+          }
+          this.start();
+        }
+        this._updateContainerStyle();
+      },
+      /**
+       * Starts the plugin:
+       * - activates the engine
+       * - draws the marker (if coordinates available)
+       */
+      start() {
+        this._activate();
+        if (this._event) {
+          this._drawMarker(this._map);
+          if (this.options.setView) {
             this.setView();
           }
-          break;
-        case "untilPan":
-          if (!this._userPanned) {
-            this.setView();
-          }
-          break;
-        case "untilPanOrZoom":
-          if (!this._userPanned && !this._userZoomed) {
-            this.setView();
-          }
-          break;
-        case "always":
-          this.setView();
-          break;
-      }
-      this._justClicked = false;
-    },
-    /**
-     * When the user drags. Need a separate event so we can bind and unbind event listeners.
-     */
-    _onDrag() {
-      if (this._event && !this._ignoreEvent) {
+        }
+        this._updateContainerStyle();
+      },
+      /**
+       * Stops the plugin:
+       * - deactivates the engine
+       * - reinitializes the button
+       * - removes the marker
+       */
+      stop() {
+        this._deactivate();
+        this._cleanClasses();
+        this._resetVariables();
+        this._removeMarker();
+      },
+      /**
+       * Keep the control active but stop following the location
+       */
+      stopFollowing() {
         this._userPanned = true;
         this._updateContainerStyle();
         this._drawMarker();
-      }
-    },
-    /**
-     * When the user zooms. Need a separate event so we can bind and unbind event listeners.
-     */
-    _onZoom() {
-      if (this._event && !this._ignoreEvent) {
-        this._userZoomed = true;
-        this._updateContainerStyle();
+      },
+      /**
+       * This method launches the location engine.
+       * It is called before the marker is updated,
+       * event if it does not mean that the event will be ready.
+       *
+       * Override it if you want to add more functionalities.
+       * It should set the this._active to true and do nothing if
+       * this._active is true.
+       */
+      _activate() {
+        if (this._active || !this._map) {
+          return;
+        }
+        this._map.locate(this.options.locateOptions);
+        this._map.fire("locateactivate", this);
+        this._active = true;
+        this._map.on("locationfound", this._onLocationFound, this);
+        this._map.on("locationerror", this._onLocationError, this);
+        this._map.on("dragstart", this._onDrag, this);
+        this._map.on("zoomstart", this._onZoom, this);
+        this._map.on("zoomend", this._onZoomEnd, this);
+        this._activateCompass();
+      },
+      /**
+       * Request DeviceOrientation permission (if needed) and bind compass events.
+       * Fails gracefully — geolocation continues without compass.
+       */
+      async _activateCompass() {
+        if (!this.options.showCompass) {
+          return;
+        }
+        const oriAbs = "ondeviceorientationabsolute" in window;
+        if (!oriAbs && !("ondeviceorientation" in window)) {
+          return;
+        }
+        const eventName = oriAbs ? "deviceorientationabsolute" : "deviceorientation";
+        const deviceOrientationEvent = window.DeviceOrientationEvent;
+        if (typeof deviceOrientationEvent !== "undefined" && typeof deviceOrientationEvent.requestPermission === "function") {
+          try {
+            const permissionState = await deviceOrientationEvent.requestPermission();
+            if (permissionState !== "granted") {
+              return;
+            }
+          } catch (err) {
+            console.warn("DeviceOrientation permission denied or unavailable:", err);
+            return;
+          }
+        }
+        if (!this._active) {
+          return;
+        }
+        this._compassEventName = eventName;
+        leaflet.DomEvent.on(window, eventName, this._onDeviceOrientation, this);
+      },
+      /**
+       * Called to stop the location engine.
+       *
+       * Override it to shutdown any functionalities you added on start.
+       */
+      _deactivate() {
+        if (!this._active || !this._map) {
+          return;
+        }
+        this._map.stopLocate();
+        this._map.fire("locatedeactivate", this);
+        this._active = false;
+        if (!this.options.cacheLocation) {
+          this._event = void 0;
+        }
+        this._map.off("locationfound", this._onLocationFound, this);
+        this._map.off("locationerror", this._onLocationError, this);
+        this._map.off("dragstart", this._onDrag, this);
+        this._map.off("zoomstart", this._onZoom, this);
+        this._map.off("zoomend", this._onZoomEnd, this);
+        this._deactivateCompass();
+      },
+      /**
+       * Remove compass event listener and reset compass heading state.
+       * Symmetric counterpart to _activateCompass().
+       */
+      _deactivateCompass() {
+        if (!this._compassEventName) {
+          return;
+        }
+        this._compassHeading = null;
+        leaflet.DomEvent.off(window, this._compassEventName, this._onDeviceOrientation, this);
+        this._compassEventName = null;
+      },
+      /**
+       * Check if the current zoom level should be kept based on keepCurrentZoomLevel option.
+       * @returns {boolean} true if zoom should be kept, false otherwise
+       */
+      _shouldKeepCurrentZoom() {
+        const option = this.options.keepCurrentZoomLevel;
+        if (Array.isArray(option) && option.length === 2) {
+          const currentZoom = this._map.getZoom();
+          const [minZoom, maxZoom] = option;
+          return currentZoom >= minZoom && currentZoom <= maxZoom;
+        }
+        return option === true;
+      },
+      /**
+       * Pan and/or zoom the map to the current location.
+       * Respects keepCurrentZoomLevel and initialZoomLevel options.
+       */
+      setView() {
         this._drawMarker();
-      }
-    },
-    /**
-     * After a zoom ends update the compass and handle sideways zooms
-     */
-    _onZoomEnd() {
-      if (this._event) {
+        if (this._isOutsideMapBounds()) {
+          this._event = void 0;
+          this.options.onLocationOutsideMapBounds(this);
+          return;
+        }
+        const { latlng } = this._event;
+        const fly = this.options.flyTo;
+        let method, args;
+        if (this._justClicked && this.options.initialZoomLevel !== false) {
+          method = fly ? "flyTo" : "setView";
+          args = [latlng, this.options.initialZoomLevel];
+        } else if (this._shouldKeepCurrentZoom()) {
+          method = fly ? "flyTo" : "panTo";
+          args = [latlng];
+        } else {
+          method = fly ? "flyToBounds" : "fitBounds";
+          args = [
+            this.options.getLocationBounds(this._event),
+            {
+              padding: this.options.circlePadding,
+              maxZoom: this.options.locateOptions.maxZoom
+            }
+          ];
+        }
+        this._setViewIgnoringEvents(method, args);
+      },
+      /**
+       * Execute a map view method while ignoring zoom/pan events to prevent breaking following mode.
+       * @param {string} method - The map method name to call ('flyTo', 'setView', 'panTo', 'fitBounds', 'flyToBounds')
+       * @param {Array} args - Arguments to pass to the method
+       */
+      _setViewIgnoringEvents(method, args) {
+        this._ignoreEvent = true;
+        this._map[method](...args);
+        requestAnimationFrame(() => {
+          this._ignoreEvent = false;
+        });
+      },
+      /**
+       *
+       */
+      _drawCompass() {
+        if (!this._event) {
+          return;
+        }
+        const latlng = this._event.latlng;
+        if (this.options.showCompass && latlng && this._compassHeading !== null) {
+          const cStyle = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle;
+          if (!this._compass) {
+            this._compass = new this.options.compassClass(latlng, this._compassHeading, cStyle).addTo(this._layer);
+          } else {
+            this._compass.setLatLng(latlng);
+            this._compass.setHeading(this._compassHeading);
+            if (this._compass.setStyle) {
+              this._compass.setStyle(cStyle);
+            }
+          }
+        }
+        if (this._compass && (!this.options.showCompass || this._compassHeading === null)) {
+          this._compass.removeFrom(this._layer);
+          this._compass = null;
+        }
+      },
+      /**
+       * Draw the marker and accuracy circle on the map.
+       *
+       * Uses the event retrieved from onLocationFound from the map.
+       */
+      _drawMarker() {
+        if (!this._event) {
+          return;
+        }
+        const latlng = this._event.latlng;
+        const accuracy = this._event.accuracy ?? 0;
+        const isFollowing = this._isFollowing();
+        if (this.options.drawCircle) {
+          const style = isFollowing ? this.options.followCircleStyle : this.options.circleStyle;
+          if (this._circle) {
+            this._circle.setLatLng(latlng).setRadius(accuracy).setStyle(style);
+          } else {
+            const options = { ...style, radius: accuracy };
+            this._circle = new leaflet.Circle(latlng, options).addTo(this._layer);
+          }
+        }
+        if (this.options.drawMarker) {
+          const style = isFollowing ? this.options.followMarkerStyle : this.options.markerStyle;
+          if (this._marker) {
+            this._marker.setLatLng(latlng);
+            if (this._marker.setStyle) {
+              this._marker.setStyle(style);
+            }
+          } else {
+            this._marker = new this.options.markerClass(latlng, style).addTo(this._layer);
+          }
+        }
         this._drawCompass();
-      }
-      if (this._event && !this._ignoreEvent) {
-        if (this._marker && !this._map.getBounds().pad(-0.3).contains(this._marker.getLatLng())) {
+        this._bindPopup(latlng, accuracy);
+      },
+      /**
+       * Bind popup with location information to marker and compass.
+       * @param {L.LatLng} latlng - The location to bind the popup to.
+       * @param {number} accuracy - The accuracy radius in meters.
+       */
+      _bindPopup(latlng, accuracy) {
+        const t = this.options.strings.popup;
+        if (!this.options.showPopup || !t) {
+          return;
+        }
+        let distance;
+        let unit;
+        let altitude;
+        if (this.options.metric) {
+          distance = accuracy.toFixed(0);
+          unit = this.options.strings.metersUnit;
+          altitude = this._event?.altitude != null ? this._event.altitude.toFixed(1) : "N/A";
+        } else {
+          distance = (accuracy * METERS_TO_FEET).toFixed(0);
+          unit = this.options.strings.feetUnit;
+          altitude = this._event?.altitude != null ? (this._event.altitude * METERS_TO_FEET).toFixed(1) : "N/A";
+        }
+        const speed = this._event?.speed != null ? this._event.speed.toFixed(2) : "N/A";
+        const heading = this._event?.heading != null ? this._event.heading.toFixed(0) : "N/A";
+        const data = {
+          distance,
+          unit,
+          lat: latlng.lat.toFixed(6),
+          lng: latlng.lng.toFixed(6),
+          altitude,
+          speed,
+          heading
+        };
+        let popupText;
+        if (typeof t === "string") {
+          popupText = leaflet.Util.template(t, data);
+        } else if (typeof t === "function") {
+          popupText = t(data);
+        } else {
+          popupText = t;
+        }
+        if (this._marker) {
+          this._marker.bindPopup(popupText)._popup.setLatLng(latlng);
+        }
+        if (this._compass) {
+          this._compass.bindPopup(popupText)._popup.setLatLng(latlng);
+        }
+      },
+      /**
+       * Remove the marker from map.
+       */
+      _removeMarker() {
+        this._layer.clearLayers();
+        this._marker = void 0;
+        this._circle = void 0;
+        this._compass = void 0;
+      },
+      /**
+       * Unload the plugin and all event listeners.
+       * Kind of the opposite of onAdd.
+       */
+      _unload() {
+        this.stop();
+        if (this._map) {
+          this._map.off("unload", this._unload, this);
+        }
+      },
+      /**
+       * Sets the compass heading
+       */
+      _setCompassHeading(angle) {
+        if (Number.isFinite(angle)) {
+          this._compassHeading = Math.round(angle);
+          requestAnimationFrame(() => this._drawCompass());
+        } else {
+          this._compassHeading = null;
+          this._drawCompass();
+        }
+      },
+      /**
+       * If the compass fails calibration just fail safely and remove the compass
+       */
+      _onCompassNeedsCalibration() {
+        this._setCompassHeading();
+      },
+      /**
+       * Process and normalise compass events.
+       *
+       * On iOS, optionally filters out inaccurate readings based on `compassAccuracyThreshold`.
+       * Android has no equivalent accuracy field and is therefore not filtered.
+       */
+      _onDeviceOrientation(e) {
+        if (!this._active) {
+          return;
+        }
+        if (e.webkitCompassHeading != null) {
+          const threshold = this.options.compassAccuracyThreshold;
+          const filterEnabled = typeof threshold === "number" && e.webkitCompassAccuracy != null;
+          const tooInaccurate = filterEnabled && (e.webkitCompassAccuracy < 0 || e.webkitCompassAccuracy > threshold);
+          if (tooInaccurate) {
+            this._setCompassHeading();
+            return;
+          }
+          const screenAngle = window.screen?.orientation?.angle ?? 0;
+          this._setCompassHeading((e.webkitCompassHeading + screenAngle) % 360);
+        } else if (e.alpha !== null) {
+          this._setCompassHeading(360 - e.alpha);
+        }
+      },
+      /**
+       * Calls deactivate and dispatches an error.
+       */
+      _onLocationError(err) {
+        if (err.code === 3 && this.options.locateOptions.watch) {
+          this._timeoutCount = (this._timeoutCount || 0) + 1;
+          this._map.fire("locationtimeout", {
+            error: err,
+            control: this,
+            count: this._timeoutCount
+          });
+          if (this._timeoutCount >= 3 && this._container) {
+            addClasses(this._container, "locate-timeout");
+          }
+          return;
+        }
+        this._timeoutCount = 0;
+        this.stop();
+        this.options.onLocationError(err, this);
+      },
+      /**
+       * Stores the received event and updates the marker.
+       */
+      _onLocationFound(e) {
+        if (this._event?.latlng?.lat === e.latlng.lat && this._event?.latlng?.lng === e.latlng.lng && this._event?.accuracy === e.accuracy) {
+          return;
+        }
+        if (!this._active) {
+          return;
+        }
+        this._timeoutCount = 0;
+        if (this._container) {
+          removeClasses(this._container, "locate-timeout");
+        }
+        this._event = e;
+        this._drawMarker();
+        this._updateContainerStyle();
+        this._map.fire("locatelocationfound", {
+          ...e,
+          control: this
+        });
+        switch (this.options.setView) {
+          case "once":
+            if (this._justClicked) {
+              this.setView();
+            }
+            break;
+          case "untilPan":
+            if (!this._userPanned) {
+              this.setView();
+            }
+            break;
+          case "untilPanOrZoom":
+            if (!this._userPanned && !this._userZoomed) {
+              this.setView();
+            }
+            break;
+          case "always":
+            this.setView();
+            break;
+        }
+        this._justClicked = false;
+      },
+      /**
+       * When the user drags. Need a separate event so we can bind and unbind event listeners.
+       */
+      _onDrag() {
+        if (this._event && !this._ignoreEvent) {
           this._userPanned = true;
           this._updateContainerStyle();
           this._drawMarker();
         }
-      }
-    },
-    /**
-     * Compute whether the map is following the user location with pan and zoom.
-     */
-    _isFollowing() {
-      if (!this._active) {
-        return false;
-      }
-      if (this.options.setView === "always") {
-        return true;
-      } else if (this.options.setView === "untilPan") {
-        return !this._userPanned;
-      } else if (this.options.setView === "untilPanOrZoom") {
-        return !this._userPanned && !this._userZoomed;
-      }
-      return false;
-    },
-    /**
-     * Check if location is in map bounds
-     */
-    _isOutsideMapBounds() {
-      if (this._event === void 0) {
-        return false;
-      }
-      return this._map.options.maxBounds && !this._map.options.maxBounds.contains(this._event.latlng);
-    },
-    /**
-     * Toggles button class between following and active.
-     */
-    _updateContainerStyle() {
-      if (!this._container) {
-        return;
-      }
-      if (this._active && !this._event) {
-        this._setClasses("requesting");
-      } else if (this._isFollowing()) {
-        this._setClasses("following");
-      } else if (this._active) {
-        this._setClasses("active");
-      } else {
-        this._cleanClasses();
-      }
-    },
-    /**
-     * Sets the CSS classes for the state.
-     */
-    _setClasses(state) {
-      switch (state) {
-        case "requesting":
-          removeClasses(this._container, "active following");
-          addClasses(this._container, "requesting");
-          removeClasses(this._icon, this.options.icon);
-          addClasses(this._icon, this.options.iconLoading);
-          break;
-        case "active":
-          removeClasses(this._container, "requesting following");
-          addClasses(this._container, "active");
-          removeClasses(this._icon, this.options.iconLoading);
-          addClasses(this._icon, this.options.icon);
-          break;
-        case "following":
-          removeClasses(this._container, "requesting");
-          addClasses(this._container, "active following");
-          removeClasses(this._icon, this.options.iconLoading);
-          addClasses(this._icon, this.options.icon);
-          break;
-      }
-    },
-    /**
-     * Removes all classes from button.
-     */
-    _cleanClasses() {
-      removeClasses(this._container, "requesting active following");
-      removeClasses(this._icon, this.options.iconLoading);
-      addClasses(this._icon, this.options.icon);
-    },
-    /**
-     * Reinitializes state variables.
-     */
-    _resetVariables() {
-      this._active = false;
-      this._justClicked = false;
-      this._timeoutCount = 0;
-      if (this._container) {
-        removeClasses(this._container, "locate-timeout");
-      }
-      this._userPanned = false;
-      this._userZoomed = false;
-    }
-  });
-  function locate(options) {
-    return new LocateControl(options);
-  }
-
-  // node_modules/leaflet.fullscreen/dist/Control.FullScreen.js
-  if (typeof document === "undefined") {
-    console.warn('"window.document" is undefined; leaflet.fullscreen requires this object to access the DOM');
-  }
-  var nativeAPI = (() => {
-    const methodMap = [
-      // Standard
-      [
-        "requestFullscreen",
-        "exitFullscreen",
-        "fullscreenElement",
-        "fullscreenEnabled",
-        "fullscreenchange",
-        "fullscreenerror"
-      ],
-      // New WebKit
-      [
-        "webkitRequestFullscreen",
-        "webkitExitFullscreen",
-        "webkitFullscreenElement",
-        "webkitFullscreenEnabled",
-        "webkitfullscreenchange",
-        "webkitfullscreenerror"
-      ]
-    ];
-    const baseList = methodMap[0];
-    const ret = {};
-    for (const methodList of methodMap) {
-      if (methodList[1] in document) {
-        for (let i = 0; i < methodList.length; i++) {
-          ret[baseList[i]] = methodList[i];
+      },
+      /**
+       * When the user zooms. Need a separate event so we can bind and unbind event listeners.
+       */
+      _onZoom() {
+        if (this._event && !this._ignoreEvent) {
+          this._userZoomed = true;
+          this._updateContainerStyle();
+          this._drawMarker();
         }
-        return ret;
+      },
+      /**
+       * After a zoom ends update the compass and handle sideways zooms
+       */
+      _onZoomEnd() {
+        if (this._event) {
+          this._drawCompass();
+        }
+        if (this._event && !this._ignoreEvent) {
+          if (this._marker && !this._map.getBounds().pad(-0.3).contains(this._marker.getLatLng())) {
+            this._userPanned = true;
+            this._updateContainerStyle();
+            this._drawMarker();
+          }
+        }
+      },
+      /**
+       * Compute whether the map is following the user location with pan and zoom.
+       */
+      _isFollowing() {
+        if (!this._active) {
+          return false;
+        }
+        if (this.options.setView === "always") {
+          return true;
+        } else if (this.options.setView === "untilPan") {
+          return !this._userPanned;
+        } else if (this.options.setView === "untilPanOrZoom") {
+          return !this._userPanned && !this._userZoomed;
+        }
+        return false;
+      },
+      /**
+       * Check if location is in map bounds
+       */
+      _isOutsideMapBounds() {
+        if (this._event === void 0) {
+          return false;
+        }
+        return this._map.options.maxBounds && !this._map.options.maxBounds.contains(this._event.latlng);
+      },
+      /**
+       * Toggles button class between following and active.
+       */
+      _updateContainerStyle() {
+        if (!this._container) {
+          return;
+        }
+        if (this._active && !this._event) {
+          this._setClasses("requesting");
+        } else if (this._isFollowing()) {
+          this._setClasses("following");
+        } else if (this._active) {
+          this._setClasses("active");
+        } else {
+          this._cleanClasses();
+        }
+      },
+      /**
+       * Sets the CSS classes for the state.
+       */
+      _setClasses(state) {
+        switch (state) {
+          case "requesting":
+            removeClasses(this._container, "active following");
+            addClasses(this._container, "requesting");
+            removeClasses(this._icon, this.options.icon);
+            addClasses(this._icon, this.options.iconLoading);
+            break;
+          case "active":
+            removeClasses(this._container, "requesting following");
+            addClasses(this._container, "active");
+            removeClasses(this._icon, this.options.iconLoading);
+            addClasses(this._icon, this.options.icon);
+            break;
+          case "following":
+            removeClasses(this._container, "requesting");
+            addClasses(this._container, "active following");
+            removeClasses(this._icon, this.options.iconLoading);
+            addClasses(this._icon, this.options.icon);
+            break;
+        }
+      },
+      /**
+       * Removes all classes from button.
+       */
+      _cleanClasses() {
+        removeClasses(this._container, "requesting active following");
+        removeClasses(this._icon, this.options.iconLoading);
+        addClasses(this._icon, this.options.icon);
+      },
+      /**
+       * Reinitializes state variables.
+       */
+      _resetVariables() {
+        this._active = false;
+        this._justClicked = false;
+        this._timeoutCount = 0;
+        if (this._container) {
+          removeClasses(this._container, "locate-timeout");
+        }
+        this._userPanned = false;
+        this._userZoomed = false;
       }
+    });
+    function locate(options) {
+      return new LocateControl(options);
     }
-    return false;
+    exports2.CompassMarker = CompassMarker;
+    exports2.LocateControl = LocateControl;
+    exports2.LocationMarker = LocationMarker;
+    exports2.locate = locate;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+  }));
+  (function() {
+    if (typeof window !== "undefined" && window.L) {
+      window.L.control = window.L.control || {};
+      window.L.control.locate = window.L.Control.Locate.locate;
+    }
   })();
-  var eventNameMap = {
-    change: nativeAPI.fullscreenchange,
-    error: nativeAPI.fullscreenerror
-  };
-  var fullscreenAPI = {
-    // Request fullscreen for a specific element
-    async request(element, options) {
-      element = element || document.documentElement;
-      const requestMethod = nativeAPI.requestFullscreen;
-      await this._callNative(() => {
-        return element[requestMethod](options);
-      });
-    },
-    // Exit fullscreen mode
-    async exit() {
-      if (!this.isFullscreen) {
-        return;
-      }
-      const exitMethod = nativeAPI.exitFullscreen;
-      await this._callNative(() => {
-        return document[exitMethod]();
-      });
-    },
-    // Helper to handle browser differences (Promise vs Event)
-    async _callNative(action) {
-      const result = action();
-      if (result instanceof Promise) {
-        await result;
-        return;
-      }
-      await new Promise((resolve) => {
-        const listener = () => {
-          this.off("change", listener);
-          resolve();
-        };
-        this.on("change", listener);
-      });
-    },
-    // Add event listener for fullscreen changes
-    on(event, callback) {
-      const eventName = eventNameMap[event];
-      if (eventName) {
-        document.addEventListener(eventName, callback);
-      }
-    },
-    // Remove event listener
-    off(event, callback) {
-      const eventName = eventNameMap[event];
-      if (eventName) {
-        document.removeEventListener(eventName, callback);
-      }
-    },
-    nativeAPI
-  };
-  Object.defineProperties(fullscreenAPI, {
-    isFullscreen: {
-      get() {
-        return Boolean(document[nativeAPI.fullscreenElement]);
-      }
-    },
-    isEnabled: {
-      enumerable: true,
-      get() {
-        return Boolean(document[nativeAPI.fullscreenEnabled]);
-      }
-    }
-  });
-  var FullScreen = Control.extend({
-    options: {
-      position: "topleft",
-      title: "Full Screen",
-      titleCancel: "Exit Full Screen",
-      forceSeparateButton: false,
-      forcePseudoFullscreen: false,
-      fullscreenElement: false
-    },
-    _screenfull: fullscreenAPI,
-    onAdd(map) {
-      let className = "leaflet-control-zoom-fullscreen";
-      let container;
-      let content = "";
-      if (map.zoomControl && !this.options.forceSeparateButton) {
-        container = map.zoomControl._container;
-      } else {
-        container = document.createElement("div");
-        container.className = "leaflet-bar";
-      }
-      if (this.options.content) {
-        content = this.options.content;
-      } else {
-        className += " leaflet-fullscreen-icon";
-      }
-      this._createButton(this.options.title, className, content, container, this.toggleFullScreen, this);
-      this._map.fullscreenControl = this;
-      this._map.on("enterFullscreen exitFullscreen", this._toggleState, this);
-      return container;
-    },
-    onRemove() {
-      DomEvent.off(this.link, "click", DomEvent.stop).off(this.link, "click", this.toggleFullScreen, this);
-      if (this._screenfull.isEnabled) {
-        DomEvent.off(document, this._screenfull.nativeAPI.fullscreenchange, DomEvent.stop).off(document, this._screenfull.nativeAPI.fullscreenchange, this._handleFullscreenChange, this);
-      }
-    },
-    _createButton(title, className, content, container, fn, context) {
-      this.link = document.createElement("a");
-      this.link.className = className;
-      container.appendChild(this.link);
-      this.link.href = "#";
-      this.link.title = title;
-      this.link.innerHTML = content;
-      this.link.setAttribute("role", "button");
-      this.link.setAttribute("aria-label", title);
-      DomEvent.disableClickPropagation(container);
-      DomEvent.on(this.link, "click", DomEvent.stop).on(this.link, "click", fn, context);
-      if (this._screenfull.isEnabled) {
-        DomEvent.on(document, this._screenfull.nativeAPI.fullscreenchange, DomEvent.stop).on(document, this._screenfull.nativeAPI.fullscreenchange, this._handleFullscreenChange, context);
-      }
-      return this.link;
-    },
-    async toggleFullScreen() {
-      const map = this._map;
-      const { fullscreenElement, forcePseudoFullscreen } = this.options;
-      const container = fullscreenElement || map.getContainer();
-      const useNative = this._screenfull.isEnabled && !forcePseudoFullscreen;
-      if (map._isFullscreen) {
-        map._exitFired = true;
-        if (useNative) {
-          await this._screenfull.exit();
-        } else {
-          container.classList.remove("leaflet-pseudo-fullscreen");
-        }
-        map.invalidateSize();
-        map._isFullscreen = false;
-        map.fire("exitFullscreen");
-      } else {
-        map._exitFired = false;
-        if (useNative) {
-          await this._screenfull.request(container);
-        } else {
-          container.classList.add("leaflet-pseudo-fullscreen");
-        }
-        map.invalidateSize();
-        map._isFullscreen = true;
-        map.fire("enterFullscreen");
-      }
-    },
-    _toggleState() {
-      const { title, titleCancel } = this.options;
-      const isFullscreen = this._map._isFullscreen;
-      this.link.title = isFullscreen ? titleCancel : title;
-      this.link.setAttribute("aria-label", this.link.title);
-      this.link.setAttribute("aria-pressed", isFullscreen.toString());
-      this.link.classList.toggle("leaflet-fullscreen-on", isFullscreen);
-    },
-    _handleFullscreenChange() {
-      const map = this._map;
-      const wasExitedExternally = !this._screenfull.isFullscreen && map._isFullscreen && !map._exitFired;
-      if (wasExitedExternally) {
-        map._exitFired = true;
-        map._isFullscreen = false;
-        map.fire("exitFullscreen");
-        map.invalidateSize();
-      }
-    }
-  });
-  Map.include({
-    toggleFullscreen() {
-      this.fullscreenControl.toggleFullScreen();
-    }
-  });
-  Map.mergeOptions({
-    fullscreenControl: false
-  });
-  Map.addInitHook(function() {
-    if (this.options.fullscreenControl) {
-      this.addControl(new FullScreen(this.options.fullscreenControlOptions));
-    }
-  });
+
+  // src/leaflet-ui.js
+  var import_Control_FullScreen_umd = __toESM(require_Control_FullScreen_umd());
 
   // node_modules/leaflet-pegman/leaflet-pegman.js
-  L.Control.Pegman = L.Control.extend({
-    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
+  init_leaflet_compat();
+  leaflet_compat_default.Control.Pegman = leaflet_compat_default.Control.extend({
+    includes: Object.fromEntries(Object.getOwnPropertyNames(leaflet_compat_default.Mixin.Events).filter((name) => name !== "constructor").map((name) => [name, leaflet_compat_default.Mixin.Events[name]])),
     options: {
       position: "bottomright",
       theme: "leaflet-pegman-v3-default",
       // or "leaflet-pegman-v3-small"
       debug: false,
       apiKey: "",
-      libraries: "",
+      libraries: "geometry",
       mutant: {
         attribution: 'Map data: &copy; <a href="https://www.google.com/intl/en/help/terms_maps.html">Google</a>',
         pane: "overlayPane",
+        styles: [{ featureType: "all", elementType: "all", stylers: [{ visibility: "off" }] }],
         type: null
         // Non-image map type (used to force a transparent background)
       },
@@ -4080,7 +3566,7 @@
       },
       marker: {
         draggable: true,
-        icon: L.icon({
+        icon: new leaflet_compat_default.Icon({
           className: "pegman-marker",
           iconSize: [52, 52],
           iconAnchor: [24, 33],
@@ -4088,12 +3574,11 @@
         })
       }
     },
-    __interactURL: "https://unpkg.com/interactjs@1.2.9/dist/interact.min.js",
     __gmapsURL: "https://maps.googleapis.com/maps/api/js?v=3",
-    __mutantURL: "https://unpkg.com/leaflet.gridlayer.googlemutant@0.10.0/Leaflet.GoogleMutant.js",
-    initialize: function(options) {
-      if (typeof options.logging !== "undefined") options.debug = options.logging;
-      L.Util.setOptions(this, options);
+    __mutantURL: "https://unpkg.com/leaflet.gridlayer.googlemutant@0.16.0/dist/Leaflet.GoogleMutant.js",
+    initialize(options) {
+      options = options || {};
+      leaflet_compat_default.Util.setOptions(this, options);
       this._mousePos = {
         direction: {},
         old: {}
@@ -4101,91 +3586,185 @@
       this._pegmanMarkerCoords = null;
       this._streetViewCoords = null;
       this._streetViewLayerEnabled = false;
-      this._dropzoneMapOpts = {
-        accept: ".draggable",
-        // Only Accept Elements Matching this CSS Selector
-        overlap: 0.75,
-        // Require a 75% Element Overlap for a Drop to be Possible
-        ondropactivate: L.bind(this.onDropZoneActivated, this),
-        ondragenter: L.bind(this.onDropZoneDragEntered, this),
-        ondragleave: L.bind(this.onDropZoneDragLeaved, this),
-        ondrop: L.bind(this.onDropZoneDropped, this),
-        ondropdeactivate: L.bind(this.onDropZoneDeactivated, this)
-      };
-      this._draggableMarkerOpts = {
-        inertia: false,
-        onmove: L.bind(this.onDraggableMove, this),
-        onend: L.bind(this.onDraggableEnd, this)
-      };
       this._lazyLoaderAdded = false;
+      this._pointerDownHandler = this._onPointerDown.bind(this);
+      this._pointerMoveHandler = this._onPointerMove.bind(this);
+      this._pointerUpHandler = this._onPointerUp.bind(this);
+      this._pointerCancelHandler = this._onPointerCancel.bind(this);
+      this._controlClickHandler = this._onControlClick.bind(this);
     },
-    onAdd: function(map) {
+    onAdd(map) {
       this._map = map;
-      this._container = L.DomUtil.create("div", "leaflet-pegman pegman-control leaflet-bar");
-      this._pegman = L.DomUtil.create("div", "pegman draggable drag-drop", this._container);
-      this._pegmanButton = L.DomUtil.create("div", "pegman-button", this._container);
-      this._pegmanMarker = L.marker([0, 0], this.options.marker);
-      this._panoDiv = this.options.panoDiv ? document.querySelector(this.options.panoDiv) : L.DomUtil.create("div", "", this._map._container);
-      L.DomUtil.addClass(this._panoDiv, "pano-canvas");
-      L.DomUtil.addClass(this._map._container, this.options.theme);
-      L.DomEvent.disableClickPropagation(this._panoDiv);
-      L.DomEvent.on(this._container, "click mousedown dblclick", this._disableClickPropagation, this);
-      this._container.addEventListener("touchstart", this._loadScripts.bind(this, !L.Browser.touch), { once: true });
+      this._lazyLoaderAdded = false;
+      this._container = leaflet_compat_default.DomUtil.create("div", "leaflet-pegman pegman-control leaflet-bar");
+      this._pegman = leaflet_compat_default.DomUtil.create("div", "pegman", this._container);
+      this._pegmanButton = leaflet_compat_default.DomUtil.create("div", "pegman-button", this._container);
+      this._pegmanMarker = new leaflet_compat_default.Marker([0, 0], this.options.marker);
+      this._panoDiv = this.options.panoDiv ? document.querySelector(this.options.panoDiv) : leaflet_compat_default.DomUtil.create("div", "", this._map._container);
+      this._panoDisplay = this._panoDiv.style.display;
+      this._panoHadClass = this._panoDiv.classList.contains("pano-canvas");
+      this._mapHadTheme = map._container.classList.contains(this.options.theme);
+      this._panoDiv.classList.add("pano-canvas");
+      this._map._container.classList.add(this.options.theme);
+      leaflet_compat_default.DomEvent.disableClickPropagation(this._panoDiv);
+      leaflet_compat_default.DomEvent.on(this._container, "click mousedown dblclick", this._disableClickPropagation, this);
+      this._pegman.addEventListener("pointerdown", this._pointerDownHandler);
+      this._container.addEventListener("click", this._controlClickHandler);
+      this._container.addEventListener("touchstart", this._loadScripts.bind(this, !leaflet_compat_default.Browser.touch), { once: true });
       this._container.addEventListener("mousedown", this._loadScripts.bind(this, true), { once: true });
       this._container.addEventListener("mouseover", this._loadScripts.bind(this, false), { once: true });
-      this._loadInteractHandlers();
       this._loadGoogleHandlers();
-      L.DomEvent.on(document, "mousemove", this.mouseMoveTracking, this);
-      L.DomEvent.on(document, "keyup", this.keyUpTracking, this);
+      leaflet_compat_default.DomEvent.on(document, "mousemove", this.mouseMoveTracking, this);
+      leaflet_compat_default.DomEvent.on(document, "keyup", this.keyUpTracking, this);
       this._pegmanMarker.on("dragend", this.onPegmanMarkerDragged, this);
       this._map.on("click", this.onMapClick, this);
       this._map.on("layeradd", this.onMapLayerAdd, this);
       return this._container;
     },
-    onRemove: function(map) {
+    onRemove(map) {
+      this._finishPointerDrag(null, true);
+      this._pegman.removeEventListener("pointerdown", this._pointerDownHandler);
+      this._container.removeEventListener("click", this._controlClickHandler);
+      this.clear();
       if (this._googleStreetViewLayer) this._googleStreetViewLayer.remove();
       if (this._pegmanMarker) this._pegmanMarker.remove();
-      L.DomUtil.remove(this._panoDiv);
-      L.DomEvent.off(document, "mousemove", this.mouseMoveTracking, this);
-      L.DomEvent.off(document, "keyup", this.keyUpTracking, this);
+      if (this._panoramaListeners) this._panoramaListeners.forEach(function(listener) {
+        listener.remove();
+      });
+      this._panoramaListeners = null;
+      this._panorama = this._streetViewService = this._googleStreetViewLayer = null;
+      this._pegmanMarker.off("dragend", this.onPegmanMarkerDragged, this);
+      if (this.options.panoDiv) {
+        this._panoDiv.style.display = this._panoDisplay;
+        if (!this._panoHadClass) this._panoDiv.classList.remove("pano-canvas");
+      } else {
+        this._panoDiv.remove();
+      }
+      if (!this._mapHadTheme) map._container.classList.remove(this.options.theme);
+      leaflet_compat_default.DomEvent.off(document, "mousemove", this.mouseMoveTracking, this);
+      leaflet_compat_default.DomEvent.off(document, "keyup", this.keyUpTracking, this);
       map.off("mousemove", this._setMouseCursor, this);
+      map.off("click", this.onMapClick, this);
+      map.off("layeradd", this.onMapLayerAdd, this);
+      map._container.style.cursor = this.defaultDraggableCursor || "";
     },
-    _log: function(args) {
+    _onPointerDown(e) {
+      if (!this._map || e.button !== 0 || this._pointerId != null) return;
+      this._loadScripts(true);
+      this._pointerId = e.pointerId;
+      this._pointerStart = { x: e.clientX, y: e.clientY };
+      this._pointerLast = this._pointerStart;
+      this._isDragging = false;
+      this._dropTarget = false;
+      e.preventDefault();
+      document.addEventListener("pointermove", this._pointerMoveHandler);
+      document.addEventListener("pointerup", this._pointerUpHandler);
+      document.addEventListener("pointercancel", this._pointerCancelHandler);
+    },
+    _onPointerMove(e) {
+      if (e.pointerId !== this._pointerId) return;
+      const dx = e.clientX - this._pointerLast.x;
+      const dy = e.clientY - this._pointerLast.y;
+      if (!this._isDragging) {
+        const startX = e.clientX - this._pointerStart.x;
+        const startY = e.clientY - this._pointerStart.y;
+        if (startX * startX + startY * startY < 9) return;
+        this._isDragging = true;
+        this._mapDraggingWasEnabled = this._map.dragging.enabled();
+        if (this._mapDraggingWasEnabled) this._map.dragging.disable();
+        this.onDropZoneActivated(e);
+      }
+      this._pointerLast = { x: e.clientX, y: e.clientY };
+      this.onDraggableMove({ pageX: e.pageX, pageY: e.pageY, dx, dy });
+      const overMap = this._pegmanOverMap();
+      if (overMap && !this._dropTarget) {
+        this._dropTarget = true;
+        this.onDropZoneDragEntered(e);
+      } else if (!overMap && this._dropTarget) {
+        this._dropTarget = false;
+        this.onDropZoneDragLeaved(e);
+      }
+    },
+    _onPointerUp(e) {
+      this._finishPointerDrag(e, false);
+    },
+    _onPointerCancel(e) {
+      this._finishPointerDrag(e, true);
+    },
+    _finishPointerDrag(e, canceled) {
+      if (this._pointerId == null) return;
+      document.removeEventListener("pointermove", this._pointerMoveHandler);
+      document.removeEventListener("pointerup", this._pointerUpHandler);
+      document.removeEventListener("pointercancel", this._pointerCancelHandler);
+      if (this._isDragging) {
+        if (!canceled) {
+          if (this._dropTarget) this.onDropZoneDropped(e);
+          this.onDraggableEnd(e);
+        } else {
+          this._translateElement(this._pegman, false, false);
+          this._removeClasses(this._container, "dragging");
+        }
+        this.onDropZoneDeactivated(e);
+        if (!canceled) {
+          this._suppressClick = true;
+          setTimeout(function() {
+            this._suppressClick = false;
+          }.bind(this), 0);
+        }
+      }
+      if (this._mapDraggingWasEnabled) this._map.dragging.enable();
+      this._pointerId = null;
+      this._isDragging = false;
+      this._dropTarget = false;
+      this._mapDraggingWasEnabled = false;
+    },
+    _pegmanOverMap() {
+      const pegman = this._pegman.getBoundingClientRect();
+      const map = this._map._container.getBoundingClientRect();
+      const width = Math.max(0, Math.min(pegman.right, map.right) - Math.max(pegman.left, map.left));
+      const height = Math.max(0, Math.min(pegman.bottom, map.bottom) - Math.max(pegman.top, map.top));
+      return pegman.width * pegman.height > 0 && width * height / (pegman.width * pegman.height) >= 0.75;
+    },
+    _onControlClick(e) {
+      if (this._suppressClick) {
+        this._suppressClick = false;
+        return;
+      }
+      this.toggleStreetViewLayer(e);
+    },
+    _log(args) {
       if (this.options.debug) {
         console.log(args);
       }
     },
-    _addClasses: function(el, classNames) {
+    _addClasses(el, classNames) {
       classNames = classNames.split(" ");
-      for (var s in classNames) {
-        L.DomUtil.addClass(el, classNames[s]);
+      for (const s in classNames) {
+        el.classList.add(classNames[s]);
       }
     },
-    _removeClasses: function(el, classNames) {
+    _removeClasses(el, classNames) {
       classNames = classNames.split(" ");
-      for (var s in classNames) {
-        L.DomUtil.removeClass(el, classNames[s]);
+      for (const s in classNames) {
+        el.classList.remove(classNames[s]);
       }
     },
-    _removeAttributes: function(el, attrNames) {
-      for (var a in attrNames) {
+    _removeAttributes(el, attrNames) {
+      for (const a in attrNames) {
         el.removeAttribute(attrNames[a]);
       }
     },
-    _insertAfter: function(targetNode, newNode) {
-      targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    },
-    _translateElement: function(el, dx, dy) {
+    _translateElement(el, dx, dy) {
       if (dx === false && dy === false) {
         this._removeAttributes(this._pegman, ["style", "data-x", "data-y"]);
       }
-      var x = (parseFloat(el.getAttribute("data-x")) || 0) + dx;
-      var y = (parseFloat(el.getAttribute("data-y")) || 0) + dy;
+      const x = (parseFloat(el.getAttribute("data-x")) || 0) + dx;
+      const y = (parseFloat(el.getAttribute("data-y")) || 0) + dy;
       el.style.webkitTransform = el.style.transform = "translate(" + x + "px, " + y + "px)";
       el.setAttribute("data-x", x);
       el.setAttribute("data-y", y);
     },
-    _updateClasses: function(action) {
+    _updateClasses(action) {
       switch (action) {
         case "pegman-dragging":
           this._removeClasses(this._pegman, "dropped");
@@ -4249,123 +3828,131 @@
       }
       this.fire("svpc_" + action);
     },
-    onDraggableMove: function(e) {
+    onDraggableMove(e) {
       this.mouseMoveTracking(e);
       this.pegmanRemove();
       this._updateClasses("pegman-dragging");
       this._translateElement(this._pegman, e.dx, e.dy);
     },
-    onDraggableEnd: function(e) {
-      this._pegmanMarkerCoords = this._map.mouseEventToLatLng(e);
+    onDraggableEnd(e) {
+      this._pegmanMarkerCoords = (this._map.pointerEventToLatLng || this._map.mouseEventToLatLng).call(this._map, e);
       this.pegmanAdd();
       this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
       this._updateClasses("pegman-dragged");
     },
-    onDropZoneActivated: function(e) {
+    onDropZoneActivated(e) {
       this._updateClasses("dropzone-actived");
     },
-    onDropZoneDragEntered: function(e) {
+    onDropZoneDragEntered(e) {
       this.showStreetViewLayer();
       this._updateClasses("dropzone-drag-entered");
     },
-    onDropZoneDragLeaved: function(e) {
+    onDropZoneDragLeaved(e) {
       this._updateClasses("dropzone-drag-leaved");
     },
-    onDropZoneDropped: function(e) {
+    onDropZoneDropped(e) {
       this._updateClasses("dropzone-drop");
       this._translateElement(this._pegman, false, false);
     },
-    onDropZoneDeactivated: function(e) {
+    onDropZoneDeactivated(e) {
       this._updateClasses("dropzone-deactivated");
     },
-    onPegmanMarkerDragged: function(e) {
+    onPegmanMarkerDragged(e) {
       this._pegmanMarkerCoords = this._pegmanMarker.getLatLng();
       this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
     },
-    onMapClick: function(e) {
+    onMapClick(e) {
       if (this._streetViewLayerEnabled) {
         this.findStreetViewData(e.latlng.lat, e.latlng.lng);
       }
     },
-    onMapLayerAdd: function(e) {
+    onMapLayerAdd(e) {
       if (this._googleStreetViewLayer)
         this._googleStreetViewLayer.bringToFront();
     },
-    onStreetViewPanoramaClose: function() {
+    onStreetViewPanoramaClose() {
       this.clear();
     },
-    onPanoramaPositionChanged: function() {
-      var pos = this._panorama.getPosition();
-      pos = L.latLng(pos.lat(), pos.lng());
+    onPanoramaPositionChanged() {
+      let pos = this._panorama.getPosition();
+      pos = new leaflet_compat_default.LatLng(pos.lat(), pos.lng());
       if (this._map && !this._map.getBounds().pad(-0.05).contains(pos)) {
         this._map.panTo(pos);
       }
       this._pegmanMarker.setLatLng(pos);
     },
-    onPanoramaPovChanged: function() {
-      var pov = this._panorama.getPov();
-      this._pegmanMarker.getElement().style.backgroundPosition = "0 " + -Math.abs(Math.round(pov.heading / (360 / 16)) % 16 * Math.round(835 / 16)) + "px";
+    onPanoramaPovChanged() {
+      const pov = this._panorama.getPov();
+      const marker = this._pegmanMarker.getElement();
+      if (marker) marker.style.backgroundPosition = "0 " + -Math.abs(Math.round(pov.heading / (360 / 16)) % 16 * Math.round(835 / 16)) + "px";
     },
-    clear: function() {
+    clear() {
       this.pegmanRemove();
       this.hideStreetViewLayer();
       this.closeStreetViewPanorama();
     },
-    toggleStreetViewLayer: function(e) {
+    toggleStreetViewLayer(e) {
       if (this._streetViewLayerEnabled) this.clear();
       else this.showStreetViewLayer();
       this._log("streetview-layer-toggled");
     },
-    pegmanAdd: function() {
+    pegmanAdd() {
       this._pegmanMarker.addTo(this._map);
       this._pegmanMarker.setLatLng(this._pegmanMarkerCoords);
       this.findStreetViewData(this._pegmanMarkerCoords.lat, this._pegmanMarkerCoords.lng);
       this._updateClasses("pegman-added");
     },
-    pegmanRemove: function() {
+    pegmanRemove() {
       this._pegmanMarker.removeFrom(this._map);
       this._updateClasses("pegman-removed");
     },
-    closeStreetViewPanorama: function() {
+    closeStreetViewPanorama() {
       this._panoDiv.style.display = "none";
+      if (this._panorama) this._panorama.setVisible(false);
     },
-    openStreetViewPanorama: function() {
+    openStreetViewPanorama() {
       this._panoDiv.style.display = "block";
     },
-    hideStreetViewLayer: function() {
+    hideStreetViewLayer() {
       if (this._googleStreetViewLayer) {
         this._googleStreetViewLayer.removeFrom(this._map);
         this._streetViewLayerEnabled = false;
         this._updateClasses("streetview-hidden");
       }
     },
-    showStreetViewLayer: function() {
+    showStreetViewLayer() {
       if (this._googleStreetViewLayer) {
         this._googleStreetViewLayer.addTo(this._map);
         this._streetViewLayerEnabled = true;
         this._updateClasses("streetview-shown");
       }
     },
-    findStreetViewData: function(lat, lng) {
-      if (typeof google === "undefined") {
+    findStreetViewData(lat, lng) {
+      if (!this._map) return;
+      if (!this._streetViewService) {
         this._loadScripts(true);
-        return this.once("svpc_streetview-shown", L.bind(this.findStreetViewData, this, lat, lng));
+        return this.once("svpc_streetview-shown", this.findStreetViewData.bind(this, lat, lng));
       }
       if (!this._pegmanMarker._map && this._map) {
-        this._pegmanMarkerCoords = L.latLng(lat, lng);
+        this._pegmanMarkerCoords = new leaflet_compat_default.LatLng(lat, lng);
         return this.pegmanAdd();
       }
       this._streetViewCoords = new google.maps.LatLng(lat, lng);
-      var zoom = this._map.getZoom();
-      var searchRadius = 100;
-      if (zoom < 6) searchRadius = 5e3;
-      else if (zoom < 10) searchRadius = 500;
-      else if (zoom < 15) searchRadius = 250;
-      else if (zoom >= 17) searchRadius = 50;
-      else searchRadius = 100;
-      this._streetViewService.getPanoramaByLocation(this._streetViewCoords, searchRadius, L.bind(this.processStreetViewServiceData, this));
+      const searchRadius = this._getStreetViewSearchRadius();
+      const panorama = this._panorama;
+      this._streetViewService.getPanoramaByLocation(this._streetViewCoords, searchRadius, function(data, status) {
+        if (this._map && this._panorama === panorama) this.processStreetViewServiceData(data, status);
+      }.bind(this));
     },
-    processStreetViewServiceData: function(data, status) {
+    _getStreetViewSearchRadius() {
+      const zoom = this._map.getZoom();
+      if (zoom < 6) return 5e3;
+      if (zoom < 10) return 500;
+      if (zoom < 15) return 250;
+      if (zoom >= 17) return 50;
+      return 100;
+    },
+    processStreetViewServiceData(data, status) {
       if (status == google.maps.StreetViewStatus.OK) {
         this.openStreetViewPanorama();
         this._panorama.setPano(data.location.pano);
@@ -4383,8 +3970,8 @@
      * mouseMoveTracking
      * @desc internal function used to style pegman while dragging
      */
-    mouseMoveTracking: function(e) {
-      var mousePos = this._mousePos;
+    mouseMoveTracking(e) {
+      const mousePos = this._mousePos;
       if (e.pageY < mousePos.old.y) {
         mousePos.direction.y = "top";
         this._updateClasses("mousemove-top");
@@ -4406,125 +3993,138 @@
      * keyUpTracking
      * @desc internal function used to track keyup events
      */
-    keyUpTracking: function(e) {
+    keyUpTracking(e) {
       if (e.keyCode == 27) {
         this._log("escape pressed");
         this.clear();
       }
     },
-    _disableClickPropagation: function(e) {
-      L.DomEvent.stopPropagation(e);
-      L.DomEvent.preventDefault(e);
+    _disableClickPropagation(e) {
+      leaflet_compat_default.DomEvent.stopPropagation(e);
+      leaflet_compat_default.DomEvent.preventDefault(e);
     },
-    _loadGoogleHandlers: function(toggleStreetView) {
-      if (typeof google !== "object" || typeof google.maps !== "object" || typeof L.GridLayer.GoogleMutant !== "function") return;
+    _loadGoogleHandlers(toggleStreetView) {
+      if (!this._map || typeof google !== "object" || typeof google.maps !== "object" || typeof leaflet_compat_default.GridLayer.GoogleMutant !== "function") return;
+      if (this._panorama) {
+        if (toggleStreetView) this.showStreetViewLayer();
+        return;
+      }
       this._initGoogleMaps(toggleStreetView);
       this._initMouseTracker();
     },
-    _initGoogleMaps: function(toggleStreetView) {
-      this._googleStreetViewLayer = L.gridLayer.googleMutant(this.options.mutant);
+    _initGoogleMaps(toggleStreetView) {
+      if (!leaflet_compat_default.Util.requestAnimFrame) {
+        leaflet_compat_default.Util = { ...leaflet_compat_default.Util, requestAnimFrame: (callback) => requestAnimationFrame(callback) };
+      }
+      const leaflet = window.L || window.leaflet;
+      if (!leaflet.Util.requestAnimFrame) {
+        leaflet.Util = { ...leaflet.Util, requestAnimFrame: leaflet_compat_default.Util.requestAnimFrame };
+      }
+      this._googleStreetViewLayer = new leaflet_compat_default.GridLayer.GoogleMutant(this.options.mutant);
+      this._googleStreetViewLayer.onRemove = function(map) {
+        leaflet_compat_default.GridLayer.prototype.onRemove.call(this, map);
+        this._observer.disconnect();
+        this._mutantContainer.remove();
+        this._logoContainer?.remove();
+        this._attributionContainer?.remove();
+        if (this._mutant) google.maps.event.clearListeners(this._mutant, "idle");
+      };
+      const layer = this._googleStreetViewLayer;
+      const onMutatedImage = layer._onMutatedImage;
+      layer._onMutatedImage = function(image) {
+        if (image.src.includes("!2ssvv!")) onMutatedImage.call(this, image);
+      };
+      layer._boundOnMutatedImage = layer._onMutatedImage.bind(layer);
       this._googleStreetViewLayer.addGoogleLayer("StreetViewCoverageLayer");
       this._panorama = new google.maps.StreetViewPanorama(this._panoDiv, this.options.pano);
       this._streetViewService = new google.maps.StreetViewService();
-      this._panorama.addListener("closeclick", L.bind(this.onStreetViewPanoramaClose, this));
-      this._panorama.addListener("position_changed", L.bind(this.onPanoramaPositionChanged, this));
-      this._panorama.addListener("pov_changed", L.bind(this.onPanoramaPovChanged, this));
+      this._panoramaListeners = [
+        this._panorama.addListener("closeclick", this.onStreetViewPanoramaClose.bind(this)),
+        this._panorama.addListener("position_changed", this.onPanoramaPositionChanged.bind(this)),
+        this._panorama.addListener("pov_changed", this.onPanoramaPovChanged.bind(this))
+      ];
       if (toggleStreetView) {
         this.showStreetViewLayer();
       }
     },
-    _initMouseTracker: function() {
+    _initMouseTracker() {
       if (!this._googleStreetViewLayer) return;
-      var tileSize = this._googleStreetViewLayer.getTileSize();
+      const tileSize = this._googleStreetViewLayer.getTileSize();
       this.tileWidth = tileSize.x;
       this.tileHeight = tileSize.y;
       this.defaultDraggableCursor = this._map._container.style.cursor;
       this._map.on("mousemove", this._setMouseCursor, this);
     },
-    _setMouseCursor: function(e) {
-      var coords = this._getTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
-      var img = this._getTileImage(coords);
-      var pixel = this._getTilePixelPoint(img, e.originalEvent);
-      var hasTileData = this._hasTileData(img, pixel);
+    _setMouseCursor(e) {
+      const coords = this._getTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
+      const img = this._getTileImage(coords);
+      const pixel = this._getTilePixelPoint(img, e.originalEvent);
+      const hasTileData = this._hasTileData(img, pixel);
       this._map._container.style.cursor = hasTileData ? "pointer" : this.defaultDraggableCursor;
     },
-    _getTileCoords: function(lat, lon, zoom) {
-      var xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
-      var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(this._toRad(lat)) + 1 / Math.cos(this._toRad(lat))) / Math.PI) / 2 * (1 << zoom)));
+    _getTileCoords(lat, lon, zoom) {
+      const xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
+      const ytile = parseInt(Math.floor((1 - Math.log(Math.tan(this._toRad(lat)) + 1 / Math.cos(this._toRad(lat))) / Math.PI) / 2 * (1 << zoom)));
       return {
         x: xtile,
         y: ytile,
         z: zoom
       };
     },
-    _getTileImage: function(coords) {
+    _getTileImage(coords) {
       if (!this._googleStreetViewLayer || !this._googleStreetViewLayer._tiles) return;
-      var key = this._googleStreetViewLayer._tileCoordsToKey(coords);
-      var tile = this._googleStreetViewLayer._tiles[key];
+      const key = this._googleStreetViewLayer._tileCoordsToKey(coords);
+      const tile = this._googleStreetViewLayer._tiles[key];
       if (!tile) return;
-      var img = tile.el.querySelector("img");
+      const img = tile.el.querySelector("img");
       if (!img) return;
       this._downloadTile(img.src, this._tileLoaded);
       return img;
     },
-    _getTilePixelPoint: function(img, e) {
+    _getTilePixelPoint(img, e) {
       if (!img) return;
-      var imgRect = img.getBoundingClientRect();
-      var imgPos = {
+      const imgRect = img.getBoundingClientRect();
+      const imgPos = {
         pageY: (imgRect.top + window.scrollY).toFixed(0),
         pageX: (imgRect.left + window.scrollX).toFixed(0)
       };
-      var mousePos = {
+      const mousePos = {
         x: e.pageX - imgPos.pageX,
         y: e.pageY - imgPos.pageY
       };
       return mousePos;
     },
-    _hasTileData: function(img, pixelPoint) {
+    _hasTileData(img, pixelPoint) {
       if (!this.tileContext || !pixelPoint) return;
-      var pixelData = this.tileContext.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data;
-      var alpha = pixelData[3];
-      var hasTileData = alpha != 0;
+      const pixelData = this.tileContext.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data;
+      const alpha = pixelData[3];
+      const hasTileData = alpha != 0;
       return hasTileData;
     },
-    _toRad: function(number) {
+    _toRad(number) {
       return number * Math.PI / 180;
     },
-    _downloadTile: function(imageSrc, callback) {
+    _downloadTile(imageSrc, callback) {
       if (!imageSrc) return;
-      var img = new Image();
+      const img = new Image();
       img.crossOrigin = "Anonymous";
       img.addEventListener("load", callback.bind(this, img), false);
       img.src = imageSrc;
     },
-    _tileLoaded: function(img) {
+    _tileLoaded(img) {
       this.tileCanvas = document.createElement("canvas");
       this.tileContext = this.tileCanvas.getContext("2d");
       this.tileCanvas.width = this.tileWidth;
       this.tileCanvas.height = this.tileHeight;
       this.tileContext.drawImage(img, 0, 0);
     },
-    _loadInteractHandlers: function() {
-      if (typeof interact !== "function") return;
-      this._draggable = interact(this._pegman).draggable(this._draggableMarkerOpts);
-      this._dropzone = interact(this._map._container).dropzone(this._dropzoneMapOpts);
-      this._draggable.styleCursor(false);
-      interact(this._container).on("tap", L.bind(this.toggleStreetViewLayer, this));
-      L.DomEvent.on(this._container, "touchstart", function(e) {
-        this._map.dragging.disable();
-      }, this);
-      L.DomEvent.on(this._container, "touchend", function(e) {
-        this._map.dragging.enable();
-      }, this);
-    },
-    _loadScripts: function(toggleStreetView) {
-      if (this._lazyLoaderAdded) return;
+    _loadScripts(toggleStreetView) {
+      if (!this._map || this._lazyLoaderAdded) return;
       this._lazyLoaderAdded = true;
-      this._loadJS(this.__interactURL, this._loadInteractHandlers.bind(this), typeof interact !== "function");
       this._loadJS(this.__gmapsURL + "&key=" + this.options.apiKey + "&libraries=" + this.options.libraries + "&callback=?", this._loadGoogleHandlers.bind(this, toggleStreetView), typeof google !== "object" || typeof google.maps !== "object");
-      this._loadJS(this.__mutantURL, this._loadGoogleHandlers.bind(this, toggleStreetView), typeof L.GridLayer.GoogleMutant !== "function");
+      this._loadJS(this.__mutantURL, this._loadGoogleHandlers.bind(this, toggleStreetView), typeof leaflet_compat_default.GridLayer.GoogleMutant !== "function");
     },
-    _loadJS: function(url, callback, condition) {
+    _loadJS(url, callback, condition) {
       if (!condition) {
         callback();
         return;
@@ -4532,39 +4132,42 @@
       if (url.indexOf("callback=?") !== -1) {
         this._jsonp(url, callback);
       } else {
-        var script = document.createElement("script");
+        const script = document.createElement("script");
         script.src = url;
-        var loaded = function() {
+        const loaded = function() {
           script.onload = script.onreadystatechange = null;
           this._log(url + " loaded");
           callback();
         }.bind(this);
+        script.onerror = function() {
+          console.error("Failed to load " + url);
+        };
         script.onload = script.onreadystatechange = loaded;
-        var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+        const head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
         head.insertBefore(script, head.firstChild);
       }
     },
-    _jsonp: function(url, callback, params) {
-      var query = url.indexOf("?") === -1 ? "?" : "&";
+    _jsonp(url, callback, params) {
+      let query = url.indexOf("?") === -1 ? "?" : "&";
       params = params || {};
-      for (var key in params) {
+      for (const key in params) {
         if (params.hasOwnProperty(key)) {
           query += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]) + "&";
         }
       }
-      var timestamp = (/* @__PURE__ */ new Date()).getUTCMilliseconds();
-      var jsonp = "json_call_" + timestamp;
+      const timestamp = (/* @__PURE__ */ new Date()).getUTCMilliseconds();
+      const jsonp = "json_call_" + timestamp;
       window[jsonp] = function(data) {
         callback(data);
         window[jsonp] = void 0;
       };
-      var script = document.createElement("script");
+      const script = document.createElement("script");
       if (url.indexOf("callback=?") !== -1) {
         script.src = url.replace("callback=?", "callback=" + jsonp) + query.slice(0, -1);
       } else {
         script.src = url + query + "callback=" + jsonp;
       }
-      var loaded = function() {
+      const loaded = function() {
         if (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") {
           script.onload = script.onreadystatechange = null;
           if (script && script.parentNode) {
@@ -4574,15 +4177,19 @@
       };
       script.async = true;
       script.onload = script.onreadystatechange = loaded;
-      var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+      const head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
       head.insertBefore(script, head.firstChild);
     }
   });
-  L.control.pegman = function(options) {
-    return new L.Control.Pegman(options);
+  (leaflet_compat_default.control || leaflet_compat_default.Control).pegman = function(options) {
+    return new leaflet_compat_default.Control.Pegman(options);
   };
 
+  // node_modules/@raruto/leaflet-gesture-handling/src/index.js
+  init_leaflet_compat();
+
   // node_modules/@raruto/leaflet-gesture-handling/src/locales/en.js
+  init_leaflet_compat();
   var en_default = {
     touch: "Use two fingers to move the map",
     scroll: "Use ctrl + scroll to zoom the map",
@@ -4591,25 +4198,27 @@
 
   // node_modules/@raruto/leaflet-gesture-handling/src/index.js
   var baseURL = (document.currentScript && document.currentScript.src || null).split("/").slice(0, -1).join("/") + "/";
+  var [leafletMajor, leafletMinor] = leaflet_compat_default.version.split(".").map(Number);
+  var usesDomEventTouchHandlers = leafletMajor > 1 || leafletMajor === 1 && leafletMinor >= 8;
   var draggingMap = false;
   var gestureHandlingOptions = {
     text: {},
     duration: 1700
   };
-  var GestureHandling = L.Handler.extend({
+  var GestureHandling = leaflet_compat_default.Handler.extend({
     _isScrolling: false,
     _isTouching: false,
     _isFading: false,
-    addHooks: function() {
-      this._handleTouch = L.bind(this._handleTouch, this);
+    addHooks() {
+      this._handleTouch = this._handleTouch.bind(this);
       this._setGestureHandlingOptions();
       this._disableInteractions();
-      if (L.version >= "1.8") {
-        L.DomEvent.on(this._map._container, "touchstart", this._handleTouch, this);
-        L.DomEvent.on(this._map._container, "touchmove", this._handleTouch, this);
-        L.DomEvent.on(this._map._container, "touchend", this._handleTouch, this);
-        L.DomEvent.on(this._map._container, "touchcancel", this._handleTouch, this);
-        L.DomEvent.on(this._map._container, "click", this._handleTouch, this);
+      if (usesDomEventTouchHandlers) {
+        leaflet_compat_default.DomEvent.on(this._map._container, "touchstart", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.on(this._map._container, "touchmove", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.on(this._map._container, "touchend", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.on(this._map._container, "touchcancel", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.on(this._map._container, "click", this._handleTouch, this);
       } else {
         this._map._container.addEventListener("touchstart", this._handleTouch);
         this._map._container.addEventListener("touchmove", this._handleTouch);
@@ -4617,28 +4226,26 @@
         this._map._container.addEventListener("touchcancel", this._handleTouch);
         this._map._container.addEventListener("click", this._handleTouch);
       }
-      L.DomEvent.on(this._map._container, "wheel", this._handleScroll, this);
-      L.DomEvent.on(this._map._container, "mouseenter", this._handleMouseOver, this);
-      L.DomEvent.on(this._map._container, "mouseleave", this._handleMouseOut, this);
-      L.DomEvent.on(this._map, "movestart", this._handleDragging, this);
-      L.DomEvent.on(this._map, "move", this._handleDragging, this);
-      L.DomEvent.on(this._map, "moveend", this._handleDragging, this);
+      leaflet_compat_default.DomEvent.on(this._map._container, "wheel", this._handleScroll, this);
+      leaflet_compat_default.DomEvent.on(this._map._container, "mouseenter", this._handleMouseOver, this);
+      leaflet_compat_default.DomEvent.on(this._map._container, "mouseleave", this._handleMouseOut, this);
+      this._map.on("movestart move moveend", this._handleDragging, this);
       this._map.on("popupopen", this._handleScrollOnPopup, this);
       this._map.on("popupclose", this._handleScrollOnPopup, this);
-      L.DomEvent.off(this._map, "enterFullscreen", this._onEnterFullscreen, this);
-      L.DomEvent.off(this._map, "exitFullscreen", this._onExitFullscreen, this);
-      L.DomEvent.on(this._map, "enterFullscreen", this._onEnterFullscreen, this);
-      L.DomEvent.on(this._map, "exitFullscreen", this._onExitFullscreen, this);
-      L.DomUtil.addClass(this._map._container, "leaflet-gesture-handling");
+      this._map.off("enterFullscreen", this._onEnterFullscreen, this);
+      this._map.off("exitFullscreen", this._onExitFullscreen, this);
+      this._map.on("enterFullscreen", this._onEnterFullscreen, this);
+      this._map.on("exitFullscreen", this._onExitFullscreen, this);
+      this._map._container.classList.add("leaflet-gesture-handling");
     },
-    removeHooks: function() {
+    removeHooks() {
       this._enableInteractions();
-      if (L.version >= "1.8") {
-        L.DomEvent.off(this._map._container, "touchstart", this._handleTouch, this);
-        L.DomEvent.off(this._map._container, "touchmove", this._handleTouch, this);
-        L.DomEvent.off(this._map._container, "touchend", this._handleTouch, this);
-        L.DomEvent.off(this._map._container, "touchcancel", this._handleTouch, this);
-        L.DomEvent.off(this._map._container, "click", this._handleTouch, this);
+      if (usesDomEventTouchHandlers) {
+        leaflet_compat_default.DomEvent.off(this._map._container, "touchstart", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.off(this._map._container, "touchmove", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.off(this._map._container, "touchend", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.off(this._map._container, "touchcancel", this._handleTouch, this);
+        leaflet_compat_default.DomEvent.off(this._map._container, "click", this._handleTouch, this);
       } else {
         this._map._container.removeEventListener("touchstart", this._handleTouch);
         this._map._container.removeEventListener("touchmove", this._handleTouch);
@@ -4646,74 +4253,70 @@
         this._map._container.removeEventListener("touchcancel", this._handleTouch);
         this._map._container.removeEventListener("click", this._handleTouch);
       }
-      L.DomEvent.off(this._map._container, "wheel", this._handleScroll, this);
-      L.DomEvent.off(this._map._container, "mouseenter", this._handleMouseOver, this);
-      L.DomEvent.off(this._map._container, "mouseleave", this._handleMouseOut, this);
-      L.DomEvent.off(this._map, "movestart", this._handleDragging, this);
-      L.DomEvent.off(this._map, "move", this._handleDragging, this);
-      L.DomEvent.off(this._map, "moveend", this._handleDragging, this);
+      leaflet_compat_default.DomEvent.off(this._map._container, "wheel", this._handleScroll, this);
+      leaflet_compat_default.DomEvent.off(this._map._container, "mouseenter", this._handleMouseOver, this);
+      leaflet_compat_default.DomEvent.off(this._map._container, "mouseleave", this._handleMouseOut, this);
+      this._map.off("movestart move moveend", this._handleDragging, this);
       this._map.off("popupopen", this._handleScrollOnPopup, this);
       this._map.off("popupclose", this._handleScrollOnPopup, this);
-      L.DomUtil.removeClass(this._map._container, "leaflet-gesture-handling");
+      this._map._container.classList.remove("leaflet-gesture-handling");
     },
-    _handleDragging: function(e) {
+    _handleDragging(e) {
       if (e.type == "movestart" || e.type == "move") {
         draggingMap = true;
       } else if (e.type == "moveend") {
         draggingMap = false;
       }
     },
-    _disableInteraction: function(name) {
+    _disableInteraction(name) {
       if (this._map.options[name] && this._map[name]) {
         this._map[name].disable();
       }
     },
-    _enableInteraction: function(name) {
+    _enableInteraction(name) {
       if (this._map.options[name] && this._map[name]) {
         this._map[name].enable();
       }
     },
-    _disableInteractions: function() {
+    _disableInteractions() {
       this._disableInteraction("dragging");
       this._disableInteraction("scrollWheelZoom");
       this._disableInteraction("tap");
     },
-    _enableInteractions: function() {
+    _enableInteractions() {
       this._enableInteraction("dragging");
       this._enableInteraction("scrollWheelZoom");
       this._enableInteraction("tap");
     },
-    _enableWarning: function(gesture) {
+    _enableWarning(gesture) {
       clearTimeout(this._isFading);
-      L.DomUtil.addClass(this._map._container, "leaflet-gesture-handling-" + gesture);
-      L.DomUtil.addClass(this._map._container, "leaflet-gesture-handling-warning");
+      this._map._container.classList.add("leaflet-gesture-handling-" + gesture);
+      this._map._container.classList.add("leaflet-gesture-handling-warning");
     },
-    _disableWarning: function(gesture, delay) {
+    _disableWarning(gesture, delay) {
       clearTimeout(this._isFading);
       this._isFading = setTimeout(
-        L.bind(function(gesture2) {
-          L.DomUtil.removeClass(this._map._container, "leaflet-gesture-handling-" + gesture2);
-        }, this, gesture),
+        () => this._map._container.classList.remove("leaflet-gesture-handling-" + gesture),
         delay || this._map.options.gestureHandlingOptions.duration
       );
-      L.DomUtil.removeClass(this._map._container, "leaflet-gesture-handling-warning");
+      this._map._container.classList.remove("leaflet-gesture-handling-warning");
     },
-    _isLanguageContent: function(text) {
+    _isLanguageContent(text) {
       return text && text.touch && text.scroll && text.scrollMac;
     },
-    _isMacUser: function() {
+    _isMacUser() {
       return navigator.platform.toUpperCase().indexOf("MAC") >= 0;
     },
-    _parseGestureHandlingOptions: function() {
-      var text = this._map.options.gestureHandlingOptions.text || this._map.options.gestureHandlingText || gestureHandlingOptions.text;
-      var duration = this._map.options.gestureHandlingOptions.duration || this._map.options.gestureHandlingDuration || gestureHandlingOptions.duration;
-      var options = L.extend(this._map.options.gestureHandlingOptions, gestureHandlingOptions);
+    _parseGestureHandlingOptions() {
+      const text = this._map.options.gestureHandlingOptions.text || this._map.options.gestureHandlingText || gestureHandlingOptions.text;
+      const duration = this._map.options.gestureHandlingOptions.duration || this._map.options.gestureHandlingDuration || gestureHandlingOptions.duration;
+      const options = Object.assign(this._map.options.gestureHandlingOptions, gestureHandlingOptions);
       options.text = text;
       options.duration = duration;
       return options;
     },
-    _setGestureHandlingOptions: function() {
-      var opts = this._parseGestureHandlingOptions();
+    _setGestureHandlingOptions() {
+      const opts = this._parseGestureHandlingOptions();
       (this._isLanguageContent(opts.text) ? Promise.resolve(opts.text) : this._getLanguageContent(opts.locale)).then((content) => {
         this._map._container.setAttribute("data-gesture-handling-touch-content", content.touch);
         this._map._container.setAttribute("data-gesture-handling-scroll-content", content.scroll);
@@ -4721,34 +4324,37 @@
         this._scrollWarning = content.scroll;
       });
     },
-    _getUserLanguage: function() {
+    _getUserLanguage() {
       return navigator.languages ? navigator.languages[0] : navigator.language || navigator.userLanguage;
     },
-    _getLanguageContent: function(lang) {
-      lang = lang || this._getUserLanguage() || "en";
-      var resolve, promise = new Promise((_resolve) => {
+    _getLanguageContent(lang) {
+      lang = (lang || this._getUserLanguage() || "en").replace("_", "-");
+      let resolve;
+      const promise = new Promise((_resolve) => {
         resolve = _resolve;
       });
-      var consume = (m) => {
-        var content = m.default || {};
+      const consume = (m) => {
+        const content = m.default || {};
         content.scroll = this._isMacUser() ? content.scrollMac : content.scroll;
         resolve(content);
       };
-      import(baseURL + "./locales/" + lang + ".js").then(consume).catch(
-        (e) => import(baseURL + "./locales/" + lang.split("-")[0] + ".js").then(consume).catch((e2) => Promise.resolve({ default: en_default }).then(consume))
-      );
+      import(baseURL + "./locales/" + lang + ".js").then(consume).catch(() => import(baseURL + "./locales/" + lang.split("-")[0] + ".js").then(consume).catch(() => consume({ default: en_default })));
       return promise;
     },
-    _handleTouch: function(e) {
-      var ignore = L.DomUtil.hasClass(e.target, "leaflet-interactive") || e.target.closest(".leaflet-control-container") || e.target.closest(".leaflet-popup-pane");
+    _handleTouch(e) {
+      const ignore = e.target.classList.contains("leaflet-interactive") || e.target.closest(".leaflet-control-container") || e.target.closest(".leaflet-popup-pane");
       if (ignore) {
-        if (L.DomUtil.hasClass(e.target, "leaflet-interactive") && e.type === "touchmove" && e.touches.length === 1) {
+        if (e.target.classList.contains("leaflet-interactive") && e.type === "touchmove" && e.touches.length === 1) {
           this._enableTouchWarning();
         } else {
           this._disableTouchWarning();
+          if ((e.type === "touchend" || e.type === "touchcancel") && e.touches.length === 0) {
+            this._enableInteractions();
+          }
         }
       } else if (e.type !== "touchmove" && e.type !== "touchstart") {
         this._disableTouchWarning();
+        this._enableInteractions();
       } else if (e.touches.length === 1) {
         this._enableTouchWarning();
       } else {
@@ -4757,120 +4363,122 @@
         this._enableInteractions();
       }
     },
-    _enableTouchWarning: function() {
+    _enableTouchWarning() {
       this._enableWarning("touch");
       this._disableInteractions();
     },
-    _disableTouchWarning: function(delay) {
+    _disableTouchWarning(delay) {
       clearTimeout(this._isTouching);
       this._isTouching = setTimeout(
-        L.bind(
-          function() {
-            this._disableWarning("touch");
-          },
-          this
-        ),
+        () => {
+          this._disableWarning("touch");
+        },
         delay || 0
       );
     },
-    _enableScrollWarning: function() {
+    _enableScrollWarning() {
       this._enableWarning("scroll");
       this._disableInteraction("scrollWheelZoom");
     },
-    _disableScrollWarning: function(delay) {
+    _disableScrollWarning(delay) {
       clearTimeout(this._isScrolling);
       this._isScrolling = setTimeout(
-        L.bind(
-          function() {
-            this._disableWarning("scroll");
-            this._enableInteraction("scrollWheelZoom");
-          },
-          this
-        ),
+        () => {
+          this._disableWarning("scroll");
+          this._enableInteraction("scrollWheelZoom");
+        },
         delay || 0
       );
     },
-    _handleScroll: function(e) {
-      if (this._map.scrollWheelZoom && this._map.scrollWheelZoom.enabled()) {
-        if (e.metaKey || e.ctrlKey || e.shiftKey && this._map._rotate) {
+    _handleScroll(e) {
+      const scrollZoom = this._map.scrollWheelZoom;
+      const scrollWarning = this._map._container.classList.contains("leaflet-gesture-handling-scroll");
+      if (e.metaKey || e.ctrlKey || e.shiftKey && this._map._rotate) {
+        if (scrollZoom && (scrollZoom.enabled() || scrollWarning)) {
           e.preventDefault();
+          if (scrollWarning && !scrollZoom.enabled()) {
+            this._enableInteraction("scrollWheelZoom");
+            scrollZoom._onWheelScroll(e);
+          }
           this._disableScrollWarning();
-        } else {
-          this._enableScrollWarning();
-          this._disableScrollWarning(this._map.options.gestureHandlingOptions.duration);
         }
+      } else if (scrollZoom && scrollZoom.enabled()) {
+        this._enableScrollWarning();
+        this._disableScrollWarning(this._map.options.gestureHandlingOptions.duration);
       }
     },
-    _handleScrollOnPopup: function(e) {
-      L.DomEvent[e.type == "popupopen" ? "on" : "off"](e.popup._contentNode, "wheel", this._handleScroll, this);
+    _handleScrollOnPopup(e) {
+      leaflet_compat_default.DomEvent[e.type == "popupopen" ? "on" : "off"](e.popup._contentNode, "wheel", this._handleScroll, this);
     },
-    _handleMouseOver: function(e) {
+    _handleMouseOver(e) {
       this._enableInteractions();
     },
-    _handleMouseOut: function(e) {
+    _handleMouseOut(e) {
       if (!draggingMap) this._disableInteractions();
     },
-    _onExitFullscreen: function() {
+    _onExitFullscreen() {
       if (this._map.options.gestureHandling)
         this._map.gestureHandling.enable();
     },
-    _onEnterFullscreen: function() {
+    _onEnterFullscreen() {
       if (this._map.options.gestureHandling)
         this._map.gestureHandling.disable();
     }
   });
-  L.Map.mergeOptions({
+  leaflet_compat_default.Map.mergeOptions({
     gestureHandlingOptions
   });
-  L.Map.addInitHook("addHandler", "gestureHandling", GestureHandling);
+  leaflet_compat_default.Map.addInitHook("addHandler", "gestureHandling", GestureHandling);
 
   // node_modules/@raruto/leaflet-edit-osm/leaflet-edit-osm.js
-  L.Control.EditInOSM = L.Control.extend({
-    options: {
-      position: "bottomright",
-      editor: false
-      // eg: "id", "potlatch2" or "remote"
-    },
-    _edit: function() {
-      var center = this._map.getCenter();
-      var z = this._map.getZoom();
-      var editor = this.options.editor ? "&editor=" + this.options.editor : "";
-      window.open("http://www.openstreetmap.org/edit?zoom=" + z + editor + "&lat=" + center.lat + "&lon=" + center.lng);
-    },
-    onAdd: function(map) {
-      var container = L.DomUtil.create("div", "leaflet-control-attribution leaflet-edit-osm"), link = L.DomUtil.create("a", "", container);
+  init_leaflet_compat();
+  leaflet_compat_default.Control.EditInOSM = class extends leaflet_compat_default.Control {
+    _edit() {
+      window.open(`http://www.openstreetmap.org/edit?zoom=${this._map.getZoom()}${this.options.editor ? "&editor=" + this.options.editor : ""}&lat=${this._map.getCenter().lat}&lon=${this._map.getCenter().lng}`);
+    }
+    onAdd(map) {
+      const container = leaflet_compat_default.DomUtil.create("div", "leaflet-control-attribution leaflet-edit-osm"), link = leaflet_compat_default.DomUtil.create("a", "", container);
       link.href = "#";
       link.innerHTML = "\u270E Edit";
       link.title = "Edit in OpenStreetMap";
-      L.DomEvent.on(link, "click", L.DomEvent.stopPropagation).on(link, "mousedown", L.DomEvent.stopPropagation).on(link, "dblclick", L.DomEvent.stopPropagation).on(link, "click", L.DomEvent.preventDefault).on(link, "click", L.bind(this._edit, this), this);
+      leaflet_compat_default.DomEvent.on(link, "click", leaflet_compat_default.DomEvent.stopPropagation).on(link, "mousedown", leaflet_compat_default.DomEvent.stopPropagation).on(link, "dblclick", leaflet_compat_default.DomEvent.stopPropagation).on(link, "click", leaflet_compat_default.DomEvent.preventDefault).on(link, "click", this._edit, this);
       return container;
     }
-  });
-  L.control.editInOSM = function(options) {
-    return new L.Control.EditInOSM(options);
   };
+  leaflet_compat_default.Control.EditInOSM.prototype.options = Object.assign(Object.create(leaflet_compat_default.Control.prototype.options), {
+    position: "bottomright",
+    editor: false
+    // eg: "id", "potlatch2" or "remote"
+  });
+  if (leaflet_compat_default.control) {
+    leaflet_compat_default.control.editInOSM = function(options) {
+      return new leaflet_compat_default.Control.EditInOSM(options);
+    };
+  }
 
   // node_modules/leaflet-control-layers-inline/leaflet-control-layers-inline.js
+  init_leaflet_compat();
   (function() {
-    var layersProto = L.Control.Layers.prototype;
-    var initializeLayersProto = layersProto.initialize;
-    var onAddLayersProto = layersProto.onAdd;
+    const layersProto = leaflet_compat_default.Control.Layers.prototype;
+    const initializeLayersProto = layersProto.initialize;
+    const onAddLayersProto = layersProto.onAdd;
     layersProto.options.inline = false;
-    L.Control.Layers.include({
-      initialize: function(baseLayers, overlays, options) {
+    leaflet_compat_default.Control.Layers.include({
+      initialize(baseLayers, overlays, options) {
+        options = options || {};
         if (options.inline) {
           options.collapsed = false;
         }
         initializeLayersProto.call(this, baseLayers, overlays, options);
       },
-      onAdd: function(map) {
+      onAdd(map) {
         onAddLayersProto.call(this, map);
         if (this.options.inline) {
           this.options.collapsed = false;
-          L.DomUtil.addClass(this._container, "leaflet-control-layers-inline");
+          this._container.classList.add("leaflet-control-layers-inline");
         }
         if (this.options.className) {
-          L.DomUtil.addClass(this._container, this.options.className);
+          this._container.classList.add(...this.options.className.split(/\s+/).filter(Boolean));
         }
         return this._container;
       }
@@ -4878,6 +4486,7 @@
   })();
 
   // node_modules/leaflet-minimap/dist/Control.MiniMap.min.js
+  init_leaflet_compat();
   (function(factory, window2) {
     if (false) {
       define(["leaflet"], factory);
@@ -4885,27 +4494,27 @@
       Control_MiniMap_min_module.exports = factory(null);
     }
     if (typeof window2 !== "undefined" && window2.L) {
-      window2.L.Control.MiniMap = factory(L);
+      window2.L.Control.MiniMap = factory(leaflet_compat_default);
       window2.L.control.minimap = function(layer, options) {
         return new window2.L.Control.MiniMap(layer, options);
       };
     }
-  })(function(L2) {
-    var MiniMap = L2.Control.extend({ includes: L2.Evented ? L2.Evented.prototype : L2.Mixin.Events, options: { position: "bottomright", toggleDisplay: false, zoomLevelOffset: -5, zoomLevelFixed: false, centerFixed: false, zoomAnimation: false, autoToggleDisplay: false, minimized: false, width: 150, height: 150, collapsedWidth: 19, collapsedHeight: 19, aimingRectOptions: { color: "#ff7800", weight: 1, clickable: false }, shadowRectOptions: { color: "#000000", weight: 1, clickable: false, opacity: 0, fillOpacity: 0 }, strings: { hideText: "Hide MiniMap", showText: "Show MiniMap" }, mapOptions: {} }, initialize: function(layer, options) {
-      L2.Util.setOptions(this, options);
+  })(function(L3) {
+    var MiniMap = L3.Control.extend({ includes: L3.Evented ? L3.Mixin.Events : L3.Mixin.Events, options: { position: "bottomright", toggleDisplay: false, zoomLevelOffset: -5, zoomLevelFixed: false, centerFixed: false, zoomAnimation: false, autoToggleDisplay: false, minimized: false, width: 150, height: 150, collapsedWidth: 19, collapsedHeight: 19, aimingRectOptions: { color: "#ff7800", weight: 1, clickable: false }, shadowRectOptions: { color: "#000000", weight: 1, clickable: false, opacity: 0, fillOpacity: 0 }, strings: { hideText: "Hide MiniMap", showText: "Show MiniMap" }, mapOptions: {} }, initialize: function(layer, options) {
+      L3.Util.setOptions(this, options);
       this.options.aimingRectOptions.clickable = false;
       this.options.shadowRectOptions.clickable = false;
       this._layer = layer;
     }, onAdd: function(map) {
       this._mainMap = map;
-      this._container = L2.DomUtil.create("div", "leaflet-control-minimap");
+      this._container = L3.DomUtil.create("div", "leaflet-control-minimap");
       this._container.style.width = this.options.width + "px";
       this._container.style.height = this.options.height + "px";
-      L2.DomEvent.disableClickPropagation(this._container);
-      L2.DomEvent.on(this._container, "mousewheel", L2.DomEvent.stopPropagation);
+      L3.DomEvent.disableClickPropagation(this._container);
+      L3.DomEvent.on(this._container, "mousewheel", L3.DomEvent.stopPropagation);
       var mapOptions = { attributionControl: false, dragging: !this.options.centerFixed, zoomControl: false, zoomAnimation: this.options.zoomAnimation, autoToggleDisplay: this.options.autoToggleDisplay, touchZoom: this.options.centerFixed ? "center" : !this._isZoomLevelFixed(), scrollWheelZoom: this.options.centerFixed ? "center" : !this._isZoomLevelFixed(), doubleClickZoom: this.options.centerFixed ? "center" : !this._isZoomLevelFixed(), boxZoom: !this._isZoomLevelFixed(), crs: map.options.crs };
-      mapOptions = L2.Util.extend(this.options.mapOptions, mapOptions);
-      this._miniMap = new L2.Map(this._container, mapOptions);
+      mapOptions = L3.Util.extend(this.options.mapOptions, mapOptions);
+      this._miniMap = new L3.Map(this._container, mapOptions);
       this._miniMap.addLayer(this._layer);
       this._mainMapMoving = false;
       this._miniMapMoving = false;
@@ -4914,9 +4523,9 @@
       if (this.options.toggleDisplay) {
         this._addToggleButton();
       }
-      this._miniMap.whenReady(L2.Util.bind(function() {
-        this._aimingRect = L2.rectangle(this._mainMap.getBounds(), this.options.aimingRectOptions).addTo(this._miniMap);
-        this._shadowRect = L2.rectangle(this._mainMap.getBounds(), this.options.shadowRectOptions).addTo(this._miniMap);
+      this._miniMap.whenReady(L3.Util.bind(function() {
+        this._aimingRect = L3.rectangle(this._mainMap.getBounds(), this.options.aimingRectOptions).addTo(this._miniMap);
+        this._shadowRect = L3.rectangle(this._mainMap.getBounds(), this.options.shadowRectOptions).addTo(this._miniMap);
         this._mainMap.on("moveend", this._onMainMapMoved, this);
         this._mainMap.on("move", this._onMainMapMoving, this);
         this._miniMap.on("movestart", this._onMiniMapMoveStarted, this);
@@ -4925,7 +4534,7 @@
       }, this));
       return this._container;
     }, addTo: function(map) {
-      L2.Control.prototype.addTo.call(this, map);
+      L3.Control.prototype.addTo.call(this, map);
       var center = this.options.centerFixed || this._mainMap.getCenter();
       this._miniMap.setView(center, this._decideZoom(true));
       this._setDisplay(this.options.minimized);
@@ -4950,12 +4559,12 @@
         return this.options.strings.hideText;
       }
     }, _createButton: function(html, title, className, container, fn, context) {
-      var link = L2.DomUtil.create("a", className, container);
+      var link = L3.DomUtil.create("a", className, container);
       link.innerHTML = html;
       link.href = "#";
       link.title = title;
-      var stop = L2.DomEvent.stopPropagation;
-      L2.DomEvent.on(link, "click", stop).on(link, "mousedown", stop).on(link, "dblclick", stop).on(link, "click", L2.DomEvent.preventDefault).on(link, "click", fn, context);
+      var stop = L3.DomEvent.stopPropagation;
+      L3.DomEvent.on(link, "click", stop).on(link, "mousedown", stop).on(link, "dblclick", stop).on(link, "click", L3.DomEvent.preventDefault).on(link, "click", fn, context);
       return link;
     }, _toggleDisplayButtonClicked: function() {
       this._userToggledDisplay = true;
@@ -5016,7 +4625,7 @@
     }, _onMiniMapMoving: function(e) {
       if (!this.options.centerFixed) {
         if (!this._mainMapMoving && this._lastAimingRectPosition) {
-          this._shadowRect.setBounds(new L2.LatLngBounds(this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.sw), this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.ne)));
+          this._shadowRect.setBounds(new L3.LatLngBounds(this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.sw), this._miniMap.containerPointToLatLng(this._lastAimingRectPosition.ne)));
           this._shadowRect.setStyle({ opacity: 1, fillOpacity: 0.3 });
         }
       }
@@ -5075,20 +4684,20 @@
     }, _isDefined: function(value) {
       return typeof value !== "undefined";
     }, _onToggle: function() {
-      L2.Util.requestAnimFrame(function() {
-        L2.DomEvent.on(this._container, "transitionend", this._fireToggleEvents, this);
-        if (!L2.Browser.any3d) {
-          L2.Util.requestAnimFrame(this._fireToggleEvents, this);
+      L3.Util.requestAnimFrame(function() {
+        L3.DomEvent.on(this._container, "transitionend", this._fireToggleEvents, this);
+        if (!L3.Browser.any3d) {
+          L3.Util.requestAnimFrame(this._fireToggleEvents, this);
         }
       }, this);
     }, _fireToggleEvents: function() {
-      L2.DomEvent.off(this._container, "transitionend", this._fireToggleEvents, this);
+      L3.DomEvent.off(this._container, "transitionend", this._fireToggleEvents, this);
       var data = { minimized: this._minimized };
       this.fire(this._minimized ? "minimize" : "restore", data);
       this.fire("toggle", data);
     } });
-    L2.Map.mergeOptions({ miniMapControl: false });
-    L2.Map.addInitHook(function() {
+    L3.Map.mergeOptions({ miniMapControl: false });
+    L3.Map.addInitHook(function() {
       if (this.options.miniMapControl) {
         this.miniMapControl = new MiniMap().addTo(this);
       }
@@ -5097,6 +4706,7 @@
   }, window);
 
   // node_modules/leaflet-loading/src/Control.Loading.js
+  init_leaflet_compat();
   (function() {
     var console2 = window.console || {
       error: function() {
@@ -5104,8 +4714,8 @@
       warn: function() {
       }
     };
-    function defineLeafletLoading(L2) {
-      L2.Control.Loading = L2.Control.extend({
+    function defineLeafletLoading(L3) {
+      L3.Control.Loading = L3.Control.extend({
         options: {
           delayIndicator: null,
           position: "topleft",
@@ -5122,7 +4732,7 @@
           }
         },
         initialize: function(options) {
-          L2.setOptions(this, options);
+          L3.setOptions(this, options);
           this._dataLoaders = {};
           if (this.options.zoomControl !== null) {
             this.zoomControl = this.options.zoomControl;
@@ -5146,12 +4756,12 @@
           if (this.zoomControl && !this.options.separate) {
             container = this.zoomControl._container;
             classes += " leaflet-bar-part-bottom leaflet-bar-part last";
-            L2.DomUtil.addClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
+            L3.DomUtil.addClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
           } else {
-            container = L2.DomUtil.create("div", "leaflet-control-zoom leaflet-control-layer-container leaflet-bar");
+            container = L3.DomUtil.create("div", "leaflet-control-zoom leaflet-control-layer-container leaflet-bar");
           }
           this._indicatorContainer = container;
-          this._indicator = L2.DomUtil.create("a", classes, container);
+          this._indicator = L3.DomUtil.create("a", classes, container);
           if (this.options.spinjs) {
             this._spinner = new Spinner(this.options.spin).spin();
             this._indicator.appendChild(this._spinner.el);
@@ -5169,7 +4779,7 @@
             this.onRemove(map);
             return this;
           } else {
-            return L2.Control.prototype.removeFrom.call(this, map);
+            return L3.Control.prototype.removeFrom.call(this, map);
           }
         },
         addLoader: function(id) {
@@ -5210,24 +4820,24 @@
           return size;
         },
         _showIndicator: function() {
-          L2.DomUtil.addClass(this._indicator, "is-loading");
-          L2.DomUtil.addClass(this._indicatorContainer, "is-loading");
+          L3.DomUtil.addClass(this._indicator, "is-loading");
+          L3.DomUtil.addClass(this._indicatorContainer, "is-loading");
           if (!this.options.separate) {
-            if (this.zoomControl instanceof L2.Control.Zoom) {
-              L2.DomUtil.removeClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
-            } else if (typeof L2.Control.Zoomslider === "function" && this.zoomControl instanceof L2.Control.Zoomslider) {
-              L2.DomUtil.removeClass(this.zoomControl._ui.zoomOut, "leaflet-bar-part-bottom");
+            if (this.zoomControl instanceof L3.Control.Zoom) {
+              L3.DomUtil.removeClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
+            } else if (typeof L3.Control.Zoomslider === "function" && this.zoomControl instanceof L3.Control.Zoomslider) {
+              L3.DomUtil.removeClass(this.zoomControl._ui.zoomOut, "leaflet-bar-part-bottom");
             }
           }
         },
         _hideIndicator: function() {
-          L2.DomUtil.removeClass(this._indicator, "is-loading");
-          L2.DomUtil.removeClass(this._indicatorContainer, "is-loading");
+          L3.DomUtil.removeClass(this._indicator, "is-loading");
+          L3.DomUtil.removeClass(this._indicatorContainer, "is-loading");
           if (!this.options.separate) {
-            if (this.zoomControl instanceof L2.Control.Zoom) {
-              L2.DomUtil.addClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
-            } else if (typeof L2.Control.Zoomslider === "function" && this.zoomControl instanceof L2.Control.Zoomslider) {
-              L2.DomUtil.addClass(this.zoomControl._ui.zoomOut, "leaflet-bar-part-bottom");
+            if (this.zoomControl instanceof L3.Control.Zoom) {
+              L3.DomUtil.addClass(this._getLastControlButton(), "leaflet-bar-part-bottom");
+            } else if (typeof L3.Control.Zoomslider === "function" && this.zoomControl instanceof L3.Control.Zoomslider) {
+              L3.DomUtil.addClass(this.zoomControl._ui.zoomOut, "leaflet-bar-part-bottom");
             }
           }
         },
@@ -5252,7 +4862,7 @@
               that._handleBaseLayerChange({ layer });
             });
           } else {
-            if (!(L2.TileLayer.Canvas && e.layer instanceof L2.TileLayer.Canvas)) {
+            if (!(L3.TileLayer.Canvas && e.layer instanceof L3.TileLayer.Canvas)) {
               that._handleLoading(e);
             }
           }
@@ -5331,26 +4941,27 @@
           }, this);
         }
       });
-      L2.Map.addInitHook(function() {
+      L3.Map.addInitHook(function() {
         if (this.options.loadingControl) {
-          this.loadingControl = new L2.Control.Loading();
+          this.loadingControl = new L3.Control.Loading();
           this.addControl(this.loadingControl);
         }
       });
-      L2.Control.loading = function(options) {
-        return new L2.Control.Loading(options);
+      L3.Control.loading = function(options) {
+        return new L3.Control.Loading(options);
       };
     }
-    if (typeof define === "function" && define.amd) {
-      define(["leaflet"], function(L2) {
-        defineLeafletLoading(L2);
+    if (false) {
+      define(["leaflet"], function(L3) {
+        defineLeafletLoading(L3);
       });
     } else {
-      defineLeafletLoading(L);
+      defineLeafletLoading(leaflet_compat_default);
     }
   })();
 
   // node_modules/leaflet-search/dist/leaflet-search.src.js
+  init_leaflet_compat();
   (function(factory) {
     if (false) {
       define(["leaflet"], factory);
@@ -5359,11 +4970,11 @@
     } else {
       if (typeof window.L === "undefined")
         throw "Leaflet must be loaded first";
-      factory(window.L);
+      factory(leaflet_compat_default);
     }
-  })(function(L2) {
-    L2.Control.Search = L2.Control.extend({
-      includes: L2.version[0] === "1" ? L2.Evented.prototype : L2.Mixin.Events,
+  })(function(L3) {
+    L3.Control.Search = L3.Control.extend({
+      includes: L3.version[0] === "1" ? L3.Mixin.Events : L3.Mixin.Events,
       options: {
         url: "",
         //url for search by ajax request, ex: "search.php?q={s}". Can be function to returns string for dynamic parameter setting
@@ -5451,9 +5062,9 @@
         return Object.prototype.toString.call(obj) === "[object Object]";
       },
       initialize: function(options) {
-        L2.Util.setOptions(this, options || {});
+        L3.Util.setOptions(this, options || {});
         this._inputMinSize = this.options.textPlaceholder ? this.options.textPlaceholder.length : 10;
-        this._layer = this.options.layer || new L2.LayerGroup();
+        this._layer = this.options.layer || new L3.LayerGroup();
         this._filterData = this.options.filterData || this._defaultFilterData;
         this._formatData = this.options.formatData || this._defaultFormatData;
         this._moveToLocation = this.options.moveToLocation || this._defaultMoveToLocation;
@@ -5464,7 +5075,7 @@
       },
       onAdd: function(map) {
         this._map = map;
-        this._container = L2.DomUtil.create("div", "leaflet-control-search");
+        this._container = L3.DomUtil.create("div", "leaflet-control-search");
         this._input = this._createInput(this.options.textPlaceholder, "search-input");
         this._tooltip = this._createTooltip("search-tooltip");
         this._cancel = this._createCancel(this.options.textCancel, "search-cancel");
@@ -5473,10 +5084,10 @@
         if (this.options.collapsed === false)
           this.expand(this.options.collapsed);
         if (this.options.marker) {
-          if (this.options.marker instanceof L2.Marker || this.options.marker instanceof L2.CircleMarker)
+          if (this.options.marker instanceof L3.Marker || this.options.marker instanceof L3.CircleMarker)
             this._markerSearch = this.options.marker;
           else if (this._isObject(this.options.marker))
-            this._markerSearch = new L2.Control.Search.Marker([0, 0], this.options.marker);
+            this._markerSearch = new L3.Control.Search.Marker([0, 0], this.options.marker);
           this._markerSearch._isMarkerSearch = true;
         }
         this.setLayer(this._layer);
@@ -5490,11 +5101,11 @@
       addTo: function(map) {
         if (this.options.container) {
           this._container = this.onAdd(map);
-          this._wrapper = L2.DomUtil.get(this.options.container);
+          this._wrapper = L3.DomUtil.get(this.options.container);
           this._wrapper.style.position = "relative";
           this._wrapper.appendChild(this._container);
         } else
-          L2.Control.prototype.addTo.call(this, map);
+          L3.Control.prototype.addTo.call(this, map);
         return this;
       },
       onRemove: function(map) {
@@ -5544,7 +5155,7 @@
       expand: function(toggle) {
         toggle = typeof toggle === "boolean" ? toggle : true;
         this._input.style.display = "block";
-        L2.DomUtil.addClass(this._container, "search-exp");
+        L3.DomUtil.addClass(this._container, "search-exp");
         if (toggle !== false) {
           this._input.focus();
           this._map.on("dragstart click", this.collapse, this);
@@ -5560,7 +5171,7 @@
         if (this.options.collapsed) {
           this._input.style.display = "none";
           this._cancel.style.display = "none";
-          L2.DomUtil.removeClass(this._container, "search-exp");
+          L3.DomUtil.removeClass(this._container, "search-exp");
           if (this.options.hideMarkerOnCollapse) {
             this._map.removeLayer(this._markerSearch);
           }
@@ -5584,15 +5195,15 @@
       },
       ////start DOM creations
       _createAlert: function(className) {
-        var alert2 = L2.DomUtil.create("div", className, this._container);
+        var alert2 = L3.DomUtil.create("div", className, this._container);
         alert2.style.display = "none";
-        L2.DomEvent.on(alert2, "click", L2.DomEvent.stop, this).on(alert2, "click", this.hideAlert, this);
+        L3.DomEvent.on(alert2, "click", L3.DomEvent.stop, this).on(alert2, "click", this.hideAlert, this);
         return alert2;
       },
       _createInput: function(text, className) {
         var self2 = this;
-        var label = L2.DomUtil.create("label", className, this._container);
-        var input = L2.DomUtil.create("input", className, this._container);
+        var label = L3.DomUtil.create("label", className, this._container);
+        var input = L3.DomUtil.create("input", className, this._container);
         input.type = "text";
         input.size = this._inputMinSize;
         input.value = "";
@@ -5606,7 +5217,7 @@
         label.htmlFor = input.id;
         label.style.display = "none";
         label.value = text;
-        L2.DomEvent.disableClickPropagation(input).on(input, "keyup", this._handleKeypress, this).on(input, "paste", function(e) {
+        L3.DomEvent.disableClickPropagation(input).on(input, "keyup", this._handleKeypress, this).on(input, "paste", function(e) {
           setTimeout(function(e2) {
             self2._handleKeypress(e2);
           }, 10, e);
@@ -5614,28 +5225,28 @@
         return input;
       },
       _createCancel: function(title, className) {
-        var cancel = L2.DomUtil.create("a", className, this._container);
+        var cancel = L3.DomUtil.create("a", className, this._container);
         cancel.href = "#";
         cancel.title = title;
         cancel.style.display = "none";
         cancel.innerHTML = "<span>&otimes;</span>";
-        L2.DomEvent.on(cancel, "click", L2.DomEvent.stop, this).on(cancel, "click", this.cancel, this);
+        L3.DomEvent.on(cancel, "click", L3.DomEvent.stop, this).on(cancel, "click", this.cancel, this);
         return cancel;
       },
       _createButton: function(title, className) {
-        var button = L2.DomUtil.create("a", className, this._container);
+        var button = L3.DomUtil.create("a", className, this._container);
         button.href = "#";
         button.title = title;
-        L2.DomEvent.on(button, "click", L2.DomEvent.stop, this).on(button, "click", this._handleSubmit, this).on(button, "focus", this.collapseDelayedStop, this).on(button, "blur", this.collapseDelayed, this);
+        L3.DomEvent.on(button, "click", L3.DomEvent.stop, this).on(button, "click", this._handleSubmit, this).on(button, "focus", this.collapseDelayedStop, this).on(button, "blur", this.collapseDelayed, this);
         return button;
       },
       _createTooltip: function(className) {
         var self2 = this;
-        var tool = L2.DomUtil.create("ul", className, this._container);
+        var tool = L3.DomUtil.create("ul", className, this._container);
         tool.style.display = "none";
-        L2.DomEvent.disableClickPropagation(tool).on(tool, "blur", this.collapseDelayed, this).on(tool, "wheel", function(e) {
+        L3.DomEvent.disableClickPropagation(tool).on(tool, "blur", this.collapseDelayed, this).on(tool, "wheel", function(e) {
           self2.collapseDelayedStop();
-          L2.DomEvent.stopPropagation(e);
+          L3.DomEvent.stopPropagation(e);
         }, this).on(tool, "mouseover", function(e) {
           self2.collapseDelayedStop();
         }, this);
@@ -5646,18 +5257,18 @@
         if (this.options.buildTip) {
           tip = this.options.buildTip.call(this, text, val);
           if (typeof tip === "string") {
-            var tmpNode = L2.DomUtil.create("div");
+            var tmpNode = L3.DomUtil.create("div");
             tmpNode.innerHTML = tip;
             tip = tmpNode.firstChild;
           }
         } else {
-          tip = L2.DomUtil.create("li", "");
+          tip = L3.DomUtil.create("li", "");
           tip.innerHTML = text;
         }
-        L2.DomUtil.addClass(tip, "search-tip");
+        L3.DomUtil.addClass(tip, "search-tip");
         tip._text = text;
         if (this.options.tipAutoSubmit)
-          L2.DomEvent.disableClickPropagation(tip).on(tip, "click", L2.DomEvent.stop, this).on(tip, "click", function(e) {
+          L3.DomEvent.disableClickPropagation(tip).on(tip, "click", L3.DomEvent.stop, this).on(tip, "click", function(e) {
             this._input.value = text;
             this._handleAutoresize();
             this._input.focus();
@@ -5718,20 +5329,20 @@
       },
       _defaultFormatData: function(json) {
         var self2 = this, propName = this.options.propertyName, propLoc = this.options.propertyLoc, jsonret = {};
-        if (L2.Util.isArray(propLoc)) {
+        if (L3.Util.isArray(propLoc)) {
           for (let i in json) {
-            jsonret[self2._getPath(json[i], propName)] = L2.latLng(self2._getPath(json[i], propLoc[0]), self2._getPath(json[i], propLoc[1]));
+            jsonret[self2._getPath(json[i], propName)] = L3.latLng(self2._getPath(json[i], propLoc[0]), self2._getPath(json[i], propLoc[1]));
           }
         } else {
           for (let i in json) {
-            jsonret[self2._getPath(json[i], propName)] = L2.latLng(self2._getPath(json[i], propLoc));
+            jsonret[self2._getPath(json[i], propName)] = L3.latLng(self2._getPath(json[i], propLoc));
           }
         }
         return jsonret;
       },
       _recordsFromJsonp: function(text, callAfter) {
-        L2.Control.Search.callJsonp = callAfter;
-        var script = L2.DomUtil.create("script", "leaflet-search-jsonp", document.getElementsByTagName("body")[0]), url = L2.Util.template(this._getUrl(text) + "&" + this.options.jsonpParam + "=L.Control.Search.callJsonp", { s: text });
+        L3.Control.Search.callJsonp = callAfter;
+        var script = L3.DomUtil.create("script", "leaflet-search-jsonp", document.getElementsByTagName("body")[0]), url = L3.Util.template(this._getUrl(text) + "&" + this.options.jsonpParam + "=L.Control.Search.callJsonp", { s: text });
         script.type = "text/javascript";
         script.src = url;
         return { abort: function() {
@@ -5752,7 +5363,7 @@
             }
           };
         }
-        var IE8or9 = L2.Browser.ie && !window.atob && document.querySelector, request = IE8or9 ? new XDomainRequest() : new XMLHttpRequest(), url = L2.Util.template(this._getUrl(text), { s: text });
+        var IE8or9 = L3.Browser.ie && !window.atob && document.querySelector, request = IE8or9 ? new XDomainRequest() : new XMLHttpRequest(), url = L3.Util.template(this._getUrl(text), { s: text });
         request.open("GET", url);
         request.onload = function() {
           callAfter(JSON.parse(request.responseText));
@@ -5767,8 +5378,8 @@
       },
       _searchInLayer: function(layer, retRecords, propName) {
         var self2 = this, loc;
-        if (layer instanceof L2.Control.Search.Marker) return;
-        if (layer instanceof L2.Marker || layer instanceof L2.CircleMarker) {
+        if (layer instanceof L3.Control.Search.Marker) return;
+        if (layer instanceof L3.Marker || layer instanceof L3.CircleMarker) {
           if (self2._getPath(layer.options, propName)) {
             loc = layer.getLatLng();
             loc.layer = layer;
@@ -5779,7 +5390,7 @@
             retRecords[self2._getPath(layer.feature.properties, propName)] = loc;
           } else {
           }
-        } else if (layer instanceof L2.Path || layer instanceof L2.Polyline || layer instanceof L2.Polygon) {
+        } else if (layer instanceof L3.Path || layer instanceof L3.Polyline || layer instanceof L3.Polygon) {
           if (self2._getPath(layer.options, propName)) {
             loc = layer.getBounds().getCenter();
             loc.layer = layer;
@@ -5804,7 +5415,7 @@
             }
           } else {
           }
-        } else if (layer instanceof L2.LayerGroup) {
+        } else if (layer instanceof L3.LayerGroup) {
           layer.eachLayer(function(layer2) {
             self2._searchInLayer(layer2, retRecords, propName);
           });
@@ -5912,7 +5523,7 @@
         var code = text.charCodeAt(text.length);
         this._input.value = text;
         this._input.style.display = "block";
-        L2.DomUtil.addClass(this._container, "search-exp");
+        L3.DomUtil.addClass(this._container, "search-exp");
         this._autoTypeTmp = false;
         this._handleKeypress({ keyCode: code });
       },
@@ -5920,12 +5531,12 @@
         var self2 = this, inputText = this._input.value, records;
         if (this._curReq && this._curReq.abort)
           this._curReq.abort();
-        L2.DomUtil.addClass(this._container, "search-load");
+        L3.DomUtil.addClass(this._container, "search-load");
         if (this.options.layer) {
           this._recordsCache = this._recordsFromLayer();
           records = this._filterData(this._input.value, this._recordsCache);
           this.showTooltip(records);
-          L2.DomUtil.removeClass(this._container, "search-load");
+          L3.DomUtil.removeClass(this._container, "search-load");
         } else {
           if (this.options.sourceData)
             this._retrieveData = this.options.sourceData;
@@ -5938,7 +5549,7 @@
             else
               records = self2._recordsCache;
             self2.showTooltip(records);
-            L2.DomUtil.removeClass(self2._container, "search-load");
+            L3.DomUtil.removeClass(self2._container, "search-load");
           });
         }
       },
@@ -5956,15 +5567,15 @@
       _handleArrowSelect: function(velocity) {
         var searchTips = this._tooltip.hasChildNodes() ? this._tooltip.childNodes : [];
         for (let i = 0; i < searchTips.length; i++) {
-          L2.DomUtil.removeClass(searchTips[i], "search-tip-select");
+          L3.DomUtil.removeClass(searchTips[i], "search-tip-select");
         }
         if (velocity == 1 && this._tooltip.currentSelection >= searchTips.length - 1) {
-          L2.DomUtil.addClass(searchTips[this._tooltip.currentSelection], "search-tip-select");
+          L3.DomUtil.addClass(searchTips[this._tooltip.currentSelection], "search-tip-select");
         } else if (velocity == -1 && this._tooltip.currentSelection <= 0) {
           this._tooltip.currentSelection = -1;
         } else if (this._tooltip.style.display != "none") {
           this._tooltip.currentSelection += velocity;
-          L2.DomUtil.addClass(searchTips[this._tooltip.currentSelection], "search-tip-select");
+          L3.DomUtil.addClass(searchTips[this._tooltip.currentSelection], "search-tip-select");
           this._input.value = searchTips[this._tooltip.currentSelection]._text;
           var tipOffsetTop = searchTips[this._tooltip.currentSelection].offsetTop;
           if (tipOffsetTop + searchTips[this._tooltip.currentSelection].clientHeight >= this._tooltip.scrollTop + this._tooltip.clientHeight) {
@@ -6023,10 +5634,10 @@
         return self2;
       }
     });
-    L2.Control.Search.Marker = L2.Marker.extend({
-      includes: L2.version[0] === "1" ? L2.Evented.prototype : L2.Mixin.Events,
+    L3.Control.Search.Marker = L3.Marker.extend({
+      includes: L3.version[0] === "1" ? L3.Mixin.Events : L3.Mixin.Events,
       options: {
-        icon: new L2.Icon.Default(),
+        icon: new L3.Icon.Default(),
         animate: true,
         circle: {
           radius: 10,
@@ -6037,15 +5648,15 @@
         }
       },
       initialize: function(latlng, options) {
-        L2.setOptions(this, options);
+        L3.setOptions(this, options);
         if (options.icon === true)
-          options.icon = new L2.Icon.Default();
-        L2.Marker.prototype.initialize.call(this, latlng, options);
-        if (L2.Control.Search.prototype._isObject(this.options.circle))
-          this._circleLoc = new L2.CircleMarker(latlng, this.options.circle);
+          options.icon = new L3.Icon.Default();
+        L3.Marker.prototype.initialize.call(this, latlng, options);
+        if (L3.Control.Search.prototype._isObject(this.options.circle))
+          this._circleLoc = new L3.CircleMarker(latlng, this.options.circle);
       },
       onAdd: function(map) {
-        L2.Marker.prototype.onAdd.call(this, map);
+        L3.Marker.prototype.onAdd.call(this, map);
         if (this._circleLoc) {
           map.addLayer(this._circleLoc);
           if (this.options.animate)
@@ -6053,23 +5664,23 @@
         }
       },
       onRemove: function(map) {
-        L2.Marker.prototype.onRemove.call(this, map);
+        L3.Marker.prototype.onRemove.call(this, map);
         if (this._circleLoc)
           map.removeLayer(this._circleLoc);
       },
       setLatLng: function(latlng) {
-        L2.Marker.prototype.setLatLng.call(this, latlng);
+        L3.Marker.prototype.setLatLng.call(this, latlng);
         if (this._circleLoc)
           this._circleLoc.setLatLng(latlng);
         return this;
       },
       _initIcon: function() {
         if (this.options.icon)
-          L2.Marker.prototype._initIcon.call(this);
+          L3.Marker.prototype._initIcon.call(this);
       },
       _removeIcon: function() {
         if (this.options.icon)
-          L2.Marker.prototype._removeIcon.call(this);
+          L3.Marker.prototype._removeIcon.call(this);
       },
       animate: function() {
         if (this._circleLoc) {
@@ -6088,27 +5699,620 @@
         return this;
       }
     });
-    L2.Map.addInitHook(function() {
+    L3.Map.addInitHook(function() {
       if (this.options.searchControl) {
-        this.searchControl = L2.control.search(this.options.searchControl);
+        this.searchControl = L3.control.search(this.options.searchControl);
         this.addControl(this.searchControl);
       }
     });
-    L2.control.search = function(options) {
-      return new L2.Control.Search(options);
+    L3.control.search = function(options) {
+      return new L3.Control.Search(options);
     };
-    return L2.Control.Search;
+    return L3.Control.Search;
   });
 
-  // src/leaflet-ui.js
-  var import_leaflet_easyprint = __toESM(require_bundle());
+  // node_modules/leaflet-easyprint/dist/bundle.js
+  init_leaflet_compat();
+  !(function(t, e) {
+    false ? e() : false ? define(e) : e();
+  })(0, function() {
+    "use strict";
+    function t(t2, e2) {
+      return e2 = { exports: {} }, t2(e2, e2.exports), e2.exports;
+    }
+    var e = "undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self ? self : {}, n = t(function(t2) {
+      !(function(e2) {
+        function n2(t3, e3) {
+          function n3(t4) {
+            return e3.bgcolor && (t4.style.backgroundColor = e3.bgcolor), e3.width && (t4.style.width = e3.width + "px"), e3.height && (t4.style.height = e3.height + "px"), e3.style && Object.keys(e3.style).forEach(function(n4) {
+              t4.style[n4] = e3.style[n4];
+            }), t4;
+          }
+          return e3 = e3 || {}, s(e3), Promise.resolve(t3).then(function(t4) {
+            return u(t4, e3.filter, true);
+          }).then(c).then(d).then(n3).then(function(n4) {
+            return g(n4, e3.width || h.width(t3), e3.height || h.height(t3));
+          });
+        }
+        function i2(t3, e3) {
+          return l(t3, e3 || {}).then(function(e4) {
+            return e4.getContext("2d").getImageData(0, 0, h.width(t3), h.height(t3)).data;
+          });
+        }
+        function o(t3, e3) {
+          return l(t3, e3 || {}).then(function(t4) {
+            return t4.toDataURL();
+          });
+        }
+        function r(t3, e3) {
+          return e3 = e3 || {}, l(t3, e3).then(function(t4) {
+            return t4.toDataURL("image/jpeg", e3.quality || 1);
+          });
+        }
+        function a(t3, e3) {
+          return l(t3, e3 || {}).then(h.canvasToBlob);
+        }
+        function s(t3) {
+          void 0 === t3.imagePlaceholder ? w.impl.options.imagePlaceholder = M.imagePlaceholder : w.impl.options.imagePlaceholder = t3.imagePlaceholder, void 0 === t3.cacheBust ? w.impl.options.cacheBust = M.cacheBust : w.impl.options.cacheBust = t3.cacheBust;
+        }
+        function l(t3, e3) {
+          function i3(t4) {
+            var n3 = document.createElement("canvas");
+            if (n3.width = e3.width || h.width(t4), n3.height = e3.height || h.height(t4), e3.bgcolor) {
+              var i4 = n3.getContext("2d");
+              i4.fillStyle = e3.bgcolor, i4.fillRect(0, 0, n3.width, n3.height);
+            }
+            return n3;
+          }
+          return n2(t3, e3).then(h.makeImage).then(h.delay(100)).then(function(e4) {
+            var n3 = i3(t3);
+            return n3.getContext("2d").drawImage(e4, 0, 0), n3;
+          });
+        }
+        function u(t3, e3, n3) {
+          function i3(t4) {
+            return t4 instanceof HTMLCanvasElement ? h.makeImage(t4.toDataURL()) : t4.cloneNode(false);
+          }
+          function o2(t4, e4, n4) {
+            var i4 = t4.childNodes;
+            return 0 === i4.length ? Promise.resolve(e4) : (function(t5, e5, n5) {
+              var i5 = Promise.resolve();
+              return e5.forEach(function(e6) {
+                i5 = i5.then(function() {
+                  return u(e6, n5);
+                }).then(function(e7) {
+                  e7 && t5.appendChild(e7);
+                });
+              }), i5;
+            })(e4, h.asArray(i4), n4).then(function() {
+              return e4;
+            });
+          }
+          function r2(t4, e4) {
+            function n4() {
+              !(function(t5, e5) {
+                t5.cssText ? e5.cssText = t5.cssText : (function(t6, e6) {
+                  h.asArray(t6).forEach(function(n5) {
+                    e6.setProperty(n5, t6.getPropertyValue(n5), t6.getPropertyPriority(n5));
+                  });
+                })(t5, e5);
+              })(window.getComputedStyle(t4), e4.style);
+            }
+            function i4() {
+              function n5(n6) {
+                var i5 = window.getComputedStyle(t4, n6), o4 = i5.getPropertyValue("content");
+                if ("" !== o4 && "none" !== o4) {
+                  var r4 = h.uid();
+                  e4.className = e4.className + " " + r4;
+                  var a2 = document.createElement("style");
+                  a2.appendChild((function(t5, e5, n7) {
+                    var i6 = "." + t5 + ":" + e5, o5 = n7.cssText ? (function(t6) {
+                      var e6 = t6.getPropertyValue("content");
+                      return t6.cssText + " content: " + e6 + ";";
+                    })(n7) : (function(t6) {
+                      function e6(e7) {
+                        return e7 + ": " + t6.getPropertyValue(e7) + (t6.getPropertyPriority(e7) ? " !important" : "");
+                      }
+                      return h.asArray(t6).map(e6).join("; ") + ";";
+                    })(n7);
+                    return document.createTextNode(i6 + "{" + o5 + "}");
+                  })(r4, n6, i5)), e4.appendChild(a2);
+                }
+              }
+              [":before", ":after"].forEach(function(t5) {
+                n5(t5);
+              });
+            }
+            function o3() {
+              t4 instanceof HTMLTextAreaElement && (e4.innerHTML = t4.value), t4 instanceof HTMLInputElement && e4.setAttribute("value", t4.value);
+            }
+            function r3() {
+              e4 instanceof SVGElement && (e4.setAttribute("xmlns", "http://www.w3.org/2000/svg"), e4 instanceof SVGRectElement && ["width", "height"].forEach(function(t5) {
+                var n5 = e4.getAttribute(t5);
+                n5 && e4.style.setProperty(t5, n5);
+              }));
+            }
+            return e4 instanceof Element ? Promise.resolve().then(n4).then(i4).then(o3).then(r3).then(function() {
+              return e4;
+            }) : e4;
+          }
+          return n3 || !e3 || e3(t3) ? Promise.resolve(t3).then(i3).then(function(n4) {
+            return o2(t3, n4, e3);
+          }).then(function(e4) {
+            return r2(t3, e4);
+          }) : Promise.resolve();
+        }
+        function c(t3) {
+          return p.resolveAll().then(function(e3) {
+            var n3 = document.createElement("style");
+            return t3.appendChild(n3), n3.appendChild(document.createTextNode(e3)), t3;
+          });
+        }
+        function d(t3) {
+          return f.inlineAll(t3).then(function() {
+            return t3;
+          });
+        }
+        function g(t3, e3, n3) {
+          return Promise.resolve(t3).then(function(t4) {
+            return t4.setAttribute("xmlns", "http://www.w3.org/1999/xhtml"), new XMLSerializer().serializeToString(t4);
+          }).then((svg) => svg.replace(/%/g, "%25")).then(h.escapeXhtml).then(function(t4) {
+            return '<foreignObject x="0" y="0" width="100%" height="100%">' + t4 + "</foreignObject>";
+          }).then(function(t4) {
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="' + e3 + '" height="' + n3 + '">' + t4 + "</svg>";
+          }).then(function(t4) {
+            return "data:image/svg+xml;charset=utf-8," + t4;
+          });
+        }
+        var h = /* @__PURE__ */ (function() {
+          function t3() {
+            var t4 = "application/font-woff", e4 = "image/jpeg";
+            return { woff: t4, woff2: t4, ttf: "application/font-truetype", eot: "application/vnd.ms-fontobject", png: "image/png", jpg: e4, jpeg: e4, gif: "image/gif", tiff: "image/tiff", svg: "image/svg+xml" };
+          }
+          function e3(t4) {
+            var e4 = /\.([^\.\/]*?)$/g.exec(t4);
+            return e4 ? e4[1] : "";
+          }
+          function n3(n4) {
+            var i4 = e3(n4).toLowerCase();
+            return t3()[i4] || "";
+          }
+          function i3(t4) {
+            return -1 !== t4.search(/^(data:)/);
+          }
+          function o2(t4) {
+            return new Promise(function(e4) {
+              for (var n4 = window.atob(t4.toDataURL().split(",")[1]), i4 = n4.length, o3 = new Uint8Array(i4), r3 = 0; r3 < i4; r3++) o3[r3] = n4.charCodeAt(r3);
+              e4(new Blob([o3], { type: "image/png" }));
+            });
+          }
+          function r2(t4) {
+            return t4.toBlob ? new Promise(function(e4) {
+              t4.toBlob(e4);
+            }) : o2(t4);
+          }
+          function a2(t4, e4) {
+            var n4 = document.implementation.createHTMLDocument(), i4 = n4.createElement("base");
+            n4.head.appendChild(i4);
+            var o3 = n4.createElement("a");
+            return n4.body.appendChild(o3), i4.href = e4, o3.href = t4, o3.href;
+          }
+          function s2(t4) {
+            return new Promise(function(e4, n4) {
+              var i4 = new Image();
+              i4.onload = function() {
+                e4(i4);
+              }, i4.onerror = n4, i4.src = t4;
+            });
+          }
+          function l2(t4) {
+            var e4 = 3e4;
+            return w.impl.options.cacheBust && (t4 += (/\?/.test(t4) ? "&" : "?") + (/* @__PURE__ */ new Date()).getTime()), new Promise(function(n4) {
+              function i4() {
+                if (4 === a3.readyState) {
+                  if (200 !== a3.status) return void (s3 ? n4(s3) : r3("cannot fetch resource: " + t4 + ", status: " + a3.status));
+                  var e5 = new FileReader();
+                  e5.onloadend = function() {
+                    var t5 = e5.result.split(/,/)[1];
+                    n4(t5);
+                  }, e5.readAsDataURL(a3.response);
+                }
+              }
+              function o3() {
+                s3 ? n4(s3) : r3("timeout of " + e4 + "ms occured while fetching resource: " + t4);
+              }
+              function r3(t5) {
+                console.error(t5), n4("");
+              }
+              var a3 = new XMLHttpRequest();
+              a3.onreadystatechange = i4, a3.ontimeout = o3, a3.responseType = "blob", a3.timeout = e4, a3.open("GET", t4, true), a3.send();
+              var s3;
+              if (w.impl.options.imagePlaceholder) {
+                var l3 = w.impl.options.imagePlaceholder.split(/,/);
+                l3 && l3[1] && (s3 = l3[1]);
+              }
+            });
+          }
+          function u2(t4, e4) {
+            return "data:" + e4 + ";base64," + t4;
+          }
+          function c2(t4) {
+            return t4.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+          }
+          function d2(t4) {
+            return function(e4) {
+              return new Promise(function(n4) {
+                setTimeout(function() {
+                  n4(e4);
+                }, t4);
+              });
+            };
+          }
+          function g2(t4) {
+            for (var e4 = [], n4 = t4.length, i4 = 0; i4 < n4; i4++) e4.push(t4[i4]);
+            return e4;
+          }
+          function h2(t4) {
+            return t4.replace(/#/g, "%23").replace(/\n/g, "%0A");
+          }
+          function m2(t4) {
+            var e4 = f2(t4, "border-left-width"), n4 = f2(t4, "border-right-width");
+            return t4.scrollWidth + e4 + n4;
+          }
+          function p2(t4) {
+            var e4 = f2(t4, "border-top-width"), n4 = f2(t4, "border-bottom-width");
+            return t4.scrollHeight + e4 + n4;
+          }
+          function f2(t4, e4) {
+            var n4 = window.getComputedStyle(t4).getPropertyValue(e4);
+            return parseFloat(n4.replace("px", ""));
+          }
+          return { escape: c2, parseExtension: e3, mimeType: n3, dataAsUrl: u2, isDataUrl: i3, canvasToBlob: r2, resolveUrl: a2, getAndEncode: l2, uid: /* @__PURE__ */ (function() {
+            var t4 = 0;
+            return function() {
+              return "u" + (function() {
+                return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+              })() + t4++;
+            };
+          })(), delay: d2, asArray: g2, escapeXhtml: h2, makeImage: s2, width: m2, height: p2 };
+        })(), m = /* @__PURE__ */ (function() {
+          function t3(t4) {
+            return -1 !== t4.search(o2);
+          }
+          function e3(t4) {
+            for (var e4, n4 = []; null !== (e4 = o2.exec(t4)); ) n4.push(e4[1]);
+            return n4.filter(function(t5) {
+              return !h.isDataUrl(t5);
+            });
+          }
+          function n3(t4, e4, n4, i4) {
+            function o3(t5) {
+              return new RegExp(`(url\\(['"]?)(` + h.escape(t5) + `)(['"]?\\))`, "g");
+            }
+            return Promise.resolve(e4).then(function(t5) {
+              return n4 ? h.resolveUrl(t5, n4) : t5;
+            }).then(i4 || h.getAndEncode).then(function(t5) {
+              return h.dataAsUrl(t5, h.mimeType(e4));
+            }).then(function(n5) {
+              return t4.replace(o3(e4), "$1" + n5 + "$3");
+            });
+          }
+          function i3(i4, o3, r2) {
+            return (function() {
+              return !t3(i4);
+            })() ? Promise.resolve(i4) : Promise.resolve(i4).then(e3).then(function(t4) {
+              var e4 = Promise.resolve(i4);
+              return t4.forEach(function(t5) {
+                e4 = e4.then(function(e5) {
+                  return n3(e5, t5, o3, r2);
+                });
+              }), e4;
+            });
+          }
+          var o2 = /url\(['"]?([^'"]+?)['"]?\)/g;
+          return { inlineAll: i3, shouldProcess: t3, impl: { readUrls: e3, inline: n3 } };
+        })(), p = /* @__PURE__ */ (function() {
+          function t3() {
+            return e3(document).then(function(t4) {
+              return Promise.all(t4.map(function(t5) {
+                return t5.resolve();
+              }));
+            }).then(function(t4) {
+              return t4.join("\n");
+            });
+          }
+          function e3() {
+            function t4(t5) {
+              return t5.filter(function(t6) {
+                return t6.type === CSSRule.FONT_FACE_RULE;
+              }).filter(function(t6) {
+                return m.shouldProcess(t6.style.getPropertyValue("src"));
+              });
+            }
+            function e4(t5) {
+              var e5 = [];
+              return t5.forEach(function(t6) {
+                try {
+                  h.asArray(t6.cssRules || []).forEach(e5.push.bind(e5));
+                } catch (e6) {
+                  console.log("Error while reading CSS rules from " + t6.href, e6.toString());
+                }
+              }), e5;
+            }
+            function n3(t5) {
+              return { resolve: function() {
+                var e5 = (t5.parentStyleSheet || {}).href;
+                return m.inlineAll(t5.cssText, e5);
+              }, src: function() {
+                return t5.style.getPropertyValue("src");
+              } };
+            }
+            return Promise.resolve(h.asArray(document.styleSheets)).then(e4).then(t4).then(function(t5) {
+              return t5.map(n3);
+            });
+          }
+          return { resolveAll: t3, impl: { readAll: e3 } };
+        })(), f = /* @__PURE__ */ (function() {
+          function t3(t4) {
+            function e4(e5) {
+              return h.isDataUrl(t4.src) ? Promise.resolve() : Promise.resolve(t4.src).then(e5 || h.getAndEncode).then(function(e6) {
+                return h.dataAsUrl(e6, h.mimeType(t4.src));
+              }).then(function(e6) {
+                return new Promise(function(n3, i3) {
+                  t4.onload = n3, t4.onerror = i3, t4.src = e6;
+                });
+              });
+            }
+            return { inline: e4 };
+          }
+          function e3(n3) {
+            return n3 instanceof Element ? (function(t4) {
+              var e4 = t4.style.getPropertyValue("background");
+              return e4 ? m.inlineAll(e4).then(function(e5) {
+                t4.style.setProperty("background", e5, t4.style.getPropertyPriority("background"));
+              }).then(function() {
+                return t4;
+              }) : Promise.resolve(t4);
+            })(n3).then(function() {
+              return n3 instanceof HTMLImageElement ? t3(n3).inline() : Promise.all(h.asArray(n3.childNodes).map(function(t4) {
+                return e3(t4);
+              }));
+            }) : Promise.resolve(n3);
+          }
+          return { inlineAll: e3, impl: { newImage: t3 } };
+        })(), M = { imagePlaceholder: void 0, cacheBust: false }, w = { toSvg: n2, toPng: o, toJpeg: r, toBlob: a, toPixelData: i2, impl: { fontFaces: p, images: f, util: h, inliner: m, options: {} } };
+        t2.exports = w;
+      })();
+    }), i = t(function(t2) {
+      var n2 = n2 || (function(t3) {
+        if (!(void 0 === t3 || "undefined" != typeof navigator && /MSIE [1-9]\./.test(navigator.userAgent))) {
+          var e2 = t3.document, n3 = function() {
+            return t3.URL || t3.webkitURL || t3;
+          }, i2 = e2.createElementNS("http://www.w3.org/1999/xhtml", "a"), o = "download" in i2, r = function(t4) {
+            var e3 = new MouseEvent("click");
+            t4.dispatchEvent(e3);
+          }, a = /constructor/i.test(t3.HTMLElement) || t3.safari, s = /CriOS\/[\d]+/.test(navigator.userAgent), l = function(e3) {
+            (t3.setImmediate || t3.setTimeout)(function() {
+              throw e3;
+            }, 0);
+          }, u = function(t4) {
+            var e3 = function() {
+              "string" == typeof t4 ? n3().revokeObjectURL(t4) : t4.remove();
+            };
+            setTimeout(e3, 4e4);
+          }, c = function(t4, e3, n4) {
+            e3 = [].concat(e3);
+            for (var i3 = e3.length; i3--; ) {
+              var o2 = t4["on" + e3[i3]];
+              if ("function" == typeof o2) try {
+                o2.call(t4, n4 || t4);
+              } catch (t5) {
+                l(t5);
+              }
+            }
+          }, d = function(t4) {
+            return /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(t4.type) ? new Blob([String.fromCharCode(65279), t4], { type: t4.type }) : t4;
+          }, g = function(e3, l2, g2) {
+            g2 || (e3 = d(e3));
+            var h2, m2 = this, p = e3.type, f = "application/octet-stream" === p, M = function() {
+              c(m2, "writestart progress write writeend".split(" "));
+            };
+            if (m2.readyState = m2.INIT, o) return h2 = n3().createObjectURL(e3), void setTimeout(function() {
+              i2.href = h2, i2.download = l2, r(i2), M(), u(h2), m2.readyState = m2.DONE;
+            });
+            !(function() {
+              if ((s || f && a) && t3.FileReader) {
+                var i3 = new FileReader();
+                return i3.onloadend = function() {
+                  var e4 = s ? i3.result : i3.result.replace(/^data:[^;]*;/, "data:attachment/file;");
+                  t3.open(e4, "_blank") || (t3.location.href = e4), e4 = void 0, m2.readyState = m2.DONE, M();
+                }, i3.readAsDataURL(e3), void (m2.readyState = m2.INIT);
+              }
+              if (h2 || (h2 = n3().createObjectURL(e3)), f) t3.location.href = h2;
+              else {
+                t3.open(h2, "_blank") || (t3.location.href = h2);
+              }
+              m2.readyState = m2.DONE, M(), u(h2);
+            })();
+          }, h = g.prototype, m = function(t4, e3, n4) {
+            return new g(t4, e3 || t4.name || "download", n4);
+          };
+          return "undefined" != typeof navigator && navigator.msSaveOrOpenBlob ? function(t4, e3, n4) {
+            return e3 = e3 || t4.name || "download", n4 || (t4 = d(t4)), navigator.msSaveOrOpenBlob(t4, e3);
+          } : (h.abort = function() {
+          }, h.readyState = h.INIT = 0, h.WRITING = 1, h.DONE = 2, h.error = h.onwritestart = h.onprogress = h.onwrite = h.onabort = h.onerror = h.onwriteend = null, m);
+        }
+      })("undefined" != typeof self && self || "undefined" != typeof window && window || e.content);
+      t2.exports && (t2.exports.saveAs = n2);
+    });
+    leaflet_compat_default.Control.EasyPrint = leaflet_compat_default.Control.extend({ options: { title: "Print map", position: "topleft", sizeModes: ["Current"], filename: "map", exportOnly: false, hidden: false, tileWait: 500, hideControlContainer: true, hideClasses: [], customWindowTitle: window.document.title, spinnerBgCOlor: "#0DC5C1", customSpinnerClass: "epLoader", defaultSizeTitles: { Current: "Current Size", A4Landscape: "A4 Landscape", A4Portrait: "A4 Portrait" } }, onAdd: function() {
+      this.mapContainer = this._map.getContainer(), this.options.sizeModes = this.options.sizeModes.map(function(t3) {
+        return "Current" === t3 ? { name: this.options.defaultSizeTitles.Current, className: "CurrentSize" } : "A4Landscape" === t3 ? { height: this._a4PageSize.height, width: this._a4PageSize.width, name: this.options.defaultSizeTitles.A4Landscape, className: "A4Landscape page" } : "A4Portrait" === t3 ? { height: this._a4PageSize.width, width: this._a4PageSize.height, name: this.options.defaultSizeTitles.A4Portrait, className: "A4Portrait page" } : t3;
+      }, this);
+      var t2 = leaflet_compat_default.DomUtil.create("div", "leaflet-control-easyPrint leaflet-bar leaflet-control");
+      if (!this.options.hidden) {
+        this._addCss(), leaflet_compat_default.DomEvent.addListener(t2, "mouseover", this._togglePageSizeButtons, this), leaflet_compat_default.DomEvent.addListener(t2, "mouseout", this._togglePageSizeButtons, this);
+        var e2 = "leaflet-control-easyPrint-button";
+        this.options.exportOnly && (e2 += "-export"), this.link = leaflet_compat_default.DomUtil.create("a", e2, t2), this.link.id = "leafletEasyPrint", this.link.title = this.options.title, this.holder = leaflet_compat_default.DomUtil.create("ul", "easyPrintHolder", t2), this.options.sizeModes.forEach(function(t3) {
+          var e3 = leaflet_compat_default.DomUtil.create("li", "easyPrintSizeMode", this.holder);
+          e3.title = t3.name;
+          leaflet_compat_default.DomUtil.create("a", t3.className, e3);
+          leaflet_compat_default.DomEvent.addListener(e3, "click", this.printMap, this);
+        }, this), leaflet_compat_default.DomEvent.disableClickPropagation(t2);
+      }
+      return t2;
+    }, printMap: function(t2, e2) {
+      e2 && (this.options.filename = e2), this.options.exportOnly || (this._page = window.open("", "_blank", "toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=10, top=10, width=200, height=250, visible=none"), this._page.document.write(this._createSpinner(this.options.customWindowTitle, this.options.customSpinnerClass, this.options.spinnerBgCOlor))), this.originalState = { mapWidth: this.mapContainer.style.width, widthWasAuto: false, widthWasPercentage: false, mapHeight: this.mapContainer.style.height, zoom: this._map.getZoom(), center: this._map.getCenter() }, "auto" === this.originalState.mapWidth ? (this.originalState.mapWidth = this._map.getSize().x + "px", this.originalState.widthWasAuto = true) : this.originalState.mapWidth.includes("%") && (this.originalState.percentageWidth = this.originalState.mapWidth, this.originalState.widthWasPercentage = true, this.originalState.mapWidth = this._map.getSize().x + "px"), this._map.fire("easyPrint-start", { event: t2 }), this.options.hidden || this._togglePageSizeButtons({ type: null }), this.options.hideControlContainer && this._toggleControls(), this.options.hideClasses.length > 0 && this._toggleClasses(this.options.hideClasses);
+      var n2 = "string" != typeof t2 ? t2.target.className : t2;
+      if ("CurrentSize" === n2) return this._printOpertion(n2);
+      this.outerContainer = this._createOuterContainer(this.mapContainer), this.originalState.widthWasAuto && (this.outerContainer.style.width = this.originalState.mapWidth), this._createImagePlaceholder(n2);
+    }, _createImagePlaceholder: function(t2) {
+      var e2 = this;
+      n.toPng(this.mapContainer, { width: parseInt(this.originalState.mapWidth.replace("px")), height: parseInt(this.originalState.mapHeight.replace("px")) }).then(function(n2) {
+        e2.blankDiv = document.createElement("div");
+        var i2 = e2.blankDiv;
+        e2.outerContainer.parentElement.insertBefore(i2, e2.outerContainer), i2.className = "epHolder", i2.style.backgroundImage = 'url("' + n2 + '")', i2.style.position = "absolute", i2.style.zIndex = 1011, i2.style.display = "initial", i2.style.width = e2.originalState.mapWidth, i2.style.height = e2.originalState.mapHeight, e2._resizeAndPrintMap(t2);
+      }).catch(function(t3) {
+        console.error("oops, something went wrong!", t3);
+      });
+    }, _resizeAndPrintMap: function(t2) {
+      this.outerContainer.style.opacity = 0;
+      var e2 = this.options.sizeModes.filter(function(e3) {
+        return e3.className === t2;
+      });
+      e2 = e2[0], this.mapContainer.style.width = e2.width + "px", this.mapContainer.style.height = e2.height + "px", this.mapContainer.style.width > this.mapContainer.style.height ? this.orientation = "portrait" : this.orientation = "landscape", this._map.setView(this.originalState.center), this._map.setZoom(this.originalState.zoom), this._map.invalidateSize(), this.options.tileLayer ? this._pausePrint(t2) : this._printOpertion(t2);
+    }, _pausePrint: function(t2) {
+      var e2 = this, n2 = setInterval(function() {
+        e2.options.tileLayer.isLoading() || (clearInterval(n2), e2._printOpertion(t2));
+      }, e2.options.tileWait);
+    }, _printOpertion: function(t2) {
+      var e2 = this, o = this.mapContainer.style.width;
+      (this.originalState.widthWasAuto && "CurrentSize" === t2 || this.originalState.widthWasPercentage && "CurrentSize" === t2) && (o = this.originalState.mapWidth), n.toPng(e2.mapContainer, { width: parseInt(o), height: parseInt(e2.mapContainer.style.height.replace("px")) }).then(function(t3) {
+        var n2 = e2._dataURItoBlob(t3);
+        e2.options.exportOnly ? i.saveAs(n2, e2.options.filename + ".png") : e2._sendToBrowserPrint(t3, e2.orientation), e2._toggleControls(true), e2._toggleClasses(e2.options.hideClasses, true), e2.outerContainer && (e2.originalState.widthWasAuto ? e2.mapContainer.style.width = "auto" : e2.originalState.widthWasPercentage ? e2.mapContainer.style.width = e2.originalState.percentageWidth : e2.mapContainer.style.width = e2.originalState.mapWidth, e2.mapContainer.style.height = e2.originalState.mapHeight, e2._removeOuterContainer(e2.mapContainer, e2.outerContainer, e2.blankDiv), e2._map.invalidateSize(), e2._map.setView(e2.originalState.center), e2._map.setZoom(e2.originalState.zoom)), e2._map.fire("easyPrint-finished");
+      }).catch(function(t3) {
+        console.error("Print operation failed", t3);
+      });
+    }, _sendToBrowserPrint: function(t2, e2) {
+      this._page.resizeTo(600, 800);
+      var n2 = this._createNewWindow(t2, e2, this);
+      this._page.document.body.innerHTML = "", this._page.document.write(n2), this._page.document.close();
+    }, _createSpinner: function(t2, e2, n2) {
+      return "<html><head><title>" + t2 + "</title></head><body><style>\n      body{\n        background: " + n2 + `;
+      }
+      .epLoader,
+      .epLoader:before,
+      .epLoader:after {
+        border-radius: 50%;
+      }
+      .epLoader {
+        color: #ffffff;
+        font-size: 11px;
+        text-indent: -99999em;
+        margin: 55px auto;
+        position: relative;
+        width: 10em;
+        height: 10em;
+        box-shadow: inset 0 0 0 1em;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+      .epLoader:before,
+      .epLoader:after {
+        position: absolute;
+        content: '';
+      }
+      .epLoader:before {
+        width: 5.2em;
+        height: 10.2em;
+        background: #0dc5c1;
+        border-radius: 10.2em 0 0 10.2em;
+        top: -0.1em;
+        left: -0.1em;
+        -webkit-transform-origin: 5.2em 5.1em;
+        transform-origin: 5.2em 5.1em;
+        -webkit-animation: load2 2s infinite ease 1.5s;
+        animation: load2 2s infinite ease 1.5s;
+      }
+      .epLoader:after {
+        width: 5.2em;
+        height: 10.2em;
+        background: #0dc5c1;
+        border-radius: 0 10.2em 10.2em 0;
+        top: -0.1em;
+        left: 5.1em;
+        -webkit-transform-origin: 0px 5.1em;
+        transform-origin: 0px 5.1em;
+        -webkit-animation: load2 2s infinite ease;
+        animation: load2 2s infinite ease;
+      }
+      @-webkit-keyframes load2 {
+        0% {
+          -webkit-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes load2 {
+        0% {
+          -webkit-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      </style>
+    <div class="` + e2 + '">Loading...</div></body></html>';
+    }, _createNewWindow: function(t2, e2, n2) {
+      return "<html><head>\n        <style>@media print {\n          img { max-width: 98%!important; max-height: 98%!important; }\n          @page { size: " + e2 + `;}}
+        </style>
+        <script>function step1(){
+        setTimeout('step2()', 10);}
+        function step2(){window.print();window.close()}
+        <\/script></head><body onload='step1()'>
+        <img src="` + t2 + '" style="display:block; margin:auto;"></body></html>';
+    }, _createOuterContainer: function(t2) {
+      var e2 = document.createElement("div");
+      return t2.parentNode.insertBefore(e2, t2), t2.parentNode.removeChild(t2), e2.appendChild(t2), e2.style.width = t2.style.width, e2.style.height = t2.style.height, e2.style.display = "inline-block", e2.style.overflow = "hidden", e2;
+    }, _removeOuterContainer: function(t2, e2, n2) {
+      e2.parentNode && (e2.parentNode.insertBefore(t2, e2), e2.parentNode.removeChild(n2), e2.parentNode.removeChild(e2));
+    }, _addCss: function() {
+      var t2 = document.createElement("style");
+      t2.type = "text/css", t2.innerHTML = ".leaflet-control-easyPrint-button { \n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDUxMiA1MTI7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8cGF0aCBkPSJNMTI4LDMyaDI1NnY2NEgxMjhWMzJ6IE00ODAsMTI4SDMyYy0xNy42LDAtMzIsMTQuNC0zMiwzMnYxNjBjMCwxNy42LDE0LjM5OCwzMiwzMiwzMmg5NnYxMjhoMjU2VjM1Mmg5NiAgIGMxNy42LDAsMzItMTQuNCwzMi0zMlYxNjBDNTEyLDE0Mi40LDQ5Ny42LDEyOCw0ODAsMTI4eiBNMzUyLDQ0OEgxNjBWMjg4aDE5MlY0NDh6IE00ODcuMTk5LDE3NmMwLDEyLjgxMy0xMC4zODcsMjMuMi0yMy4xOTcsMjMuMiAgIGMtMTIuODEyLDAtMjMuMjAxLTEwLjM4Ny0yMy4yMDEtMjMuMnMxMC4zODktMjMuMiwyMy4xOTktMjMuMkM0NzYuODE0LDE1Mi44LDQ4Ny4xOTksMTYzLjE4Nyw0ODcuMTk5LDE3NnoiIGZpbGw9IiMwMDAwMDAiLz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);\n      background-size: 16px 16px; \n      cursor: pointer; \n    }\n    .leaflet-control-easyPrint-button-export { \n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDQzMy41IDQzMy41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzMuNSA0MzMuNTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxnIGlkPSJmaWxlLWRvd25sb2FkIj4KCQk8cGF0aCBkPSJNMzk1LjI1LDE1M2gtMTAyVjBoLTE1M3YxNTNoLTEwMmwxNzguNSwxNzguNUwzOTUuMjUsMTUzeiBNMzguMjUsMzgyLjV2NTFoMzU3di01MUgzOC4yNXoiIGZpbGw9IiMwMDAwMDAiLz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);\n      background-size: 16px 16px; \n      cursor: pointer; \n    }\n    .easyPrintHolder a {\n      background-size: 16px 16px;\n      cursor: pointer;\n    }\n    .easyPrintHolder .CurrentSize{\n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTZweCIgdmVyc2lvbj0iMS4xIiBoZWlnaHQ9IjE2cHgiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgNjQgNjQiPgogIDxnPgogICAgPGcgZmlsbD0iIzFEMUQxQiI+CiAgICAgIDxwYXRoIGQ9Ik0yNS4yNTUsMzUuOTA1TDQuMDE2LDU3LjE0NVY0Ni41OWMwLTEuMTA4LTAuODk3LTIuMDA4LTIuMDA4LTIuMDA4QzAuODk4LDQ0LjU4MiwwLDQ1LjQ4MSwwLDQ2LjU5djE1LjQwMiAgICBjMCwwLjI2MSwwLjA1MywwLjUyMSwwLjE1NSwwLjc2N2MwLjIwMywwLjQ5MiwwLjU5NCwwLjg4MiwxLjA4NiwxLjA4N0MxLjQ4Niw2My45NDcsMS43NDcsNjQsMi4wMDgsNjRoMTUuNDAzICAgIGMxLjEwOSwwLDIuMDA4LTAuODk4LDIuMDA4LTIuMDA4cy0wLjg5OC0yLjAwOC0yLjAwOC0yLjAwOEg2Ljg1NWwyMS4yMzgtMjEuMjRjMC43ODQtMC43ODQsMC43ODQtMi4wNTUsMC0yLjgzOSAgICBTMjYuMDM5LDM1LjEyMSwyNS4yNTUsMzUuOTA1eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgICA8cGF0aCBkPSJtNjMuODQ1LDEuMjQxYy0wLjIwMy0wLjQ5MS0wLjU5NC0wLjg4Mi0xLjA4Ni0xLjA4Ny0wLjI0NS0wLjEwMS0wLjUwNi0wLjE1NC0wLjc2Ny0wLjE1NGgtMTUuNDAzYy0xLjEwOSwwLTIuMDA4LDAuODk4LTIuMDA4LDIuMDA4czAuODk4LDIuMDA4IDIuMDA4LDIuMDA4aDEwLjU1NmwtMjEuMjM4LDIxLjI0Yy0wLjc4NCwwLjc4NC0wLjc4NCwyLjA1NSAwLDIuODM5IDAuMzkyLDAuMzkyIDAuOTA2LDAuNTg5IDEuNDIsMC41ODlzMS4wMjctMC4xOTcgMS40MTktMC41ODlsMjEuMjM4LTIxLjI0djEwLjU1NWMwLDEuMTA4IDAuODk3LDIuMDA4IDIuMDA4LDIuMDA4IDEuMTA5LDAgMi4wMDgtMC44OTkgMi4wMDgtMi4wMDh2LTE1LjQwMmMwLTAuMjYxLTAuMDUzLTAuNTIyLTAuMTU1LTAuNzY3eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+Cg==)\n    }\n    .easyPrintHolder .page {\n      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQ0NC44MzMgNDQ0LjgzMyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDQ0LjgzMyA0NDQuODMzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4Ij4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNNTUuMjUsNDQ0LjgzM2gzMzQuMzMzYzkuMzUsMCwxNy03LjY1LDE3LTE3VjEzOS4xMTdjMC00LjgxNy0xLjk4My05LjM1LTUuMzgzLTEyLjQ2N0wyNjkuNzMzLDQuNTMzICAgIEMyNjYuNjE3LDEuNywyNjIuMzY3LDAsMjU4LjExNywwSDU1LjI1Yy05LjM1LDAtMTcsNy42NS0xNywxN3Y0MTAuODMzQzM4LjI1LDQzNy4xODMsNDUuOSw0NDQuODMzLDU1LjI1LDQ0NC44MzN6ICAgICBNMzcyLjU4MywxNDYuNDgzdjAuODVIMjU2LjQxN3YtMTA4LjhMMzcyLjU4MywxNDYuNDgzeiBNNzIuMjUsMzRoMTUwLjE2N3YxMzAuMzMzYzAsOS4zNSw3LjY1LDE3LDE3LDE3aDEzMy4xNjd2MjI5LjVINzIuMjVWMzR6ICAgICIgZmlsbD0iIzAwMDAwMCIvPgoJPC9nPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPgo=);\n    }\n    .easyPrintHolder .A4Landscape { \n      transform: rotate(-90deg);\n    }\n\n    .leaflet-control-easyPrint-button{\n      display: inline-block;\n    }\n    .easyPrintHolder{\n      margin-top:-31px;\n      margin-bottom: -5px;\n      margin-left: 30px;\n      padding-left: 0px;\n      display: none;\n    }\n\n    .easyPrintSizeMode {\n      display: inline-block;\n    }\n    .easyPrintHolder .easyPrintSizeMode a {\n      border-radius: 0px;\n    }\n\n    .easyPrintHolder .easyPrintSizeMode:last-child a{\n      border-top-right-radius: 2px;\n      border-bottom-right-radius: 2px;\n      margin-left: -1px;\n    }\n\n    .easyPrintPortrait:hover, .easyPrintLandscape:hover{\n      background-color: #757570;\n      cursor: pointer;\n    }", document.body.appendChild(t2);
+    }, _dataURItoBlob: function(t2) {
+      for (var e2 = atob(t2.split(",")[1]), n2 = t2.split(",")[0].split(":")[1].split(";")[0], i2 = new ArrayBuffer(e2.length), o = new DataView(i2), r = 0; r < e2.length; r++) o.setUint8(r, e2.charCodeAt(r));
+      return new Blob([i2], { type: n2 });
+    }, _togglePageSizeButtons: function(t2) {
+      var e2 = this.holder.style, n2 = this.link.style;
+      "mouseover" === t2.type ? (e2.display = "block", n2.borderTopRightRadius = "0", n2.borderBottomRightRadius = "0") : (e2.display = "none", n2.borderTopRightRadius = "2px", n2.borderBottomRightRadius = "2px");
+    }, _toggleControls: function(t2) {
+      var e2 = document.getElementsByClassName("leaflet-control-container")[0];
+      if (t2) return e2.style.display = "block";
+      e2.style.display = "none";
+    }, _toggleClasses: function(t2, e2) {
+      t2.forEach(function(t3) {
+        var n2 = document.getElementsByClassName(t3)[0];
+        if (e2) return n2.style.display = "block";
+        n2.style.display = "none";
+      });
+    }, _a4PageSize: { height: 715, width: 1045 } }), leaflet_compat_default.easyPrint = function(t2) {
+      return new leaflet_compat_default.Control.EasyPrint(t2);
+    };
+  });
 
   // node_modules/leaflet.control.resizer/L.Control.Resizer.js
-  (function(L2) {
-    if (typeof L2 === "undefined") {
+  init_leaflet_compat();
+  (function(L3) {
+    if (typeof L3 === "undefined") {
       throw new Error("Leaflet must be included first");
     }
-    L2.Control.Resizer = L2.Control.extend({
+    L3.Control.Resizer = L3.Control.extend({
       options: {
         direction: "e",
         // valid values e, s, se
@@ -6129,7 +6333,7 @@
         MSPointerDown: "touchmove"
       },
       initialize: function(options) {
-        L2.Util.setOptions(this, options);
+        L3.Util.setOptions(this, options);
         this._initialOffsetX = 0;
         this._initialOffsetY = 0;
         this.options.position = "leaflet-control-resizer-corner-" + this.options.direction;
@@ -6148,33 +6352,33 @@
         var className = "leaflet-control-resizer";
         var classNameTransp = className + (this.options.onlyOnHover ? "-transparent" : "-opaque");
         var classNameLoc = className + "-" + this.options.direction;
-        this._container = L2.DomUtil.create(
+        this._container = L3.DomUtil.create(
           "div",
           className + " " + classNameTransp + " " + classNameLoc,
           map.getContainer()
         );
         var container = this._container;
-        L2.DomEvent.on(container, "mousedown mouseup click touchstart drag", L2.DomEvent.stopPropagation);
-        L2.DomEvent.on(container, "mousedown touchstart", this._initResize, this);
+        L3.DomEvent.on(container, "pointerdown mousedown mouseup click touchstart drag", L3.DomEvent.stopPropagation);
+        L3.DomEvent.on(container, "mousedown touchstart", this._initResize, this);
         return this._container;
       },
       onRemove: function(map) {
-        L2.DomEvent.off(this._container, "mousedown touchstart", this._initResize, this);
-        L2.DomEvent.off(this._container, "mousedown mouseup click touchstart drag", L2.DomEvent.stopPropagation);
+        L3.DomEvent.off(this._container, "mousedown touchstart", this._initResize, this);
+        L3.DomEvent.off(this._container, "pointerdown mousedown mouseup click touchstart drag", L3.DomEvent.stopPropagation);
       },
       fakeHover: function(ms) {
         var className = "leaflet-control-resizer-transparent-fakedhover";
         var cont = this._container;
-        L2.DomUtil.addClass(cont, className);
+        L3.DomUtil.addClass(cont, className);
         setTimeout(function() {
-          L2.DomUtil.removeClass(cont, className);
+          L3.DomUtil.removeClass(cont, className);
         }, ms | 1e3);
       },
       _prepareLocation: function(map) {
         var corners = map._controlCorners;
         var l = "leaflet-control-resizer-corner-" + this.options.direction;
         var container = map._controlContainer;
-        corners[l] = L2.DomUtil.create("div", l, container);
+        corners[l] = L3.DomUtil.create("div", l, container);
       },
       _initResize: function(e) {
         if (e._simulated || !this._enabled) {
@@ -6184,22 +6388,22 @@
         this._started = true;
         this._moved = false;
         var first = e.touches && e.touches.length === 1 ? e.touches[0] : e;
-        L2.DomUtil.disableImageDrag();
-        L2.DomUtil.disableTextSelection();
+        L3.DomUtil.disableImageDrag();
+        L3.DomUtil.disableTextSelection();
         this.fire("down", e);
         var mapCont = this._map.getContainer();
         this._initialOffsetX = mapCont.offsetWidth + mapCont.offsetLeft - first.clientX;
         this._initialOffsetY = mapCont.offsetHeight + mapCont.offsetTop - first.clientY;
-        L2.DomEvent.on(document, this._END[e.type], this._stopResizing, this);
-        L2.DomEvent.on(this._container, this._END[e.type], this._stopResizing, this);
-        L2.DomEvent.on(document, this._MOVE[e.type], this._duringResizing, this);
+        L3.DomEvent.on(document, this._END[e.type], this._stopResizing, this);
+        L3.DomEvent.on(this._container, this._END[e.type], this._stopResizing, this);
+        L3.DomEvent.on(document, this._MOVE[e.type], this._duringResizing, this);
       },
       _duringResizing: function(e) {
         if (e._simulated) {
           return;
         }
         var first = e.touches && e.touches.length === 1 ? e.touches[0] : e;
-        L2.DomEvent.preventDefault(e);
+        L3.DomEvent.preventDefault(e);
         if (!this._moved) {
           this.fire("dragstart", e);
         }
@@ -6224,28 +6428,29 @@
           return;
         }
         for (var i in this._MOVE) {
-          L2.DomEvent.off(document, this._MOVE[i], this._duringResizing, this);
-          L2.DomEvent.off(document, this._END[i], this._stopResizing, this);
-          L2.DomEvent.off(this._container, this._END[i], this._stopResizing, this);
+          L3.DomEvent.off(document, this._MOVE[i], this._duringResizing, this);
+          L3.DomEvent.off(document, this._END[i], this._stopResizing, this);
+          L3.DomEvent.off(this._container, this._END[i], this._stopResizing, this);
         }
         this._map.invalidateSize({ pan: this.options.pan });
-        L2.DomUtil.enableImageDrag();
-        L2.DomUtil.enableTextSelection();
+        L3.DomUtil.enableImageDrag();
+        L3.DomUtil.enableTextSelection();
         this._started = false;
         this.fire("dragend", e);
       }
     });
-    L2.Control.Resizer.include(L2.Evented.prototype);
-    L2.control.resizer = function(options) {
-      return new L2.Control.Resizer(options);
+    L3.Control.Resizer.include(L3.Mixin.Events);
+    L3.control.resizer = function(options) {
+      return new L3.Control.Resizer(options);
     };
-  })(L);
+  })(leaflet_compat_default);
 
   // node_modules/leaflet.visualclick/dist/L.VisualClick.js
-  L.Map.VisualClick = L.Handler.extend({
+  init_leaflet_compat();
+  leaflet_compat_default.Map.VisualClick = leaflet_compat_default.Handler.extend({
     _makeVisualIcon: function() {
       var touchMode = this._map.options.visualClickMode === "touch" ? true : false;
-      return L.divIcon({
+      return leaflet_compat_default.divIcon({
         className: "leaflet-visualclick-icon" + (touchMode ? "-touch" : ""),
         // See L.VisualClick.css
         iconSize: [0, 0],
@@ -6256,7 +6461,7 @@
     _onClick: function(e) {
       var map = this._map;
       var latlng = e.latlng;
-      var marker = L.marker(latlng, {
+      var marker = leaflet_compat_default.marker(latlng, {
         pane: this._map.options.visualClickPane,
         icon: this._visualIcon,
         interactive: false
@@ -6281,23 +6486,21 @@
       this._map.off(this._map.options.visualClickEvents, this._onClick, this);
     }
   });
-  L.Map.mergeOptions({
-    visualClick: L.Browser.any3d ? true : false,
+  leaflet_compat_default.Map.mergeOptions({
+    visualClick: leaflet_compat_default.Browser.any3d ? true : false,
     //Can be true, desktop, touch, false. Not straight forward to use L.Browser.touch flag because true on IE10
-    visualClickMode: L.Browser.touch && L.Browser.mobile ? "touch" : "desktop",
+    visualClickMode: leaflet_compat_default.Browser.touch && leaflet_compat_default.Browser.mobile ? "touch" : "desktop",
     //Not straight forward to use only L.Browser.touch flag because true on IE10 - so this is slightly better
     visualClickEvents: "click contextmenu",
     //Standard leaflety way of defining which events to hook on to
-    visualClickPane: L.Browser.ie && document.documentMode === 10 ? "ie10-visual-click-pane" : "shadowPane"
+    visualClickPane: leaflet_compat_default.Browser.ie && document.documentMode === 10 ? "ie10-visual-click-pane" : "shadowPane"
     // Map pane where the pulse markers will be showh
   });
-  L.Map.addInitHook("addHandler", "visualClick", L.Map.VisualClick);
+  leaflet_compat_default.Map.addInitHook("addHandler", "visualClick", leaflet_compat_default.Map.VisualClick);
 
   // src/leaflet-ui.js
-  L.Control.Locate = LocateControl;
-  L.control.locate = locate;
-  L.Control.FullScreen = FullScreen;
-  L.control.fullscreen = (options) => new FullScreen(options);
+  leaflet_compat_default.Control.Locate = leaflet_compat_default.Control.Locate.LocateControl;
+  leaflet_compat_default.control.fullscreen = (options) => new leaflet_compat_default.Control.FullScreen(options);
   (function() {
     const currentScript = document.currentScript;
     const currentVersion = version.split("+")[0].trim();
@@ -6347,7 +6550,7 @@
             maxNativeZoom: 22,
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
             // apikey: '<your apikey>',
-            r: L.Browser.retina ? "@2x" : ""
+            r: leaflet_compat_default.Browser.retina ? "@2x" : ""
           }
         },
         streets: {
@@ -6367,7 +6570,7 @@
             maxNativeZoom: 22,
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
             // apikey: '<your apikey>',
-            r: L.Browser.retina ? "@2x" : ""
+            r: leaflet_compat_default.Browser.retina ? "@2x" : ""
           }
         },
         terrain: {
@@ -6378,7 +6581,7 @@
             maxNativeZoom: 22,
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
             // apikey: '<your apikey>',
-            r: L.Browser.retina ? "@2x" : ""
+            r: leaflet_compat_default.Browser.retina ? "@2x" : ""
           }
         },
         satellite: {
@@ -6503,7 +6706,7 @@
       _isMiniMap: false
       // used to prevent infinite loops when loading the minimap control.
     };
-    L.Map.mergeOptions({
+    leaflet_compat_default.Map.mergeOptions({
       mapTypeId: "streets",
       mapTypeIds: ["streets", "terrain", "satellite", "topo"],
       mapTypes: void 0,
@@ -6529,7 +6732,7 @@
       _isMiniMap: false
       // used to prevent infinite loops when loading the minimap control.
     });
-    L.Map.addInitHook(function() {
+    leaflet_compat_default.Map.addInitHook(function() {
       disableDefaultUI.call(this);
       if (this.options._isMiniMap) {
         return;
@@ -6542,7 +6745,7 @@
     function disableDefaultUI() {
       if (this.zoomControl) this.zoomControl.remove();
       if (this.rotateControl) this.rotateControl.remove();
-      if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+      if (this.fullscreenControl) this.fullscreenControl.remove();
       if (this.searchControl && this.options.searchControl) this.searchControl.remove();
       if (this.attributionControl) this.attributionControl.remove();
     }
@@ -6550,9 +6753,9 @@
       let opts = this.options;
       for (let i in default_options) {
         if (opts[i] === true || typeof opts[i] === "undefined") {
-          opts[i] = default_options[i];
+          opts[i] = isObject(default_options[i]) ? deepMerge({}, default_options[i]) : default_options[i];
         } else if (typeof this.options[i] === "object" && opts[i] instanceof Array === false) {
-          opts[i] = deepMerge(default_options[i], opts[i]);
+          opts[i] = deepMerge({}, default_options[i], opts[i]);
         }
       }
       if (opts.apiKeys) {
@@ -6591,7 +6794,7 @@
       for (let i in opts.mapTypeIds) {
         let id = opts.mapTypeIds[i];
         if (opts.mapTypes[id]) {
-          baseMaps[opts.mapTypes[id].name] = layers[id] = new L.TileLayer(opts.mapTypes[id].url, opts.mapTypes[id].options);
+          baseMaps[opts.mapTypes[id].name] = layers[id] = new leaflet_compat_default.TileLayer(opts.mapTypes[id].url, opts.mapTypes[id].options);
           layers[id].mapTypeId = id;
         }
       }
@@ -6607,19 +6810,19 @@
         if (e && e.layer && e.layer.mapTypeId && e.layer.bringToBack) e.layer.bringToBack();
       });
       if (opts.layersControl) {
-        controls.layers = new L.Control.Layers(baseMaps, null, opts.layersControl);
+        controls.layers = new leaflet_compat_default.Control.Layers(baseMaps, null, opts.layersControl);
         this.on("zoomend", autoToggleSatelliteLayer, this);
       }
       if (opts.attributionControl && this.attributionControl) {
         this.attributionControl.addTo(this);
         controls.attribution = this.attributionControl;
-        this.on("baselayerchange", L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
+        this.on("baselayerchange", updateLeafletAttribution.bind(this, this.attributionControl.options.prefix));
       }
       if (opts.editInOSMControl) {
-        controls.editInOSM = new L.Control.EditInOSM(opts.editInOSMControl);
+        controls.editInOSM = new leaflet_compat_default.Control.EditInOSM(opts.editInOSMControl);
       }
       if (opts.scaleControl) {
-        controls.scale = new L.Control.Scale(opts.scaleControl);
+        controls.scale = new leaflet_compat_default.Control.Scale(opts.scaleControl);
       }
       if (opts.zoomControl && this.zoomControl) {
         this.zoomControl.setPosition(opts.zoomControl.position);
@@ -6632,35 +6835,36 @@
         controls.rotate = this.rotateControl;
       }
       if (opts.pegmanControl) {
-        controls.pegman = new L.Control.Pegman(opts.pegmanControl);
+        controls.pegman = new leaflet_compat_default.Control.Pegman(opts.pegmanControl);
       }
       if (opts.locateControl) {
-        controls.locate = new L.Control.Locate(opts.locateControl);
+        controls.locate = new leaflet_compat_default.Control.Locate(opts.locateControl);
       }
       if (opts.searchControl) {
-        controls.search = this.searchControl = new L.Control.Search(opts.searchControl);
+        controls.search = this.searchControl = new leaflet_compat_default.Control.Search(opts.searchControl);
       }
       if (opts.printControl) {
-        controls.print = new L.Control.EasyPrint(opts.printControl);
+        controls.print = new leaflet_compat_default.Control.EasyPrint(opts.printControl);
       }
       if (opts.loadingControl) {
-        controls.loading = new L.Control.Loading(opts.loadingControl);
+        controls.loading = new leaflet_compat_default.Control.Loading(opts.loadingControl);
       }
       if (opts.fullscreenControl) {
-        controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(opts.fullscreenControl);
+        controls.fullscreen = this.fullscreenControl;
+        leaflet_compat_default.Util.setOptions(controls.fullscreen, opts.fullscreenControl);
       }
       if (opts.minimapControl) {
         let miniMapTypeId = opts.minimapControl.mapOptions.mapTypeId;
         let miniMapLayer = opts.mapTypes[miniMapTypeId];
         if (miniMapLayer) {
-          miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+          miniMapLayer = new leaflet_compat_default.TileLayer(miniMapLayer.url, miniMapLayer.options);
           miniMapLayer.mapTypeId = miniMapTypeId;
-          controls.minimap = new L.Control.MiniMap(miniMapLayer, opts.minimapControl);
+          controls.minimap = new leaflet_compat_default.Control.MiniMap(miniMapLayer, opts.minimapControl);
           controls.minimap._mainMapBaseLayers = baseMaps;
         }
       }
       if (opts.resizerControl) {
-        controls.resizer = new L.Control.Resizer(opts.resizerControl);
+        controls.resizer = new leaflet_compat_default.Control.Resizer(opts.resizerControl);
       }
       for (let i in controls) {
         if (controls[i].addTo) {
@@ -6691,11 +6895,11 @@
         if (opts.includeLeafletUICSS) {
           core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
         }
-        if (!window.L) {
+        if (!window.L && !window.leaflet) {
           core_plugins.unshift("leaflet@1.9.4/dist/leaflet.css");
           core_plugins.unshift("leaflet@1.9.4/dist/leaflet.js");
-        } else if (opts.includeLeafletCSS && L.version) {
-          let core_css_url = "leaflet@" + L.version + "/dist/leaflet.css";
+        } else if (opts.includeLeafletCSS && leaflet_compat_default.version) {
+          let core_css_url = "leaflet@" + leaflet_compat_default.version + "/dist/leaflet.css";
           let core_css_exists = false;
           for (let i = 0; i < document.styleSheets.length; i++) {
             if (document.styleSheets[i].href && document.styleSheets[i].href.indexOf(core_css_url) > 0) {
@@ -6722,7 +6926,7 @@
     }
     function updateLeafletAttribution(defaultAttribution, e) {
       if (e && e.layer) {
-        this.attributionControl.setPrefix(L.GridLayer.GoogleMutant && e.layer instanceof L.GridLayer.GoogleMutant ? false : defaultAttribution);
+        this.attributionControl.setPrefix(leaflet_compat_default.GridLayer.GoogleMutant && e.layer instanceof leaflet_compat_default.GridLayer.GoogleMutant ? false : defaultAttribution);
       }
     }
     function autoToggleSatelliteLayer(e) {
@@ -6757,9 +6961,9 @@
         }
       }
     }
-    let minimapProto = L.Control.MiniMap.prototype;
+    let minimapProto = leaflet_compat_default.Control.MiniMap.prototype;
     let onAddMinimapProto = minimapProto.onAdd;
-    L.Control.MiniMap.include({
+    leaflet_compat_default.Control.MiniMap.include({
       onAdd: function(map) {
         let container = onAddMinimapProto.call(this, map);
         if (this._miniMap) {
@@ -6768,8 +6972,8 @@
           this._miniMap.scrollWheelZoom.disable();
         }
         if (this.options.toggleMapTypes) {
-          L.DomEvent.on(map, "baselayerchange", this._handleMainMapTypeChange, this);
-          L.DomEvent.on(this._container, "click", this._handleMiniMapTypeToggle, this);
+          map.on("baselayerchange", this._handleMainMapTypeChange, this);
+          leaflet_compat_default.DomEvent.on(this._container, "click", this._handleMiniMapTypeToggle, this);
         }
         return container;
       },
@@ -6789,7 +6993,7 @@
               }
               miniMapLayer = mainmap.options.mapTypes[mapTypeId];
               if (miniMapLayer) {
-                miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+                miniMapLayer = new leaflet_compat_default.TileLayer(miniMapLayer.url, miniMapLayer.options);
                 miniMapLayer.mapTypeId = mapTypeId;
                 minimap._lastMapTypeId = miniMapTypeId;
                 minimap.changeLayer(miniMapLayer);
@@ -6816,7 +7020,7 @@
             }
             miniMapLayer = mainmap.options.mapTypes[mapTypeId];
             if (miniMapLayer) {
-              miniMapLayer = new L.TileLayer(miniMapLayer.url, miniMapLayer.options);
+              miniMapLayer = new leaflet_compat_default.TileLayer(miniMapLayer.url, miniMapLayer.options);
               miniMapLayer.mapTypeId = mapTypeId;
               minimap._lastMapTypeId = miniMapTypeId;
               minimap.changeLayer(miniMapLayer);
@@ -6861,23 +7065,23 @@
 })();
 /*! Bundled license information:
 
-leaflet.locatecontrol/dist/L.Control.Locate.esm.js:
-  (*! Version: 0.90.1
-  Copyright (c) 2016 Dominik Moritz *)
-  (*!
-  Copyright (c) 2016 Dominik Moritz
-  
-  This file is part of the leaflet locate control. It is licensed under the MIT license.
-  You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
-  *)
-
-leaflet.fullscreen/dist/Control.FullScreen.js:
+leaflet.fullscreen/dist/Control.FullScreen.umd.js:
   (*!
    * leaflet.fullscreen
    * (c) Bruno B.; MIT License
    * https://github.com/brunob/leaflet.fullscreen
    *)
   (*! GENERATED FILE - DO NOT EDIT DIRECTLY. Edit files in src/ and run 'npm run build' *)
+
+leaflet.locatecontrol/dist/L.Control.Locate.umd.js:
+  (*! Version: 0.90.1
+  Copyright (c) 2016 Dominik Moritz *)
+  (*!
+    Copyright (c) 2016 Dominik Moritz
+  
+    This file is part of the leaflet locate control. It is licensed under the MIT license.
+    You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
+    *)
 
 leaflet-pegman/leaflet-pegman.js:
   (**

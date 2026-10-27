@@ -1,8 +1,9 @@
 import { version } from '../package.json';
+import L from './leaflet-compat.js';
 import 'leaflet-i18n';
 import 'leaflet-rotate';
-import { LocateControl, locate } from 'leaflet.locatecontrol';
-import FullScreen from 'leaflet.fullscreen';
+import 'leaflet.locatecontrol/dist/L.Control.Locate.umd.js';
+import 'leaflet.fullscreen/dist/Control.FullScreen.umd.js';
 import 'leaflet-pegman';
 import '@raruto/leaflet-gesture-handling';
 import '@raruto/leaflet-edit-osm';
@@ -14,10 +15,8 @@ import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
 
-L.Control.Locate = LocateControl;
-L.control.locate = locate;
-L.Control.FullScreen = FullScreen;
-L.control.fullscreen = options => new FullScreen(options);
+L.Control.Locate = L.Control.Locate.LocateControl;
+L.control.fullscreen = options => new L.Control.FullScreen(options);
 
 (function() {
 
@@ -280,7 +279,7 @@ L.control.fullscreen = options => new FullScreen(options);
 	function disableDefaultUI() {
 		if (this.zoomControl) this.zoomControl.remove();
 		if (this.rotateControl) this.rotateControl.remove();
-		if (this.fullscreenControl && this.options.fullscreenControl && !this.options.zoomControl) this.fullscreenControl.remove();
+		if (this.fullscreenControl) this.fullscreenControl.remove();
 		if (this.searchControl && this.options.searchControl) this.searchControl.remove();
 		if (this.attributionControl) this.attributionControl.remove();
 	}
@@ -292,9 +291,9 @@ L.control.fullscreen = options => new FullScreen(options);
 		// Recursive merge leaflet map options.
 		for (let i in default_options) {
 			if (opts[i] === true || typeof opts[i] === "undefined") {
-				opts[i] = default_options[i];
+				opts[i] = isObject(default_options[i]) ? deepMerge({}, default_options[i]) : default_options[i];
 			} else if (typeof this.options[i] === "object" && opts[i] instanceof Array === false) {
-				opts[i] = deepMerge(default_options[i], opts[i]);
+				opts[i] = deepMerge({}, default_options[i], opts[i]);
 			}
 		}
 
@@ -378,7 +377,7 @@ L.control.fullscreen = options => new FullScreen(options);
 		if (opts.attributionControl && this.attributionControl) {
 			this.attributionControl.addTo(this);
 			controls.attribution = this.attributionControl;
-			this.on('baselayerchange', L.bind(updateLeafletAttribution, this, this.attributionControl.options.prefix));
+			this.on('baselayerchange', updateLeafletAttribution.bind(this, this.attributionControl.options.prefix));
 		}
 
 		// Edit in OSM link.
@@ -432,7 +431,8 @@ L.control.fullscreen = options => new FullScreen(options);
 
 		// Fullscreen Control.
 		if (opts.fullscreenControl) {
-			controls.fullscreen = this.fullscreenControl = new L.Control.FullScreen(opts.fullscreenControl);
+			controls.fullscreen = this.fullscreenControl;
+			L.Util.setOptions(controls.fullscreen, opts.fullscreenControl);
 		}
 
 		// Minimap Control.
@@ -490,7 +490,7 @@ L.control.fullscreen = options => new FullScreen(options);
 			if (opts.includeLeafletUICSS) {
 				core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
 			}
-			if (!window.L) {
+			if (!window.L && !window.leaflet) {
 				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.css");
 				core_plugins.unshift("leaflet@1.9.4/dist/leaflet.js");
 			} else if (opts.includeLeafletCSS && L.version) {
@@ -582,7 +582,7 @@ L.control.fullscreen = options => new FullScreen(options);
 			}
 			// Automatically switch between "satellite" and "roads" layers.
 			if (this.options.toggleMapTypes) {
-				L.DomEvent.on(map, 'baselayerchange', this._handleMainMapTypeChange, this);
+				map.on('baselayerchange', this._handleMainMapTypeChange, this);
 				L.DomEvent.on(this._container, 'click', this._handleMiniMapTypeToggle, this);
 			}
 			return container;
