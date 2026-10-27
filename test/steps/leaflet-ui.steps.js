@@ -364,9 +364,6 @@ Then('custom JavaScript and CSS load without additional core stylesheets', async
   assert.equal(await this.page.evaluate(() => map.options.plugins.length), 2);
 });
 
-import assert from 'node:assert/strict';
-import { Then } from '@cucumber/cucumber';
-
 Then('zoom buttons are visible and change the map zoom', async function () {
   const initial = await this.page.evaluate(() => map.getZoom());
   const zoomIn = this.page.getByRole('button', { name: 'Zoom in', exact: true });
