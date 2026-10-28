@@ -229,8 +229,8 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 		disableDefaultUI: false,
 		// TODO: pluginsBaseURL: 'https://unpkg.com/',
 		plugins: [
-			// "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.css",
-			// "@raruto/leaflet-elevation@0.4.5/leaflet-elevation.js",
+			// "@raruto/leaflet-elevation@2.9.0/dist/leaflet-elevation.css",
+			// "@raruto/leaflet-elevation@2.9.0/dist/leaflet-elevation.js",
 			// "leaflet-kmz@0.3.1/dist/leaflet-kmz.js",
 			// "leaflet-transparency@0.0.5/leaflet-transparency.min.js"
 		],
