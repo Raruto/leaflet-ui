@@ -5,8 +5,8 @@ Feature: rotate plugin and controls
       """
       {"rotateControl":{"closeOnZeroBearing":false},"gestureHandling":false}
       """
-    When I drag the rotation control through 45 degrees
-    Then the bearing and rotation arrow are updated
+    When I drag the rotation control left by 45 pixels
+    Then the bearing is 324 degrees and the rotation arrow is updated
     And rotated map coordinates round-trip correctly
 
     Examples:
