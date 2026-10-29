@@ -226,6 +226,7 @@ Use tile providers according to their terms of service and include their require
 
 ```sh
 npm install
+npm run dev
 npm test
 ```
 
