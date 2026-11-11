@@ -277,7 +277,7 @@
   });
 
   // package.json
-  var version = "0.7.2";
+  var version = "0.8.0";
 
   // node_modules/leaflet-i18n/Leaflet.i18n.js
   var L = window.L || window.leaflet;
