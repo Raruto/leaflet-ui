@@ -232,10 +232,12 @@ npm test
 
 `npm test` builds the bundle and runs browser tests.
 
-* * *
+---
 
-**Compatible with:** Leaflet@1.9.4 and Leaflet@2.0.0-beta.3
+**Compatible with:**
+[![Leaflet 1.9.4](https://img.shields.io/badge/Leaflet-1.9.4-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
+[![Leaflet 2.0.0-beta.3](https://img.shields.io/badge/Leaflet-2.0.0--beta.3-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
 
-* * *
+---
 
 **Contributors:** [Raruto](https://github.com/Raruto/leaflet-ui)
