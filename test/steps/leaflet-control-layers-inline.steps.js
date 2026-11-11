@@ -17,7 +17,7 @@ Then('the custom provider is selected without a preset layer control', async fun
     return {
       selected: !!customBaseLayer && map.hasLayer(customBaseLayer),
       id: map.options.mapTypeId,
-      url: customBaseLayer?.getTileUrl({ x: 1, y: 2 }),
+      url: customBaseLayer?.getTileUrl({ x: 1, y: 2, z: map.getZoom() }),
       attribution: map.attributionControl.getContainer().textContent,
       selector: !!map.controls.layers,
     };
@@ -33,7 +33,7 @@ Then('the custom provider is selected without a preset layer control', async fun
 Then('native layers and a native layer selector work alongside the UI', async function () {
   await this.page.evaluate(() => {
     window.customMarker = new L.Marker([41, 12]).addTo(map);
-    new L.Control.Layers({ 'Custom provider': customBaseLayer }, { 'Custom marker': customMarker }, { collapsed: false }).addTo(map);
+    new (L.LayersControl || L.Control.Layers)({ 'Custom provider': customBaseLayer }, { 'Custom marker': customMarker }, { collapsed: false }).addTo(map);
   });
   assert.equal(await this.page.locator('.leaflet-control-layers').count(), 1);
   const overlay = this.page.getByRole('checkbox', { name: 'Custom marker' });

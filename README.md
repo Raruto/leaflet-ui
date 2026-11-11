@@ -18,7 +18,7 @@ Just load leaflet first, then leaflet-ui.
 ```html
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-ui@latest/dist/leaflet-ui.js"></script>
+<script src="https://unpkg.com/leaflet-ui@0.7.2/dist/leaflet-ui.js"></script>
 
 <style>
   html, body, #map { height: 100%; margin: 0; }
@@ -234,7 +234,7 @@ npm test
 
 * * *
 
-**Compatible with:** Leaflet@1.9.4 and Leaflet@2.0.0-alpha.1.
+**Compatible with:** Leaflet@1.9.4 and Leaflet@2.0.0-beta.3
 
 * * *
 

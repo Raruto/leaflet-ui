@@ -17,3 +17,12 @@ Feature: locate plugin and controls
       | bundle            |
       | leaflet-ui-src.js |
       | leaflet-ui.js     |
+
+  Scenario Outline: Locate marker subclasses initialize independently
+    Given a map using "<bundle>"
+    Then the location and compass markers retain their own coordinates and styles
+
+    Examples:
+      | bundle            |
+      | leaflet-ui-src.js |
+      | leaflet-ui.js     |

@@ -15,7 +15,7 @@ async function inlineMapPage(page, baseUrl) {
   <script>
     const leafletVersions = {
       '1.9.4': 'leaflet.js',
-      '2.0.0-alpha.1': 'leaflet-global-src.js',
+      '2.0.0-beta.3': 'leaflet-global.js',
     };
     const leafletVersion = new URL(location.href).searchParams.get('leaflet') || '1.9.4';
     const leafletConfig = leafletVersions[leafletVersion];
@@ -74,7 +74,7 @@ Then('Leaflet {string} is loaded with {int} test maps', async function (version,
 });
 
 async function createMap(bundle, options = {}) {
-  const version = process.env.LEAFLET_VERSION === '2' ? '2.0.0-alpha.1' : '1.9.4';
+  const version = process.env.LEAFLET_VERSION === '2' ? '2.0.0-beta.3' : '1.9.4';
   await inlineMapPage(this.page, this.baseUrl);
   await this.page.goto(`${this.baseUrl}/test/map.html?leaflet=${version}`);
   await this.page.evaluate(() => { window.originalLeaflet = window.L || window.leaflet; });
@@ -151,6 +151,16 @@ Then("the UI controls use the page's Leaflet", async function () {
   }
 });
 
+Then('legacy control initialization hooks run after initialization', async function () {
+  const initialized = await this.page.evaluate(() => {
+    const calls = [];
+    L.Control.Search.addInitHook(function () { calls.push(!!this._layer); });
+    new L.Control.Search();
+    return calls;
+  });
+  assert.deepEqual(initialized, [true]);
+});
+
 When('I rotate the map, open search and locate a position', async function () {
   this.state = await this.page.evaluate(() => {
     map.setBearing(40);
@@ -185,7 +195,7 @@ When('I view the map at {int} pixels with {string} controls', async function (wi
     container.style.height = '100vh';
     container.classList.toggle('leaflet-touch', touch);
     map.invalidateSize({ animate: false });
-    map.controls.layers._layerControlInputs[3].click();
+    map.controls.layers.getContainer().querySelectorAll('.leaflet-control-layers-base input')[3].click();
   }, this.touchControls);
 });
 

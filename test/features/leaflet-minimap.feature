@@ -9,3 +9,12 @@ Feature: minimap plugin and controls
       | bundle            |
       | leaflet-ui-src.js |
       | leaflet-ui.js     |
+
+  Scenario Outline: Minimap toggle emits events without 3D support
+    Given a map using "<bundle>"
+    Then minimap toggle events work without 3D support
+
+    Examples:
+      | bundle            |
+      | leaflet-ui-src.js |
+      | leaflet-ui.js     |

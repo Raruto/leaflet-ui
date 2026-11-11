@@ -1,5 +1,4 @@
 import { version } from '../package.json';
-import L from './leaflet-compat.js';
 import 'leaflet-i18n';
 import 'leaflet-rotate';
 import 'leaflet.locatecontrol/dist/L.Control.Locate.umd.js';
@@ -15,6 +14,9 @@ import 'leaflet-easyprint';
 import 'leaflet.control.resizer';
 import 'leaflet.visualclick';
 
+const L = window.L || window.leaflet;
+if (!L) throw new Error('Leaflet must be loaded before leaflet-ui');
+
 L.Control.Locate = L.Control.Locate.LocateControl;
 L.control.fullscreen = options => new L.Control.FullScreen(options);
 
@@ -22,6 +24,18 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 
 	const currentScript = document.currentScript;
 	const currentVersion = version.split("+")[0].trim();
+	const lateInitHooks = [];
+	if (!L.version.startsWith('1.')) {
+		// Leaflet 2 keeps its hook registry private; track hooks added by lazy plugins.
+		const addInitHook = L.Map.addInitHook;
+		L.Map.addInitHook = function(hook, ...args) {
+			const result = addInitHook.call(this, hook, ...args);
+			if (this === L.Map) {
+				lateInitHooks.push(typeof hook === 'function' ? hook : function() { this[hook](...args); });
+			}
+			return result;
+		};
+	}
 
 	let lazyLoader = {
 
@@ -86,7 +100,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
-					r: L.Browser.retina ? '@2x' : '',
+					r: L.Browser?.retina ? '@2x' : '',
 				},
 			},
 			streets: {
@@ -106,7 +120,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
-					r: L.Browser.retina ? '@2x' : '',
+					r: L.Browser?.retina ? '@2x' : '',
 				},
 			},
 			terrain: {
@@ -117,7 +131,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 					maxNativeZoom: 22,
 					attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Map style: &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>',
 					// apikey: '<your apikey>',
-					r: L.Browser.retina ? '@2x' : '',
+					r: L.Browser?.retina ? '@2x' : '',
 				},
 			},
 			satellite: {
@@ -369,7 +383,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 
 		// Layers Control.
 		if (opts.layersControl) {
-			controls.layers = new L.Control.Layers(baseMaps, null, opts.layersControl);
+			controls.layers = new (L.LayersControl || L.Control.Layers)(baseMaps, null, opts.layersControl);
 			this.on('zoomend', autoToggleSatelliteLayer, this);
 		}
 
@@ -387,7 +401,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 
 		// Scale Control.
 		if (opts.scaleControl) {
-			controls.scale = new L.Control.Scale(opts.scaleControl);
+			controls.scale = new (L.ScaleControl || L.Control.Scale)(opts.scaleControl);
 		}
 
 		// Zoom Control.
@@ -517,6 +531,12 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 						}
 					this.fire('initHooks_called');
 				});
+			} else {
+				const initHooks = lateInitHooks.length;
+				this.once('plugins_loaded', function() {
+					for (const hook of lateInitHooks.slice(initHooks)) hook.call(this);
+					this.fire('initHooks_called');
+				});
 			}
 
 			lazyLoader.loadSyncScripts([core_plugins, opts.plugins]).then(() => this.fire('plugins_loaded'));
@@ -534,11 +554,12 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 	function autoToggleSatelliteLayer(e) {
 		let zoom = this.getZoom();
 		let control = this.controls.layers;
-		let inputs = control._layerControlInputs;
+		let inputs = control._layerControlInputs instanceof Map
+			? [...control._layerControlInputs.entries()].map(([input, layer]) => ({ input, layer }))
+			: control._layerControlInputs.map(input => ({ input, layer: control._getLayer(input.layerId).layer }));
 
 		for (let i in inputs) {
-			let input = inputs[i];
-			let layer = control._getLayer(input.layerId).layer;
+			let { input, layer } = inputs[i];
 			let mapTypeId = layer.mapTypeId;
 			if (mapTypeId == "satellite") {
 				if (zoom >= 18 && !layer._map && !layer._isAutoToggled) {
@@ -547,8 +568,7 @@ L.control.fullscreen = options => new L.Control.FullScreen(options);
 					break;
 				} else if (zoom < 18 && layer._map && layer._isAutoToggled) {
 					for (let j in inputs) {
-						let input = inputs[j];
-						let layer = control._getLayer(input.layerId).layer;
+						let { input, layer } = inputs[j];
 						let mapTypeId = layer.mapTypeId;
 						if (mapTypeId == this._prevMapTypeId) {
 							input.click();

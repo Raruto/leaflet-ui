@@ -50,3 +50,15 @@ Then('an empty search displays no results without moving the map', async functio
   assert.deepEqual(await this.page.evaluate(() => map.getCenter()), center);
   await this.page.keyboard.press('Escape');
 });
+
+Then('search converts separate and combined JSON coordinates', async function () {
+  const result = await this.page.evaluate(() => {
+    const separate = new L.Control.Search({ propertyName: 'name', propertyLoc: ['lat', 'lon'] });
+    const combined = new L.Control.Search({ propertyName: 'name', propertyLoc: 'loc' });
+    return {
+      separate: separate._defaultFormatData([{ name: 'Rome', lat: 41.9, lon: 12.5 }]).Rome,
+      combined: combined._defaultFormatData([{ name: 'Rome', loc: [41.9, 12.5] }]).Rome,
+    };
+  });
+  assert.deepEqual(result, { separate: { lat: 41.9, lng: 12.5 }, combined: { lat: 41.9, lng: 12.5 } });
+});

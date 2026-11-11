@@ -18,3 +18,12 @@ Feature: search plugin and controls
       | bundle            |
       | leaflet-ui-src.js |
       | leaflet-ui.js     |
+
+  Scenario Outline: Search accepts coordinates in both supported JSON formats
+    Given a map using "<bundle>"
+    Then search converts separate and combined JSON coordinates
+
+    Examples:
+      | bundle            |
+      | leaflet-ui-src.js |
+      | leaflet-ui.js     |

@@ -3,8 +3,8 @@ Feature: Leaflet UI integration
   Scenario Outline: Test pages switch Leaflet versions without losing the URL state
     Given the test page "<page>" is open
     Then Leaflet "1.9.4" is loaded with <maps> test maps
-    When I select Leaflet "2.0.0-alpha.1"
-    Then Leaflet "2.0.0-alpha.1" is loaded with <maps> test maps
+    When I select Leaflet "2.0.0-beta.3"
+    Then Leaflet "2.0.0-beta.3" is loaded with <maps> test maps
     When I select Leaflet "1.9.4"
     Then Leaflet "1.9.4" is loaded with <maps> test maps
 
@@ -17,6 +17,7 @@ Feature: Leaflet UI integration
   Scenario Outline: Controls work with each browser bundle
     Given a map using "<bundle>"
     Then the UI controls use the page's Leaflet
+    And legacy control initialization hooks run after initialization
     When I rotate the map, open search and locate a position
     Then rotation, search and location are updated
 

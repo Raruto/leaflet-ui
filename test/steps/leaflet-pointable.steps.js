@@ -6,7 +6,7 @@ When('I add a pointable canvas overlay', async function () {
   await this.page.evaluate(() => {
     window.pointableClicks = 0;
     map.on('pointable_mouseclick', () => pointableClicks++);
-    const Overlay = L.GridLayer.extend({
+    class Overlay extends L.GridLayer {
       createTile() {
         const tile = document.createElement('canvas');
         tile.width = tile.height = 256;
@@ -14,8 +14,8 @@ When('I add a pointable canvas overlay', async function () {
         context.fillStyle = '#008800';
         context.fillRect(0, 0, 128, 256);
         return tile;
-      },
-    });
+      }
+    }
     window.overlay = new Overlay({ pointable: true }).addTo(map);
   });
 });
