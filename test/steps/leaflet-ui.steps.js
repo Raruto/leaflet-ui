@@ -121,6 +121,15 @@ Given('a map using {string} with options:', async function (bundle, options) {
   await createMap.call(this, bundle, JSON.parse(options));
 });
 
+Then('the default UI stylesheet loads from the local bundle directory', async function () {
+  await this.page.locator('link[href="/dist/leaflet-ui.css"]').evaluate(link => link.remove());
+  await this.page.waitForFunction(() => Array.from(document.styleSheets).some(sheet =>
+    sheet.href === new URL('/dist/leaflet-ui.css', location.href).href));
+  const stylesheets = await this.page.locator('link[rel="stylesheet"]').evaluateAll(links => links.map(link => link.href));
+  assert.equal(stylesheets.filter(url => url === `${this.baseUrl}/dist/leaflet-ui.css`).length, 1);
+  assert.ok(!stylesheets.some(url => url.startsWith('https://unpkg.com/leaflet-ui@')));
+});
+
 Given('a map using {string} without zoom controls', async function (bundle) {
   await createMap.call(this, bundle, { zoomControl: false });
 });

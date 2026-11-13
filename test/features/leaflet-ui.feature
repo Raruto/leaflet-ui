@@ -1,5 +1,17 @@
 Feature: Leaflet UI integration
 
+  Scenario Outline: Local browser bundles load their own default stylesheet
+    Given a map using "<bundle>" with options:
+      """
+      {"includeLeafletUICSS":true}
+      """
+    Then the default UI stylesheet loads from the local bundle directory
+
+    Examples:
+      | bundle            |
+      | leaflet-ui-src.js |
+      | leaflet-ui.js     |
+
   Scenario Outline: Test pages switch Leaflet versions without losing the URL state
     Given the test page "<page>" is open
     Then Leaflet "1.9.4" is loaded with <maps> test maps

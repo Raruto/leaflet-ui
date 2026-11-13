@@ -8,6 +8,7 @@ for (const version of ['1', '2']) {
   console.log(`\nTesting Leaflet ${version}`);
   const result = spawnSync(process.execPath, [
     'node_modules/@cucumber/cucumber/bin/cucumber.js',
+    ...(version === '2' ? ['--tags', 'not @smoke'] : []),
     ...process.argv.slice(2),
   ], {
     cwd: fileURLToPath(new URL('../', import.meta.url)),

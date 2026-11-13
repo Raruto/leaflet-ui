@@ -7651,7 +7651,7 @@
       if (opts.plugins) {
         let core_plugins = [];
         if (opts.includeLeafletUICSS) {
-          core_plugins.unshift("leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
+          core_plugins.unshift(currentScript?.src && /\/leaflet-ui(?:-src)?\.js$/.test(new URL(currentScript.src).pathname) ? new URL("leaflet-ui.css", currentScript.src).href : "leaflet-ui@" + currentVersion + "/dist/leaflet-ui.css");
         }
         if (!window.L && !window.leaflet) {
           core_plugins.unshift("leaflet@1.9.4/dist/leaflet.css");
